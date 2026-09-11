@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hr:schema:messagelib",
+  "title": "MessageLibrary",
+  "description": "打招呼话术库：三档（初次/二次激活/三次及以上），每档可多版本，来源 preset(常用语) 或 custom(HR自定义)",
+  "type": "object",
+  "required": ["templateId", "tier", "source", "content"],
+  "properties": {
+    "templateId": { "type": "string" },
+    "tier": { "type": "string", "enum": ["first", "second", "third", "exchange"] },
+    "source": { "type": "string", "enum": ["preset", "custom"] },
+    "content": { "type": "string" },
+    "active": { "type": "boolean", "default": false },
+    "note": { "type": "string" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "meta": {
+      "type": "object",
+      "properties": { "createdAt": { "type": "string", "format": "date-time" } }
+    }
+  }
+}

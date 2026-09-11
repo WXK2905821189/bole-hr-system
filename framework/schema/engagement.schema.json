@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hr:schema:engagement",
+  "title": "Engagement",
+  "description": "候选人触达记录（每一次打招呼/索要简历/回复跟进记一条，记录触达状态）",
+  "type": "object",
+  "required": ["engagementId", "candidateId", "jobId", "action"],
+  "properties": {
+    "engagementId": { "type": "string" },
+    "candidateId": { "type": "string" },
+    "jobId": { "type": "string" },
+    "recruiterId": { "type": "string" },
+    "action": { "type": "string", "enum": ["greet", "request_resume", "request_phone", "follow_up", "reply", "agree_resume", "exchange_contact"], "description": "触达动作：打招呼/索要简历/索要电话/跟进/候选人回复/同意收取简历/交换联系方式" },
+    "touchCount": { "type": "integer", "minimum": 1, "description": "该候选人累计触达轮次（第 N 次触达）" },
+    "readStatus": { "type": "string", "enum": ["unread", "read"], "default": "unread", "description": "消息是否已被候选人阅读" },
+    "messageVersion": { "type": "string", "description": "话术版本标识（便于统计不同话术转化率）" },
+    "content": { "type": "string", "description": "本次实际发送的消息正文" },
+    "frequencyMode": { "type": "string", "enum": ["aggressive", "balanced", "conservative"], "default": "balanced", "description": "本次触达频次档位" },
+    "stopFlag": { "type": "boolean", "default": false, "description": "标记是否停止后续触达（如对方明确拒绝）" },
+    "reply": {
+      "type": "object",
+      "properties": {
+        "content": { "type": "string" },
+        "receivedAt": { "type": "string", "format": "date-time" },
+        "intent": { "type": "string", "enum": ["accept", "reject", "question", "other"] }
+      }
+    },
+    "timestamps": {
+      "type": "object",
+      "description": "各关键节点时间戳",
+      "properties": {
+        "sent": { "type": "string", "format": "date-time" },
+        "read": { "type": "string", "format": "date-time" },
+        "replied": { "type": "string", "format": "date-time" }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["createdAt"],
+      "properties": {
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

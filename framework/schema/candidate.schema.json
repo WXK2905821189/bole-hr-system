@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hr:schema:candidate",
+  "title": "Candidate",
+  "description": "候选人档案（参考 Frappe Job Applicant 字段，落到统一契约）",
+  "type": "object",
+  "required": ["candidateId", "source", "jobId", "meta"],
+  "properties": {
+    "candidateId": { "type": "string" },
+    "source": { "type": "string", "enum": ["boss", "boss_recommend", "zhilian", "51job", "manual", "other"] },
+    "jobId": { "type": "string" },
+    "name": { "type": "string" },
+    "email": { "type": "string", "format": "email" },
+    "phone": { "type": "string" },
+    "status": { "type": "string", "enum": ["sourced", "resume_received", "parsed", "matched", "screened", "rejected"] },
+    "touchStatus": { "type": "string", "enum": ["pending", "engaging", "replied", "sleeping"], "description": "候选人触达状态：待触达/跟进中/已回复/沉睡" },
+    "manualPending": { "type": "boolean", "default": false, "description": "F-1：自动收取简历失败/异常 → 转人工待处理" },
+    "manualReason": { "type": "string", "description": "转人工原因" },
+    "contactResolved": { "type": "boolean", "default": false, "description": "F-2：交换联系方式成功后候选人联系方式已回写" },
+    "education": {
+      "type": "object",
+      "properties": { "school": { "type": "string" }, "degree": { "type": "string" }, "major": { "type": "string" } }
+    },
+    "workExperienceYears": { "type": "integer", "minimum": 0 },
+    "salaryExpected": { "type": "string" },
+    "skills": { "type": "array", "items": { "type": "string" } },
+    "resume": { "type": ["object", "string", "null"], "description": "简历对象/关联 resumeId/暂无" },
+    "meta": {
+      "type": "object",
+      "required": ["createdAt", "masked"],
+      "properties": {
+        "createdAt": { "type": "string", "format": "date-time" },
+        "masked": { "type": "boolean", "default": true },
+        "sourceLink": { "type": "string" }
+      }
+    }
+  }
+}

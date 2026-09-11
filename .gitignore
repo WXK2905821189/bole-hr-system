@@ -1,0 +1,20 @@
+# 数据与运行时产物（不入库）
+infra/store/*
+infra/files/*
+!infra/store/.gitkeep
+!infra/files/.gitkeep
+
+# 采集配置可能含账号/会话路径等敏感信息，不复用
+modules/recruitment-sourcing/adapters/sourcing-py/config.json
+
+# 通用
+node_modules/
+*.log
+
+# 本地派生 / 测试产物 / 敏感文件（不入库）
+_out.xlsx
+*.xlsx
+.env
+*.key
+__pycache__/
+*.pyc

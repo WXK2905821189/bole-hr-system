@@ -1,0 +1,15 @@
+{
+  "id": "recruitment-sourcing",
+  "version": "0.1.0",
+  "displayName": "招聘提效（BOSS直聘自动要简历 + JD匹配）",
+  "requires": ["hr:framework"],
+  "services": ["getJobs", "runSourcingCycle", "getMatches"],
+  "listens": [
+    ["candidate.sourced", "onCandidateSourced"],
+    ["resume.parsed", "onResumeParsed"],
+    ["match.score", "onMatchScore"],
+    ["greet.campaign.finished", "onCampaignFinished"]
+  ],
+  "provides": ["candidate:parsed", "resume:parsed", "match:computed"],
+  "frontendMountPoint": "/modules/recruitment-sourcing/public/index.html"
+}

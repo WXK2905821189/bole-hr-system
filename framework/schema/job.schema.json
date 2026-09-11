@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hr:schema:job",
+  "title": "Job",
+  "description": "岗位/JD（参考 Frappe Job Opening，落到统一契约）",
+  "type": "object",
+  "required": ["jobId", "jobTitle", "meta"],
+  "properties": {
+    "jobId": { "type": "string" },
+    "jobTitle": {
+      "type": "string"
+    },
+    "recruiterId": {
+      "type": "string",
+      "description": "所属招聘者账号（不同招聘者管理不同岗位）"
+    },
+    "department": { "type": "string" },
+    "location": { "type": "string" },
+    "employmentType": { "type": "string", "enum": ["fulltime", "parttime", "contract", "intern"] },
+    "status": { "type": "string", "enum": ["draft", "open", "closed", "archived"] },
+    "jdRaw": { "type": "string" },
+    "parsedKeywords": { "type": "array", "items": { "type": "string" } },
+    "hardSkills": { "type": "array", "items": { "type": "string" } },
+    "softSkills": { "type": "array", "items": { "type": "string" } },
+    "meta": {
+      "type": "object",
+      "required": ["createdAt"],
+      "properties": { "createdAt": { "type": "string", "format": "date-time" } }
+    }
+  }
+}

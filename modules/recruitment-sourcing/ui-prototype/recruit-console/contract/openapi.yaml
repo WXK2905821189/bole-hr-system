@@ -1,0 +1,248 @@
+openapi: 3.0.3
+info:
+  title: 招聘提效模块 API
+  version: 1.0.0
+  description: |
+    依据原型 api.js 桩层机械提取的架构中立契约。
+    前端只需替换 api.js 内部实现即可接入；本文档不绑定任何后端技术。
+security:
+  - bearerAuth: []
+
+paths:
+  # ---------- 运营总览 ----------
+  /api/overview:
+    get:
+      operationId: fetchOverview
+      summary: 运营总览 KPI / 流水线 / 质量 / Top 候选人
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [kpis, pipeline, quality, top]
+                properties:
+                  kpis:
+                    type: object
+                    properties:
+                      today: { type: integer, example: 46 }
+                      successRate: { type: integer, example: 91 }
+                      accuracy: { type: integer, example: 94 }
+                      active: { type: integer, example: 230 }
+                  pipeline:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string, example: 检索 }
+                        pass: { type: integer, example: 245 }
+                        state: { type: string, enum: [run, ok, warn] }
+                  quality:
+                    type: object
+                    properties:
+                      ok: { type: integer, example: 73 }
+                      review: { type: integer, example: 18 }
+                      fail: { type: integer, example: 9 }
+                  top:
+                    type: array
+                    items: { $ref: '#/components/schemas/Candidate' }
+
+  # ---------- 岗位 / JD ----------
+  /api/jobs:
+    get:
+      operationId: fetchJobs
+      summary: 岗位列表
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs: { type: array, items: { $ref: '#/components/schemas/Job' } }
+    post:
+      operationId: createJob
+      summary: 创建岗位并从 JD 解析关键词
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jobId, title, jdRaw]
+              properties:
+                jobId: { type: string, example: frontend_01 }
+                title: { type: string, example: 前端工程师 }
+                jdRaw: { type: string, example: 3–5 年 Java/Go 后端经验；熟练 MySQL、Redis… }
+      responses:
+        '200':
+          description: 创建成功（含解析关键词）
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, jobId, title, keywords]
+                properties:
+                  ok: { type: boolean, example: true }
+                  jobId: { type: string }
+                  title: { type: string }
+                  keywords: { type: array, items: { type: string } }
+
+  # ---------- 候选人库 ----------
+  /api/candidates:
+    get:
+      operationId: fetchCandidates
+      summary: 分页候选人列表（状态过滤 + 搜索）
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [all, matched, parsed, pending, failed], default: all } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, default: 8 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [list, total]
+                properties:
+                  list: { type: array, items: { $ref: '#/components/schemas/Candidate' } }
+                  total: { type: integer, example: 12 }
+
+  # ---------- 采集调度 ----------
+  /api/schedule/run:
+    post:
+      operationId: runCollect
+      summary: 立即运行指定岗位采集（模拟/触发）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jobId]
+              properties:
+                jobId: { type: string, example: frontend_01 }
+      responses:
+        '200':
+          description: 运行完成，返回日志行
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, lines]
+                properties:
+                  ok: { type: boolean, example: true }
+                  lines:
+                    type: array
+                    items: { type: string }
+
+  # ---------- 导出（审批留痕） ----------
+  /api/export/candidates:
+    post:
+      operationId: exportCandidates
+      summary: 导出候选人清单（进入审批队列，获批后生成 CSV 并留痕）
+      responses:
+        '200':
+          description: 已进入审批
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  note: { type: string, example: 已进入审批队列 · 获批后生成 CSV 并留痕 }
+
+  # ---------- 审计 ----------
+  /api/audit:
+    get:
+      operationId: fetchAudit
+      summary: 审计流水列表
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Audit' }
+
+  # ---------- 准入与护栏 ----------
+  /api/settings:
+    post:
+      operationId: saveSettings
+      summary: 保存护栏配置
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+
+  # ---------- 脱敏字段解密（单次留痕） ----------
+  /api/detail/decrypt:
+    post:
+      operationId: decryptField
+      summary: 解密脱敏字段（演示，需授权，每次解密留痕）
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  phone: { type: string, example: 138****7210 → 138-0107-7210 }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: JWT / Session 由后端工程决定，原型前端仅 mock 校验
+
+  schemas:
+    Job:
+      type: object
+      required: [id, jobId, title, status, round, todayQuota, keywords]
+      properties:
+        id: { type: integer }
+        jobId: { type: string }
+        title: { type: string }
+        status: { type: string, enum: [active, idle] }
+        round: { type: integer }
+        todayQuota: { type: integer }
+        keywords: { type: array, items: { type: string } }
+        lastRun: { type: string }
+    Candidate:
+      type: object
+      required: [id, name, source, workYears, skills, salary, status, matchScore]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        source: { type: string }
+        workYears: { type: integer }
+        skills: { type: array, items: { type: string } }
+        salary: { type: string }
+        status: { type: string, enum: [matched, parsed, pending, failed] }
+        matchScore: { type: integer, nullable: true }
+    Audit:
+      type: object
+      required: [id, action, target, actor, ts, type]
+      properties:
+        id: { type: string }
+        action: { type: string }
+        target: { type: string }
+        actor: { type: string }
+        ts: { type: string }
+        type: { type: string, enum: [collect, access, export] }

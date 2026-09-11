@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hr:schema:greet-campaign",
+  "title": "GreetCampaign",
+  "description": "打招呼批次（F-3）：按职位顺序/指定职位逐个打招呼，每个职位可单独自定义额度，到额自动切换下一职位，遍历完或到配额即结束",
+  "type": "object",
+  "required": ["campaignId", "recruiterId", "mode", "jobs", "status", "meta"],
+  "properties": {
+    "campaignId": { "type": "string" },
+    "recruiterId": { "type": "string" },
+    "mode": { "type": "string", "enum": ["all_jobs", "selected_jobs"], "description": "全部职位按顺序 / 指定职位列表" },
+    "jobs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["jobId", "quota"],
+        "properties": {
+          "jobId": { "type": "string" },
+          "quota": { "type": "integer", "minimum": 0, "description": "该职位本批次打招呼额度（0 表示不限，用完全部可打候选人）" },
+          "greeted": { "type": "integer", "minimum": 0, "description": "该职位已打招呼数" },
+          "state": { "type": "string", "enum": ["pending", "running", "quota_reached", "exhausted", "done"] }
+        }
+      }
+    },
+    "status": { "type": "string", "enum": ["running", "paused", "finished"], "description": "批次状态：进行中/暂停/已结束" },
+    "cursor": { "type": "integer", "minimum": 0, "description": "当前遍历到的职位下标" },
+    "note": { "type": "string", "description": "暂停/结束原因留痕" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "finishedAt": { "type": "string", "format": "date-time" },
+    "meta": {
+      "type": "object",
+      "required": ["createdAt"],
+      "properties": {
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

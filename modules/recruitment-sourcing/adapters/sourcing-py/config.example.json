@@ -1,0 +1,17 @@
+{
+  "mode": "simulator",
+  "gateway_url": "http://127.0.0.1:4700",
+  "safety": {
+    "interval_seconds": [3, 8],
+    "daily_cap": 200,
+    "touch_daily_cap": 60,
+    "cooldown_minutes": 30,
+    "session_cap": 80,
+    "circuit_breaker": 3
+  },
+  "per_job_target": 3,
+  "jobs": [
+    { "job_id": "job_01", "keyword": "前端工程师" },
+    { "job_id": "job_02", "keyword": "后端工程师" }
+  ]
+}

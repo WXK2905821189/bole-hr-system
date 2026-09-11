@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hr:schema:match",
+  "title": "MatchScore",
+  "description": "候选人↔JD 匹配分（复用 InterviewPrep GAP_ANALYSIS 的加权口径）",
+  "type": "object",
+  "required": ["matchId", "candidateId", "jobId", "matchScore", "meta"],
+  "properties": {
+    "matchId": { "type": "string" },
+    "candidateId": { "type": "string" },
+    "jobId": { "type": "string" },
+    "matchScore": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "dimensionScores": {
+      "type": "object",
+      "properties": {
+        "hardSkills": { "type": "integer" },
+        "softSkills": { "type": "integer" },
+        "coreDuties": { "type": "integer" },
+        "industry": { "type": "integer" },
+        "education": { "type": "integer" }
+      }
+    },
+    "evidence": { "type": "string" },
+    "meta": {
+      "type": "object",
+      "required": ["matchedAt", "engine"],
+      "properties": {
+        "matchedAt": { "type": "string", "format": "date-time" },
+        "engine": { "type": "string" }
+      }
+    }
+  }
+}

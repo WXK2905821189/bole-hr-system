@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>招聘提效模块 · 候选人寻源与控制台</title>
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-page="dashboard">
+  <!-- ============ App Shell · 固定侧栏导航（契约 §4，不得改） ============ -->
+  <aside class="app-nav">
+    <div class="logo">
+      <div class="mark">聘</div>
+      <div style="display:flex;flex-direction:column">
+        <span class="name">招聘提效</span>
+        <span class="sub">AI HR 系统 · 模块 I</span>
+      </div>
+    </div>
+    <nav>
+      <div class="navsec">运营台</div>
+      <button class="navitem" data-nav="dashboard" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>运营总览</button>
+      <button class="navitem" data-nav="jobs" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg>岗位 / JD 配置</button>
+      <button class="navitem" data-nav="schedule" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 5h16M8 3v4M16 3v4M4 11h16"/></svg>采集调度</button>
+      <button class="navitem" data-nav="candidates" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3.5 19c.5-3.5 3-5.5 5.5-5.5s5 2 5.5 5.5"/><path d="M16 8.5l1.5 1.5L21 6"/></svg>候选人库<span class="lle">12</span></button>
+      <div class="navsec">沟通</div>
+      <button class="navitem" data-nav="engage" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 01-12.8 7.3L3 21l1.6-4.4A8.5 8.5 0 1121 11.5z"/><path d="M8.5 11.5h7M8.5 14.5h4"/></svg>触达沟通</button>
+      <div class="navsec">治理</div>
+      <button class="navitem" data-nav="audit" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M19 5l-2.5 2.5"/><circle cx="12" cy="12" r="3.5"/></svg>审计留痕</button>
+      <button class="navitem" data-nav="settings" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8a4 4 0 100 8 4 4 0 000-8z"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>准入与护栏</button>
+    </nav>
+    <div class="riskbox">
+      <div class="t"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 1 21h22L12 2zm0 4.5 7.2 13H4.8l7.2-13z"/><rect x="11" y="10" width="2" height="5" fill="currentColor"/><circle cx="12" cy="18" r="1.5"/></svg>风控护栏 · 关注中</div>
+      <div class="n">今日已索取 <b>46 / 200</b> · 账号 B2 冷却中 · 熔断护栏启用</div>
+    </div>
+    <div class="foot">
+      <div class="ava">HR</div>
+      <div style="display:flex;flex-direction:column;line-height:1.4;flex:1;min-width:0">
+        <span style="color:#fff">招聘专员 · 王女士</span>
+        <label style="font-size:11px;color:#8b97bd">岗位按登录账号隔离 · BOSS A1</label>
+        <button class="btn ghost sm" style="margin-top:6px;width:100%;border-color:#26304d;color:#cdd6f4">账号管理 / 绑定 BOSS</button>
+        <button class="btn ghost sm" style="margin-top:6px;width:100%;border-color:#26304d;color:#8b97bd">退出登录</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ App Content ============ -->
+  <main class="app-content">
+    <header class="topbar">
+      <div style="display:flex;flex-direction:column"><h1 id="pageTitle">运营总览</h1><span class="crumb" id="pageSub">候选人寻源 · 控制台</span></div>
+      <div class="headright">
+        <div class="health"><span class="dot"></span>网关已连接</div>
+        <button class="btn ghost sm" id="btnRefresh" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 11-2.6-6.4M21 5v4h-4"/></svg>刷新</button>
+        <button class="btn" id="btnTopRun" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 4l14 8-14 8V4z"/></svg>运行采集</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- ===== 视图：运营总览 ===== -->
+      <section class="view active" id="view-dashboard"></section>
+
+      <!-- ===== 视图：岗位 / JD ===== -->
+      <section class="view" id="view-jobs"></section>
+
+      <!-- ===== 视图：采集调度 ===== -->
+      <section class="view" id="view-schedule"></section>
+
+      <!-- ===== 视图：候选人库 ===== -->
+      <section class="view" id="view-candidates"></section>
+
+      <!-- ===== 视图：触达沟通 ===== -->
+      <section class="view" id="view-engage"></section>
+
+      <!-- ===== 视图：审计留痕 ===== -->
+      <section class="view" id="view-audit"></section>
+
+      <!-- ===== 视图：准入与护栏 ===== -->
+      <section class="view" id="view-settings"></section>
+    </div>
+  </main>
+
+  <!-- Drawer + Scrim (候选人详情) -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-hd">
+      <div class="ava" id="dAva">陈</div>
+      <div>
+        <div class="nm" id="dName">—</div>
+        <div class="meta" id="dMeta">—</div>
+      </div>
+      <button class="x" id="drawerClose" type="button">×</button>
+    </div>
+    <div class="drawer-bd" id="drawerBd"></div>
+    <div class="drawer-ft">
+      <button class="btn sm" style="flex:1" id="dMark" type="button">标记已沟通</button>
+      <button class="btn ghost sm" style="flex:1" id="dDecrypt" type="button">解密查看</button>
+    </div>
+  </aside>
+
+  <!-- Modal (新增岗位) -->
+  <div class="modal" id="jobModal">
+    <div class="modal-bg" data-close></div>
+    <div class="modal-card">
+      <h3>新增岗位（粘贴 JD，自动解析关键词）</h3>
+      <label>岗位 ID</label>
+      <input type="text" id="mJobId" placeholder="例如 backend_02" />
+      <label>岗位名称</label>
+      <input type="text" id="mTitle" placeholder="例如 后端工程师" />
+      <label>JD 原文</label>
+      <textarea id="mJd" placeholder="粘贴岗位职责 / 要求，系统将自动抽取学历、经验、技能关键词…">3–5 年 Java/Go 后端开发经验；熟练掌握 MySQL、Redis；熟悉微服务架构与高并发场景。</textarea>
+      <div class="modal-ft">
+        <button class="btn ghost" id="modalCancel" type="button">取消</button>
+        <button class="btn" id="modalCreate" type="button">创建并解析</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

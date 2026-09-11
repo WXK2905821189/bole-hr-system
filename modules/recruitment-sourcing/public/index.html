@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>伯乐招聘系统 · 业务控制台</title>
+<style>
+  :root{
+    --brand:#2f54eb; --brand-d:#1f3bb0; --brand-soft:#eef2ff;
+    --bg:#eef1f6; --canvas:#fafbfd; --card:#ffffff; --line:#e6e9f0; --line-strong:#d6dbe6;
+    --ink:#1b1f27; --muted:#64748b; --faint:#94a3b8;
+    --ok:#16803c; --ok-bg:#e6f6ec; --warn:#b45309; --warn-bg:#fbf3e2; --err:#c0392b; --err-bg:#fdecec; --info:#2563eb; --info-bg:#eef4ff;
+    --r:10px; --r-sm:8px;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
+    --shadow-lg:0 8px 24px rgba(16,24,40,.10);
+    --sidebar-w:232px;
+    --mono:ui-monospace,"SF Mono",Consolas,"Cascadia Code",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
+  /* ---------- shell ---------- */
+  .shell{display:grid;grid-template-columns:var(--sidebar-w) 1fr 360px;min-height:100vh}
+  .job-sidebar{position:sticky;top:0;height:100vh;background:var(--bg);border-left:1px solid var(--line);padding:16px 14px;overflow:auto}
+  .job-sidebar .js-empty{text-align:center;color:var(--muted);padding:40px 10px}
+  .job-sidebar h3{font-size:14px;font-weight:700;margin:0 0 10px;color:var(--ink)}
+  .job-sidebar .js-title{font-size:16px;font-weight:700;color:var(--ink);line-height:1.35}
+  .job-sidebar .js-sub{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin:4px 0 14px}
+  .job-sidebar .js-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .job-sidebar .kv{margin-top:4px}
+  .job-sidebar .kv .v{overflow-wrap:break-word}
+  @media(max-width:1480px){.shell{grid-template-columns:var(--sidebar-w) 1fr}.job-sidebar{display:none}}
+  body:not(.jobs-view) .shell{grid-template-columns:var(--sidebar-w) 1fr}
+  body:not(.jobs-view) .job-sidebar{display:none}
+  /* ---------- sidebar ---------- */
+  aside{background:linear-gradient(180deg,#101a33 0%,#0c1226 100%);color:#c7d2ea;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .logo{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .logo .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--brand),#6b8bff);display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;box-shadow:0 4px 12px rgba(47,84,235,.4)}
+  .logo .name{font-weight:600;color:#fff;font-size:14px;letter-spacing:.2px}
+  .logo .sub{font-size:11px;color:#7f8db5;margin-top:1px}
+  nav{padding:12px 10px;display:flex;flex-direction:column;gap:2px;flex:1;overflow:auto}
+  .navsec{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#5c6b93;padding:14px 10px 6px;font-weight:600}
+  .navitem{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:#b9c3dd;cursor:pointer;font-size:13.5px;transition:background .15s,color .15s;border:none;background:transparent;text-align:left;width:100%;font-family:inherit}
+  .navitem:hover{background:rgba(255,255,255,.06);color:#fff}
+  .navitem.active{background:var(--brand);color:#fff;font-weight:600;box-shadow:0 4px 12px rgba(47,84,235,.35)}
+  .navitem .ic{width:18px;height:18px;flex:none;opacity:.9}
+  .navitem .badge{margin-left:auto;background:var(--err);color:#fff;font-size:10.5px;border-radius:99px;padding:1px 7px;font-weight:600}
+  .navitem .badge.warn{background:var(--warn)}
+  .riskbox{margin:10px;padding:12px;border-radius:10px;background:rgba(184,83,9,.12);border:1px solid rgba(236,158,58,.35)}
+  .riskbox .t{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:#f5c069}
+  .riskbox .n{font-size:11px;color:#c9cfde;line-height:1.5;margin-top:6px}
+  .riskbox.green{background:rgba(22,128,60,.14);border-color:rgba(52,199,123,.35)}
+  .riskbox.green .t{color:#5fe0a0}
+  .riskline{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink);background:rgba(184,83,9,.1);border:1px solid rgba(184,83,9,.35);padding:11px 13px;border-radius:9px}
+  .riskdot{width:9px;height:9px;border-radius:50%;background:#f0a03a;box-shadow:0 0 0 3px rgba(240,160,58,.25);flex:none}
+  aside .foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;font-size:12.5px;color:#aeb8d2}
+  aside .foot .ava{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a78bfa);display:grid;place-items:center;font-size:12px;color:#fff;font-weight:600}
+  /* ---------- main ---------- */
+  main{display:flex;flex-direction:column;min-width:0}
+  header.top{position:sticky;top:0;z-index:20;background:rgba(250,251,253,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:0 28px;height:60px;display:flex;align-items:center;gap:16px}
+  header.top h1{font-size:17px;font-weight:700;margin:0;letter-spacing:-.01em}
+  header.top .crumb{color:var(--muted);font-size:13px}
+  .headright{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .health{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);background:#fff;border:1px solid var(--line);padding:6px 11px;border-radius:99px}
+  .health .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px var(--ok-bg)}
+  .health .dot.warn{background:var(--warn);box-shadow:0 0 0 4px var(--warn-bg)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--brand);color:#fff;border:1px solid var(--brand);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s,transform .05s;white-space:nowrap}
+  .btn:hover{background:var(--brand-d)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:#fff;color:var(--brand);border-color:var(--line-strong)}
+  .btn.ghost:hover{background:var(--brand-soft);border-color:var(--brand)}
+  .btn.sm{padding:6px 10px;font-size:12.5px;border-radius:7px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.ghost.danger{color:var(--err);border-color:#f0c2c2}
+  .btn.ghost.danger:hover{background:var(--err-bg);border-color:var(--err)}
+  /* ---------- content ---------- */
+  .content{padding:24px 28px 48px;display:flex;flex-direction:column;gap:20px;max-width:1280px;width:100%}
+  .view{display:none;flex-direction:column;gap:20px;animation:fade .25s ease}
+  .view.active{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .card-hd{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+  .card-hd h2{margin:0;font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+  .card-hd .hint{color:var(--muted);font-size:12px}
+  .card-hd .t-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .card-bd{padding:18px}
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .kpi::after{content:"";position:absolute;inset:0 auto 0 0;width:3px}
+  .kpi.b-brand::after{background:var(--brand)}.kpi.b-ok::after{background:var(--ok)}.kpi.b-warn::after{background:var(--warn)}.kpi.b-info::after{background:var(--info)}
+  .kpi .lab{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .kpi .val{font-size:27px;font-weight:700;letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums}
+  .kpi .val small{font-size:14px;font-weight:500;color:var(--muted);margin-left:3px}
+  .kpi .delta{margin-top:6px;font-size:12px;color:var(--muted)}
+  .kpi .delta b{color:var(--ok);font-weight:600}
+  .kpi .delta b.down{color:var(--err)}
+  /* table */
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  thead th{text-align:left;padding:10px 16px;font-size:12px;font-weight:600;color:var(--muted);background:#f8fafc;border-bottom:1px solid var(--line);white-space:nowrap;user-select:none}
+  tbody td{padding:12px 16px;border-bottom:1px solid #f0f2f7;vertical-align:middle}
+  tbody tr{transition:background .12s;cursor:pointer}
+  tbody tr:hover{background:#f5f8ff}
+  tbody tr.sel{background:var(--brand-soft);box-shadow:inset 3px 0 0 var(--brand)}
+  .cell-name{font-weight:600;display:flex;flex-direction:column;line-height:1.35}
+  .cell-name small{color:var(--faint);font-weight:400;font-size:11.5px;font-family:var(--mono)}
+  .tag{display:inline-block;background:#eef2ff;color:var(--brand-d);border-radius:5px;padding:2px 7px;font-size:11.5px;margin:1px 2px 1px 0;font-weight:500}
+  .skill{background:#f1f5f9;color:#475569;border-radius:5px;padding:2px 7px;font-size:11.5px;margin:1px 2px 1px 0;display:inline-block}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap}
+  .badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+  .b-ok{background:var(--ok-bg);color:var(--ok)}.b-warn{background:var(--warn-bg);color:var(--warn)}.b-err{background:var(--err-bg);color:var(--err)}.b-info{background:var(--info-bg);color:var(--info)}.b-gray{background:#eef1f6;color:#64748b}
+  .scorewrap{display:flex;align-items:center;gap:9px;min-width:96px}
+  .scorebar{flex:1;height:6px;background:#eef1f6;border-radius:99px;overflow:hidden;max-width:46px}
+  .scorebar i{display:block;height:100%;border-radius:99px}
+  .scorenum{font-weight:700;font-variant-numeric:tabular-nums;font-size:13px;min-width:22px;text-align:right}
+  .s-high i{background:var(--ok)}.s-high .scorenum{color:var(--ok)}
+  .s-mid i{background:var(--warn)}.s-mid .scorenum{color:var(--warn)}
+  .s-low i{background:var(--err)}.s-low .scorenum{color:var(--err)}
+  .s-none i{background:#cbd5e1}.s-none .scorenum{color:var(--faint)}
+  .empty{padding:34px;text-align:center;color:var(--faint);font-size:13px}
+  /* toolbar / filers / seg */
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line);background:#fff}
+  .tsearchbox{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;align-items:center}
+  .seg{display:inline-flex;background:#eef1f6;border-radius:8px;padding:3px}
+  .seg button{border:none;background:transparent;padding:6px 13px;font-size:12.5px;border-radius:6px;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:500}
+  .seg button.active{background:#fff;color:var(--ink);box-shadow:var(--shadow);font-weight:600}
+  .search{position:relative}
+  .search input{border:1px solid var(--line-strong);border-radius:8px;padding:8px 12px 8px 32px;font-size:13px;width:180px;font-family:inherit;outline:none;background:#fff;transition:border .15s,box-shadow .15s}
+  .search input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,84,235,.12)}
+  .search .ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none}
+  select, input[type=text], input[type=number]{border:1px solid var(--line-strong);border-radius:8px;padding:8px 11px;font-size:13px;font-family:inherit;color:var(--ink);outline:none;background:#fff}
+  select:focus,input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,84,235,.12)}
+  input[type=number]{width:110px}
+  label.f{font-size:12px;color:var(--muted);font-weight:600}
+  .pfoot{padding:12px 16px;border-top:1px solid var(--line);display:flex;align-items:center;font-size:12.5px;color:var(--muted)}
+  /* drawer */
+  .drawer{position:fixed;top:60px;right:0;bottom:0;width:460px;max-width:94vw;background:var(--canvas);border-left:1px solid var(--line-strong);box-shadow:var(--shadow-lg);transform:translateX(102%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:40;display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .drawer-hd{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px;background:#fff}
+  .drawer-hd .ava{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--brand),#7d6bff);color:#fff;display:grid;place-items:center;font-weight:700;font-size:16px;flex:none}
+  .drawer-hd .nm{font-size:17px;font-weight:700}
+  .drawer-hd .meta{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.6}
+  .drawer-hd .x{margin-left:auto;border:none;background:#f1f5f9;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;color:var(--muted);font-family:inherit}
+  .drawer-hd .x:hover{background:#e2e8f0}
+  .drawer-bd{flex:1;overflow:auto;padding:20px}
+  .dsec{margin-bottom:20px}
+  .dsec .dt{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:6px}
+  .dsec .dt::after{content:"";flex:1;height:1px;background:var(--line)}
+  .kv{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .kv .k{font-size:12px;color:var(--faint)}.kv .v{font-size:13px;font-weight:600;margin-top:2px}
+  .pl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+  .pl li{background:#fff;border:1px solid var(--line);border-radius:8px;padding:11px 12px}
+  .pl li .co{font-weight:600;font-size:13px}.pl li .ro{color:var(--muted);font-size:12px;margin-top:2px}.pl li .dur{float:right;color:var(--faint);font-size:11.5px}
+  .rawtext{background:#0e1526;color:#cfe0ff;border-radius:9px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.7;white-space:pre-wrap}
+  /* pipeline */
+  .pipe{display:flex;gap:6px}
+  .pipe .step{flex:1;text-align:center;font-size:11.5px;color:var(--muted)}
+  .pipe .step .bar{height:8px;border-radius:6px;margin-bottom:6px;background:#e9edf5;position:relative;overflow:hidden}
+  .pipe .step.ok .bar{background:var(--ok)}.pipe .step.run .bar{background:var(--brand)}
+  .pipe .step.run .bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 6px,rgba(255,255,255,.35) 6px,transparent 10px);animation:strip 1s linear infinite}
+  @keyframes strip{to{background-position:20px 0}}
+  .pipe .step.warn .bar{background:var(--warn)}
+  .pipe .step .n{font-weight:600;color:var(--ink)}
+  .textfield{font-size:12.5px;color:var(--muted);line-height:1.7}
+  /* log */
+  .log{background:#0e1526;color:#cfe0ff;border-radius:10px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.7;height:220px;overflow:auto;white-space:pre-wrap}
+  .log .ok{color:#5ce0a0}.log .warn{color:#f5c069}.log .err{color:#ff8f80}.log .dim{color:#5c6b93}.log .t{color:#7f8db5}
+  /* audit */
+  .audit{display:flex;flex-direction:column}
+  .audit .item{display:flex;gap:14px;padding:11px 18px;border-bottom:1px solid #f0f2f7;align-items:baseline}
+  .audit .item:last-child{border-bottom:none}
+  .audit .act{font-weight:600}.audit .act small{color:var(--faint);font-weight:400;font-family:var(--mono);margin-left:6px}
+  .audit .who{font-size:12px;color:var(--muted)}.audit .ts{margin-left:auto;font-size:12px;color:var(--faint);font-family:var(--mono)}
+  /* jobs */
+  .jobgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .jobcard{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fff;transition:box-shadow .15s,transform .15s}
+  .jobcard:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+  .jobcard .jt{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+  .jobcard .jid{font-family:var(--mono);font-size:11.5px;color:var(--faint);font-weight:400}
+  .jobcard .stat{margin-left:auto}
+  .jobcard .kw{margin-top:9px}
+  .jobcard .ftr{margin-top:11px;display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px}
+  .jdform{display:flex;flex-direction:column;gap:12px}
+  .jdform label{font-size:12px;color:var(--muted);font-weight:600}
+  .jdform input,.jdform textarea{width:100%;padding:9px 11px;border:1px solid var(--line-strong);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical}
+  .jdform textarea{min-height:90px}
+  .kwchips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:#eef2ff;color:var(--brand-d);border:1px solid #d6defc;border-radius:99px;padding:4px 11px;font-size:12.5px;font-weight:500}
+  .gobtn{text-align:right}
+  /* settings */
+  .acctrow{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--line);border-radius:9px;margin-bottom:8px}
+  /* form grid */
+  .fgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .split2{display:grid;grid-template-columns:1.6fr 1fr;gap:20px}
+  /* job detail modal */
+  .modal{position:fixed;inset:0;background:rgba(13,18,32,.55);backdrop-filter:blur(2px);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal.open{display:flex}
+  .modalcard{background:var(--canvas);border-radius:14px;max-width:560px;width:100%;max-height:86vh;overflow:auto;box-shadow:var(--shadow-lg)}
+  .modal-hd{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px 14px 0 0;position:sticky;top:0;z-index:1}
+  .modal-bd{padding:20px;display:flex;flex-direction:column;gap:16px}
+  .modaltip{padding:12px 14px;border:1px dashed var(--line-strong);border-radius:9px;background:#fff;font-size:12.5px;color:var(--muted);line-height:1.7;white-space:pre-wrap}
+  .jdsnippet{background:#0e1526;color:#cfe0ff;border-radius:9px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.7;white-space:pre-wrap;max-height:200px;overflow:auto}
+  .jobcandline{display:flex;align-items:center;gap:12px;margin-top:11px;font-size:12.5px;color:var(--muted)}
+  .jobcandline b{color:var(--brand);font-size:15px}
+  /* extra candidate filters */
+  .filtrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 18px;border-bottom:1px solid var(--line);background:#fbfcfe;font-size:12.5px}
+  .filtrow label{font-size:12px;color:var(--faint);font-weight:600}
+  .filtrow select,.filtrow input[type=number]{font-size:12.5px;padding:6px 8px}
+  .filtrow input[type=number]{width:70px}
+  /* BOSS 账号卡 + 采集工作流步骤条 */
+  .bossbar{background:linear-gradient(135deg,#0e1526,#15213b)}
+  .bossbar .badge{background:rgba(34,197,94,.16);color:#34d399}
+  .bossavatar{flex:none;width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,#2f54eb,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;box-shadow:0 8px 20px rgba(47,84,235,.35)}
+  .greetstat{font-size:12.5px;color:#8b97bd;background:#0a0f1d;padding:8px 14px;border-radius:9px;border:1px solid #26304d}
+  .pipe{display:flex;flex-direction:column}
+  .pex{display:flex;gap:12px;align-items:flex-start;padding:10px 4px;border-bottom:1px dashed var(--line)}
+  .pex:last-child{border-bottom:none}
+  .pd{width:26px;height:26px;border-radius:50%;border:2px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);flex:none}
+  .pex.done .pd{border-color:var(--brand);background:var(--brand);color:#fff}
+  .pd svg{width:12px;height:12px}
+  .pl{font-size:13px;color:var(--ink);line-height:1.5}
+  .pnote{font-size:12px;color:var(--muted);margin-top:2px}
+  /* 登录界面 */
+  .login{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:radial-gradient(1200px 600px at 20% 0%,#16213c 0%,#0a0f1d 55%,#05080f 100%);padding:20px}
+  .login.open{display:flex}
+  .loginbox{width:100%;max-width:400px;background:var(--canvas);border:1px solid var(--line);border-radius:16px;padding:26px 26px 20px;box-shadow:var(--shadow-lg)}
+  .loginhd{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  .loginhd h1{font-size:19px;margin:0;color:var(--ink)}
+  .loginhd span{font-size:12px;color:var(--muted)}
+  .logininput{display:flex;align-items:center;gap:8px;border:1px solid var(--line-strong);border-radius:9px;padding:0 11px;background:#fff;margin-top:6px}
+  .logininput svg{color:var(--faint);flex:none}
+  .logininput input{flex:1;border:none;outline:none;padding:11px 0;font-size:13.5px;background:transparent;color:var(--ink)}
+  .loginerr{min-height:16px;font-size:12px;color:var(--err);margin-top:6px}
+  .loginbtn{width:100%;padding:11px;font-size:14px;margin-top:4px}
+  .loginfoot{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+  .accchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .accchips button{padding:7px 12px;border-radius:20px;border:1px solid var(--line-strong);background:#fff;color:#334;font-size:12.5px;cursor:pointer}
+  .accchips button:hover{border-color:var(--brand);color:var(--brand);background:#f1f6ff}
+  .loginfoot .hint{margin-top:12px;font-size:11.5px;color:var(--faint);line-height:1.6}
+  /* 账号管理弹窗 */
+  .acctgrid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .acctgrid.c-single{grid-template-columns:1fr;max-width:720px}
+  /* 设置：我的账号与 BOSS 绑定 美化 */
+  .profilehead{display:flex;gap:14px;align-items:center;padding:2px 0 12px;border-bottom:1px solid var(--line)}
+  .profilehead .pava{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--brand),#7d6bff);color:#fff;display:grid;place-items:center;font-size:24px;font-weight:700;flex:none;box-shadow:0 6px 14px rgba(47,84,235,.22);letter-spacing:0}
+  .profilehead .pt{flex:1;min-width:0}
+  .profilehead .pn{font-size:18px;font-weight:700;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .profilehead .pm{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.6}
+  .profilehead .pm b{color:var(--ink);font-weight:600}
+  .rolebadge{font-size:11px;font-weight:600;padding:2px 11px;border-radius:999px;background:var(--brand-soft);color:var(--brand-d);vertical-align:1px}
+  .rolebadge.ra{background:#eef1f8;color:#5c6b93}
+  .ibox{border:1px solid var(--line);border-radius:12px;background:#fbfcfe;padding:15px 16px;margin-top:14px}
+  .ibox .ibox-hd{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:4px}
+  .ibox .ibox-hd svg{color:var(--brand);flex:none}
+  .ibox .ibox-hd .tag{margin-left:auto;font-size:11px;font-weight:600;padding:2px 11px;border-radius:999px;white-space:nowrap}
+  .tag.t-unbound{background:#fff4e0;color:#b06a00}
+  .tag.t-bound{background:#e6f7ef;color:#0b7a4b}
+  .ibox .ibox-sub{font-size:11.5px;color:var(--faint);margin-bottom:13px}
+  .fld{display:flex;flex-direction:column;gap:5px;margin-top:12px}
+  .fld:first-of-type{margin-top:4px}
+  .fld label{font-size:12px;color:var(--muted);font-weight:600}
+  .fld input{width:100%;box-sizing:border-box;border:1px solid var(--line-strong);border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:var(--ink);outline:none;background:#fff;transition:border-color .12s,box-shadow .12s}
+  .fld input::placeholder{color:#b3bccb}
+  .fld input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,84,235,.12)}
+  .fld .tip{font-size:11px;color:var(--faint);line-height:1.6}
+  .bossnote{display:flex;gap:8px;align-items:flex-start;border-left:3px solid var(--brand);background:#f4f7ff;border-radius:0 8px 8px 0;padding:9px 12px;margin-top:14px}
+  .bossnote svg{color:var(--brand);flex:none;margin-top:1px}
+  .bossnote .bn-txt{font-size:11.5px;color:#5a6a9a;line-height:1.7}
+  .bossnote .bn-txt b{color:var(--brand-d);font-weight:600}
+  .ssave{width:100%;margin-top:14px}
+  .ssec{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+  .ssec .kvrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .ssec .kvrow .k{font-size:11.5px;color:var(--faint)}.ssec .kvrow .v{font-size:13px;font-weight:600;margin-top:3px}
+  @media(max-width:760px){.ssec .kvrow{grid-template-columns:1fr 1fr}}
+  .urow{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .urow:last-child{border-bottom:none}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:r .6s linear infinite;vertical-align:-2px}
+  @keyframes r{to{transform:rotate(360deg)}}
+  .toast{position:fixed;bottom:24px;right:24px;background:#0e1526;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(8px);transition:.25s;z-index:60}
+  .toast.show{opacity:1;transform:none}
+  /* ---------- 扫码登录 BOSS ---------- */
+  .bossbtns{display:flex;gap:8px;margin-top:14px}
+  .bossbtns .btn{flex:1}
+  .scanmodal{position:fixed;inset:0;background:rgba(10,15,30,.55);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+  .scanmodal.show{display:flex}
+  .scanbox{background:#fff;border-radius:14px;padding:20px 22px;width:340px;max-width:100%;box-shadow:var(--shadow-lg);text-align:center}
+  .scanbox h3{margin:0 0 4px;font-size:15px}
+  .scanbox .scan-sub{font-size:12px;color:var(--faint);margin-bottom:14px;line-height:1.6}
+  .scanqrcode{width:230px;height:230px;margin:0 auto;border:1px solid var(--line);border-radius:12px;background:#fafbff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .scanqrcode img{width:100%;height:100%;object-fit:contain;display:block}
+  #scanQrPh{font-size:12.5px;color:var(--faint);line-height:1.6;padding:8px}
+  .scan-status{margin-top:12px;font-size:12.5px;color:var(--muted);min-height:18px}
+  .scan-status.ok{color:#1a7f37;font-weight:600}
+  .scan-status.err{color:var(--err)}
+  .scan-foot{margin-top:16px;display:flex;gap:8px;justify-content:center}
+  .scan-foot .btn{min-width:84px}
+  /* ---------- 系统运行日志 ---------- */
+  .logtoolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .logtoolbar .chip{border:1px solid var(--line-strong);background:#fbfcfe;padding:5px 12px;border-radius:999px;font-size:12.5px;color:var(--muted);cursor:pointer;transition:.12s}
+  .logtoolbar .chip:hover{border-color:var(--brand)}
+  .logtoolbar .chip.chip-on{background:var(--brand);border-color:var(--brand);color:#fff}
+  .logbox{max-height:62vh;overflow:auto;padding:8px 0;font-family:var(--mono)}
+  .logline{display:flex;align-items:baseline;gap:10px;padding:8px 16px;border-bottom:1px dashed #eef1f7;font-size:12px;line-height:1.55}
+  .logline:hover{background:#fafcff}
+  .log-ts{color:var(--faint);white-space:nowrap}
+  .log-lv{flex:none;min-width:38px;text-align:center}
+  .logline.log-info .log-lv{background:#eef2ff;color:#4a5fd0}
+  .logline.log-warn .log-lv{background:#fff6e8;color:#c07a00}
+  .logline.log-warn .log-msg{color:#9a6a00}
+  .logline.log-err .log-lv{background:#ffecec;color:#d23c3c}
+  .logline.log-err{background:#fffafa}
+  .log-scope{flex:none;color:var(--brand);font-size:11px;background:var(--brand-soft);padding:1px 8px;border-radius:999px}
+  .log-msg{flex:1;min-width:0;word-break:break-all;white-space:pre-wrap;color:var(--ink)}
+  @media(max-width:1080px){.split2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.jobgrid{grid-template-columns:1fr}.fgrid{grid-template-columns:1fr 1fr}}
+  @media(max-width:860px){.shell{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;align-items:center;overflow:visible}nav{flex-direction:row;overflow-x:auto}.navsec,aside .foot,.riskbox{display:none}}
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
+  /* ---------- 触达/沟通 · 话术库 ---------- */
+  .tiergrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .tier{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--line);border-radius:var(--r-sm);background:#fbfcfe}
+  .tier-hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .tier-hd b{font-size:13.5px;color:var(--ink)}
+  .tier .now{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:8px;background:var(--brand-soft);border:1px solid #dbe3ff}
+  .tier .now .v{font-size:12.5px;line-height:1.6;color:var(--ink)}
+  .tier .now .s{font-size:11px;color:var(--brand-d)}
+  .verlist{display:flex;flex-direction:column;gap:6px}
+  .tver{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;transition:border-color .12s,background .12s}
+  .tver:hover{border-color:var(--brand)}
+  .tver .c{flex:1;font-size:12.5px;color:#33415c;line-height:1.45}
+  .tver .act{font-size:11px;color:var(--faint);flex:none}
+  .tier .add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+  .tier .add textarea{flex:1 1 240px;border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;resize:vertical;min-height:50px}
+  @media(max-width:1180px){.tiergrid{grid-template-columns:1fr}}
+  .chiprow{display:flex;flex-wrap:wrap;gap:8px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- ===== Sidebar ===== -->
+  <aside>
+    <div class="logo">
+      <div class="mark">聘</div>
+      <div style="display:flex;flex-direction:column">
+        <span class="name">伯乐招聘系统</span>
+        <span class="sub">招聘提效模块 · 已启用</span>
+      </div>
+    </div>
+    <nav>
+      <div class="navsec">运营台</div>
+      <button class="navitem active" data-view="overview"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="5" rx="1.5" stroke="currentColor"/><rect x="13" y="3" width="8" height="5" rx="1.5" stroke="currentColor"/><rect x="3" y="10" width="8" height="11" rx="1.5" stroke="currentColor"/><rect x="13" y="10" width="8" height="11" rx="1.5" stroke="currentColor"/></svg>运营总览</button>
+      <button class="navitem" data-view="jobs"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 7h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 12h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 17h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>招聘岗位</button>
+      <button class="navitem" data-view="schedule"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="16" rx="2" stroke="currentColor"/><path d="M8 3v4M16 3v4M4 11h16" stroke="currentColor"/></svg>采集调度</button>
+      <button class="navitem" data-view="candidates"><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor"/><path d="M3.5 19c.5-3.5 3-5.5 5.5-5.5s5 2 5.5 5.5" stroke="currentColor" stroke-linecap="round"/><circle cx="17" cy="9" r="2.4" stroke="currentColor"/><path d="M16 13.5c2.8.3 4.5 2.3 4.9 5.5" stroke="currentColor" stroke-linecap="round"/></svg>候选人库<span class="badge" id="navCandBadge" style="display:none">0</span></button>
+      <button class="navitem" data-view="talent"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l-6 5v13h12V8l-6-5z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.4"/><path d="M9.5 17c.6-1 1.4-1.6 2.5-1.6s1.9.6 2.5 1.6" stroke-linecap="round"/></svg>人才库<span class="badge" id="navTalentBadge" style="display:none">0</span></button>
+      <div class="navsec">沟通</div>
+      <button class="navitem" data-view="engage"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.5 8.5 0 01-12.8 7.3L3 21l1.6-4.4A8.5 8.5 0 1121 11.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 11.5h7M8.5 14.5h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>触达沟通</button>
+      <button class="navitem" data-view="tapaudit"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="8" y="3" width="8" height="4" rx="1" stroke="currentColor"/><path d="M6 7h12l-1.5 13a2 2 0 01-2 1.8H9.5a2 2 0 01-2-1.8L6 7z" stroke="currentColor"/><path d="M10 11v5M14 11v5" stroke="currentColor" stroke-linecap="round"/></svg>触达审计</button>
+      <div class="navsec">治理</div>
+      <button class="navitem" data-view="audit"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke="currentColor" stroke-linecap="round"/><rect x="7" y="9.5" width="10" height="5" rx="2.5" transform="rotate(45 12 12)" stroke="currentColor"/></svg>审计留痕</button>
+      <button class="navitem" data-view="settings"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" stroke="currentColor"/><path d="M19 12a7 7 0 01.1-1l2-1.5-2-3.4-2.4.7a7.5 7.5 0 00-1.7-1L14.8 3.4h-5.6l-.4 2.4a7.5 7.5 0 00-1.7 1l-2.4-.7-2 3.4 2 1.5a7 7 0 000 2l-2 1.5 2 3.4 2.4-.7a7.5 7.5 0 001.7 1l.4 2.4h5.6l.4-2.4a7.5 7.5 0 001.7-1l2.4.7 2-3.4-2-1.5a7 7 0 01-.1-1z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>准入与护栏</button>
+      <div class="navsec">系统</div>
+      <button class="navitem" data-view="logs"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" stroke="currentColor"/><path d="M8 9h8M8 12h8M8 15h5" stroke="currentColor" stroke-linecap="round"/></svg>运行日志</button>
+	    </nav>
+    <div class="foot">
+      <div class="ava" id="footAva">—</div>
+      <div style="display:flex;flex-direction:column;line-height:1.4;flex:1;min-width:0">
+        <span id="footName" style="color:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">未登录</span>
+        <label class="f" style="color:#8b97bd;font-size:10.5px">岗位按登录账号隔离</label>
+        <button class="btn ghost sm" id="logoutBtn" style="margin-top:6px;width:100%;border-color:#26304d;color:#8b97bd">退出登录</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== Main ===== -->
+  <main>
+    <header class="top">
+      <div style="display:flex;flex-direction:column"><h1 id="pageTitle">运营总览</h1><span class="crumb" id="pageSub">招聘提效模块 · 数据看板</span></div>
+      <div class="headright">
+        <div class="health"><span class="dot" id="healthDot"></span><span id="healthTxt">网关检测中</span></div>
+        <button class="btn ghost sm" id="btnRefresh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-2.6-6.4M21 5v4h-4"/></svg>刷新</button>
+        <button class="btn" id="topRun"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 4l14 8-14 8V4z"/></svg>运行采集</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ============ VIEW 1: OVERVIEW ============ -->
+      <section class="view active" id="v-overview">
+        <div class="kpis">
+          <div class="kpi b-brand"><div class="lab">候选人累计入库</div><div class="val"><span id="kCands">0</span><small>人</small></div><div class="delta">岗位 <b id="kJobs">0</b> · 来源含 BOSS/模拟</div></div>
+          <div class="kpi b-ok"><div class="lab">已匹配（含匹配分）</div><div class="val"><span id="kMatched">0</span><small>人</small></div><div class="delta">平均分 <b id="kAvgScore">—</b></div></div>
+          <div class="kpi b-info"><div class="lab">简历解析成功</div><div class="val"><span id="kParsed">0</span><small>份</small></div><div class="delta">原文加密存储 · 脱敏展示</div></div>
+          <div class="kpi b-warn"><div class="lab">定时调度任务</div><div class="val"><span id="kSched">0</span><small>个</small></div><div class="delta">最近周期 <span id="kCycle">—</span></div></div>
+        </div>
+
+        <div class="split2">
+          <div class="card">
+            <div class="card-hd"><h2>采集流水线</h2><span class="hint">JD 解析 → 采集 → 简历解析 → JD 匹配</span></div>
+            <div class="card-bd">
+              <div class="pipe">
+                <div class="step ok"><div class="bar"></div><span class="n">JD 解析</span><div id="pJd">—</div></div>
+                <div class="step run"><div class="bar"></div><span class="n">采集</span><div id="pCollect">—</div></div>
+                <div class="step run"><div class="bar"></div><span class="n">简历解析</span><div id="pParse">—</div></div>
+                <div class="step warn"><div class="bar"></div><span class="n">JD 匹配</span><div id="pMatch">—</div></div>
+              </div>
+              <p class="textfield" style="margin-top:16px">流水线由事件驱动串联：<b style="color:var(--ink)">candidate.sourced → resume.parsed → match</b>。点击右上角「运行采集」可触发一轮完整链路。</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><h2>当前运行状态</h2><span class="hint">调度器 · 网关于线</span></div>
+            <div class="card-bd" style="display:flex;gap:14px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:10px" id="schedStatus">
+                <div class="textfield">调度器 服务端常驻 · 重启自动续跑持久化任务。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>高分候选人（按匹配分）</h2><span class="hint">前 8 名 · 点击查看详情</span></div>
+          <div class="card-bd" style="padding:0">
+            <table><thead><tr><th>候选人</th><th>岗位</th><th>年限</th><th>核心技能</th><th>状态</th><th>匹配分</th><th></th></tr></thead>
+            <tbody id="ovCand"></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW 2: JOBS ============ -->
+      <section class="view" id="v-jobs">
+        <div class="card">
+          <div class="card-hd"><h2>招聘岗位</h2><span class="hint">粘贴 JD 自动解析，可人工微调</span></div>
+          <div class="card-bd">
+            <div class="jobgrid" id="jobListBox"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h2>新增岗位</h2><span class="hint">自动从 JD 抽取搜索关键词</span></div>
+          <div class="card-bd">
+            <form class="jdform" id="jdForm">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div><label>岗位编号</label><input id="jJobId" placeholder="例如 frontend_01" /></div>
+                <div><label>岗位名称</label><input id="jTitle" placeholder="例如 前端工程师" /></div>
+              </div>
+              <div><label>JD 原文（粘贴岗位职责 / 要求）</label><textarea id="jJd" placeholder="粘贴 JD 文本，系统将自动抽取学历、经验、技能关键词…"></textarea></div>
+              <div class="gobtn"><button class="btn" type="submit" id="jbtn">创建并解析岗位</button></div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW 3: SCHEDULE ============ -->
+      <section class="view" id="v-schedule">
+        <div class="card bossbar">
+          <div class="card-hd" style="border:none;padding-bottom:4px">
+            <h2 style="color:#fff">BOSS 直聘 · 采集账号</h2>
+            <span class="hint" style="color:#8b97bd">打招呼 / 索要简历由此账号登录态发出</span>
+            <div class="t-right"><button class="btn ghost sm" id="bossTieBtn" style="border-color:#2c3a5e;color:#cdd6f4">绑定 / 更换 BOSS</button></div>
+          </div>
+          <div class="card-bd" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-top:6px">
+            <div class="bossavatar"><span id="bossAva">A1</span></div>
+            <div style="flex:1;min-width:230px">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:16px;color:#fff" id="bossName">BOSS 账号 · 王先生</b><span class="badge">● BOSS 已登录</span></div>
+              <div class="textfield" style="font-size:12px;color:#8b97bd;margin-top:6px">仅<b style="color:#cdd6f4">绑定 BOSS 账号</b>不足以自动打招呼——需保持 BOSS 网页端<b style="color:#cdd6f4">登录会话在线</b>，采集调度才会以该账号身份执行搜索与打招呼；且只对合规筛选通过的候选人发送，受风控护栏控制。</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-width:208px">
+              <div class="greetstat" id="bossBound">未绑定 BOSS 直聘账号</div>
+              <div class="greetstat" id="greetStat">尚未发送打招呼</div>
+              <button class="btn sm" id="bossGoAcct" style="width:100%">去「设置」绑定 BOSS 账号</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>风控护栏 · 关注中</h2><span class="hint">采集全过程风险状态 · 自动熔断 / 脱敏</span></div>
+          <div class="card-bd">
+            <div class="riskline"><span class="riskdot"></span><span id="riskTxt">间隔随机化 · 会话/每日上限护栏 · 冷却 · 熔断 · 敏感字段脱敏</span></div>
+            <div class="chiprow" style="margin-top:12px">
+              <span class="chip">间隔随机化 3–8s</span><span class="chip">会话上限</span><span class="chip">冷却 30min</span><span class="chip">熔断保护</span><span class="chip">日/全局最小间隔护栏</span><span class="chip">敏感字段默认脱敏</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>BOSS 采集工作流</h2><span class="hint">一次完整寻源：搜索 → 打招呼 → 索要简历 → 解析 → 匹配</span></div>
+          <div class="card-bd">
+            <div class="pipe" id="pipe"></div>
+            <div class="textfield" style="margin-top:14px">运行采集后，系统以<b>当前 BOSS 账号</b>搜索候选人 → 发送打招呼 → 回应后索要简历（docx/PDF）→ AI 解析入库 → 生成岗位匹配分。下方运行终端实时输出每个环节，候选人在线“打招呼”也可手动单独触发。</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>定时批量调度</h2><span class="hint">按岗位周期触发 · 受全局最小间隔节流</span>
+            <div class="t-right">
+              <button class="btn sm" id="runJob">▸ 立即运行所选</button>
+            </div>
+          </div>
+          <div class="card-bd">
+            <div class="fgrid">
+              <div><label class="f">目标岗位</label><select id="schJob" style="width:100%"></select></div>
+              <div><label class="f">关键词(可选)</label><input type="text" id="schKw" placeholder="前端工程师" style="width:100%"></div>
+              <div><label class="f">间隔(分钟)</label><input type="number" id="schInterval" min="1" value="60" style="width:100%"></div>
+              <div style="display:flex;align-items:flex-end"><button class="btn" style="width:100%" id="btnAddSch">新增定时任务</button></div>
+            </div>
+          </div>
+          <div class="card-bd" style="border-top:1px solid var(--line)">
+            <div id="schedList"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h2>采集运行终端</h2><span class="hint">BOSS 采集 · 失败自动降级离线冒烟 · 留痕审计</span>
+            <div class="t-right">
+              <button class="btn ghost sm" id="btnGreet">👋 发送打招呼（所选岗位）</button>
+              <button class="btn ghost sm" id="btnRecommend">⭐ 推荐牛人寻访（所选岗位）</button>
+              <button class="btn ghost sm" id="btnSmoke">离线冒烟</button>
+              <button class="btn sm" id="btnCollect">运行 BOSS 采集</button>
+            </div>
+          </div>
+          <div class="card-bd">
+            <div class="log" id="collectLog"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW 4: CANDIDATES ============ -->
+      <section class="view" id="v-candidates">
+        <div class="card">
+          <div class="toolbar">
+            <div class="seg" id="statusSeg"></div>
+            <div class="tsearchbox">
+              <div class="search"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="fKw" placeholder="姓名 / 期望…"/></div>
+              <input type="text" id="fSkill" placeholder="技能" style="width:110px"/>
+              <input type="text" id="fEdu" placeholder="学历/院校" style="width:130px"/>
+              <button class="btn sm" id="btnSearch">检索</button>
+              <button class="btn ghost sm" id="btnReset">重置</button>
+            </div>
+            <button class="btn ghost sm" onclick="location.href='/export/candidates.csv'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>导出 CSV</button>
+            <button class="btn ghost sm" onclick="location.href='/export/candidates.xlsx'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>导出 Excel</button>
+          </div>
+          <div class="filtrow">
+            <label>岗位</label><select id="fJob"><option value="">全部岗位</option></select>
+            <label>来源</label><select id="fSource"><option value="">全部来源</option></select>
+            <label>学历</label><select id="fDeg"><option value="">全部学历</option><option>大专</option><option>本科</option><option>硕士</option><option>博士</option></select>
+          </div>
+          <div class="filtrow">
+            <label>工作年限 ≥</label><input type="number" id="fYears" min="0" value="" placeholder="年" />
+            <label>匹配分 ≥</label><input type="number" id="fScore" min="0" max="100" value="" placeholder="0-100" />
+            <label>触达状态</label><select id="fTouch"><option value="">全部状态</option><option value="pending">待触达</option><option value="engaging">跟进中</option><option value="replied">已回复</option><option value="sleeping">已沉睡</option></select>
+            <label>联系方式</label><select id="fContact"><option value="">全部</option><option value="has">已获取</option><option value="no">未获取</option></select>
+          </div>
+          <div class="filtrow">
+            <label>创建时间</label><select id="fCreated"><option value="">全部</option><option value="today">今日</option><option value="week">近7天</option><option value="month">近30天</option><option value="older">更早</option></select>
+            <button class="btn ghost sm" id="btnClearFilters">清除筛选</button>
+          </div>
+          <div style="overflow:auto">
+            <table><thead><tr><th>候选人</th><th>来源</th><th>年限</th><th>核心技能</th><th>期望薪资</th><th>状态</th><th>匹配分</th></tr></thead>
+            <tbody id="candTbody"></tbody></table>
+          </div>
+          <div class="pfoot"><span id="candCount"></span></div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW 5B: 人才库（全员共享，不随账号变化；无“岗位”筛选） ============ -->
+      <section class="view" id="v-talent">
+        <div class="card">
+          <div class="card-hd"><h2>人才库</h2><span class="hint">全员共享 · 不随登录账号变化 · 全量人才池（候选人在各账号下采集后沉淀于此）</span></div>
+          <div class="toolbar">
+            <div class="seg" id="talentSeg"></div>
+            <div class="tsearchbox">
+              <div class="search"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="tKw" placeholder="姓名 / 期望…"/></div>
+              <input type="text" id="tSkill" placeholder="技能" style="width:110px"/>
+              <input type="text" id="tEdu" placeholder="学历/院校" style="width:130px"/>
+              <button class="btn sm" id="tBtnSearch">检索</button>
+              <button class="btn ghost sm" id="tBtnReset">重置</button>
+            </div>
+            <button class="btn ghost sm" onclick="location.href='/export/candidates.csv'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>导出 CSV</button>
+            <button class="btn ghost sm" onclick="location.href='/export/candidates.xlsx'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>导出 Excel</button>
+          </div>
+          <div class="filtrow">
+            <label>来源</label><select id="tSource"><option value="">全部来源</option></select>
+            <label>学历</label><select id="tDeg"><option value="">全部学历</option><option>大专</option><option>本科</option><option>硕士</option><option>博士</option></select>
+          </div>
+          <div class="filtrow">
+            <label>工作年限 ≥</label><input type="number" id="tYears" min="0" value="" placeholder="年" />
+            <label>匹配分 ≥</label><input type="number" id="tScore" min="0" max="100" value="" placeholder="0-100" />
+            <label>触达状态</label><select id="tTouch"><option value="">全部状态</option><option value="pending">待触达</option><option value="engaging">跟进中</option><option value="replied">已回复</option><option value="sleeping">已沉睡</option></select>
+            <label>联系方式</label><select id="tContact"><option value="">全部</option><option value="has">已获取</option><option value="no">未获取</option></select>
+          </div>
+          <div class="filtrow">
+            <label>创建时间</label><select id="tCreated"><option value="">全部</option><option value="today">今日</option><option value="week">近7天</option><option value="month">近30天</option><option value="older">更早</option></select>
+            <button class="btn ghost sm" id="tBtnClearFilters">清除筛选</button>
+          </div>
+          <div style="overflow:auto">
+            <table><thead><tr><th>候选人</th><th>来源</th><th>年限</th><th>核心技能</th><th>期望薪资</th><th>状态</th><th>匹配分</th></tr></thead>
+            <tbody id="talentTbody"></tbody></table>
+          </div>
+          <div class="pfoot"><span id="talentCount"></span></div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW 7: ENGAGE（触达/沟通） ============ -->
+      <section class="view" id="v-engage">
+        <div class="card">
+          <div class="card-hd"><h2>打招呼话术库</h2><span class="hint">初次 / 二次激活 / 三次及以上 · 常用语或自定义 · 多版本切换 · 写入领域库并过 Schema</span>
+            <div class="t-right"><button class="btn ghost sm" id="btnMsgRefresh">刷新</button></div>
+          </div>
+          <div class="card-bd"><div class="tiergrid" id="msgTiers"></div></div>
+        </div>
+
+        <div class="split2">
+          <div class="card">
+            <div class="card-hd"><h2>自动打招呼</h2><span class="hint">监听 <code style="color:var(--brand)">match.score</code> · 匹配达标即发送当前生效「初次」话术</span>
+              <div class="t-right"><button class="btn sm" id="btnAutoGreet">⚡ 对全部匹配达标候选人打招呼</button></div>
+            </div>
+            <div class="card-bd">
+              <div class="textfield">触发条件：<b>匹配分 ≥ <span id="egThreshold" style="color:var(--brand)">60</span></b>，且尚未打招呼、未沉睡。发送后进入 <code>touchStatus</code> 状态机并写入审计（轮次/时点/对象/话术版本）。</div>
+              <div style="margin:12px 0"><span class="badge b-info" id="egAutoCount">0 已自动打招呼</span></div>
+              <div class="chiprow" id="egAutoList"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><h2>智能跟进引擎</h2><span class="hint">未读 / 已读双轨 · 隔 1 天 → ≥5 次降周频 → 满 1 月沉睡</span>
+              <div class="t-right"><button class="btn ghost sm" id="btnSweep">立即扫描</button></div>
+            </div>
+            <div class="card-bd" style="padding:0">
+              <table><thead><tr><th>候选人</th><th>轨</th><th>轮次</th><th>模式</th><th>下次跟进</th><th>状态</th></tr></thead>
+              <tbody id="fupTbody"></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="split2">
+          <div class="card">
+            <div class="card-hd"><h2>自动收取简历（F-1）</h2><span class="hint">候选人发送简历 → 自动点击 BOSS「同意」→ 触发解析；异常转人工待处理</span>
+              <div class="t-right"><button class="btn ghost sm" id="btnPendingRefresh">刷新</button></div>
+            </div>
+            <div class="card-bd" style="padding:0">
+              <table><thead><tr><th>候选人</th><th>岗位</th><th>转人工原因</th><th>操作</th></tr></thead>
+              <tbody id="pendingTbody"></tbody></table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><h2>交换联系方式（F-2）</h2><span class="hint">简历缺电话 → 自动发送交换话术（附我方联系方式）· 回复含手机号自动回写</span></div>
+            <div class="card-bd">
+              <label>我方联系方式（替换交换话术中的 [我方联系方式]）</label>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <input id="hrContactInput" placeholder="例如：HR小王 13900001111（BOSS 站内信）" style="flex:1">
+                <button class="btn sm" id="btnSaveContact">保存</button>
+              </div>
+              <div class="chiprow" id="hrContactHint" style="margin-top:12px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>打招呼批次（F-3 · 职位顺序 + 额度管控）</h2><span class="hint">全部职位顺序逐个打招呼 / 指定职位 · 各职位额度可自定义 · 到额自动切换 · 全程走风控护栏</span>
+            <div class="t-right"><button class="btn ghost sm" id="btnCampaignRefresh">刷新</button></div>
+          </div>
+          <div class="card-bd">
+            <form class="jdform" id="cgForm" style="margin-bottom:14px">
+              <div class="fgrid">
+                <div><label class="f">批次模式</label><select id="cgMode" style="width:100%">
+                  <option value="all_jobs">全部职位 · 按顺序逐个打招呼</option>
+                  <option value="selected_jobs">指定职位 · 自定义额度</option>
+                </select></div>
+                <div style="display:flex;align-items:flex-end"><button class="btn" type="submit" style="width:100%" id="cgBtn">创建批次</button></div>
+              </div>
+              <div id="cgJobQuotas" style="margin-top:10px"></div>
+            </form>
+            <div id="campaignList"></div>
+          </div>
+        </div>
+
+        <div class="split2">
+          <div class="card">
+            <div class="card-hd"><h2>批次结束提醒（F-4）</h2><span class="hint">批次到额/遍历完自动提醒 · 页面红点</span>
+              <div class="t-right"><button class="btn ghost sm" id="btnNotifyRead">全部已读</button></div>
+            </div>
+            <div class="card-bd" style="padding:0">
+              <div class="audit" id="notifyBox" style="max-height:300px"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><h2>打招呼数据复盘（F-4）</h2><span class="hint">各职位打招呼量 / 已读未读 / 回复比例 / 索要交换转化 / 沉睡数 / 话术采用</span>
+              <div class="t-right">
+                <select id="mtCampaign" style="width:auto"><option value="">全部职位（当前账号）</option></select>
+                <button class="btn ghost sm" id="btnMetricsRefresh">刷新</button>
+                <button class="btn sm" id="btnMetricsExport">导出 CSV</button>
+              </div>
+            </div>
+            <div class="card-bd" style="padding:0">
+              <div style="max-height:300px;overflow:auto"><table><thead><tr><th>职位</th><th>打招呼</th><th>已读</th><th>回复率</th><th>转化率</th><th>沉睡</th></tr></thead>
+              <tbody id="metricsTbody"></tbody></table></div>
+              <div class="chiprow" id="metricsTotals" style="padding:10px 14px"></div>
+            </div>
+          </div>
+        </div>
+
+        </section>
+
+      <!-- ============ VIEW 7B: 触达审计（沟通 · 触达审计独立子模块） ============ -->
+      <section class="view" id="v-tapaudit">
+        <div class="card">
+          <div class="card-hd"><h2>触达审计留痕</h2><span class="hint">打招呼 / 重发跟进 / 索要简历 / 索要电话 / 同意收取 / 交换联系方式 · 操作人 / 时点 / 对象 / 轮次 / 话术版本 / 结果</span>
+            <div class="t-right"><button class="btn ghost sm" id="btnTapAuditRefresh">刷新</button></div>
+          </div>
+          <div class="audit" id="engageAudit"></div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW 5: AUDIT ============ -->
+      <section class="view" id="v-audit">
+        <div class="card">
+          <div class="card-hd"><h2>操作审计留痕</h2><span class="hint">采集 / 访问 / 导出 / 调度 · 留痕可溯</span>
+            <div class="t-right"><button class="btn ghost sm" id="btnAuditRefresh">刷新</button></div>
+          </div>
+          <div class="audit" id="auditBox"></div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW 6: SETTINGS ============ -->
+      <section class="view" id="v-settings">
+        <div class="card">
+          <div class="card-hd"><h2>账号接入与权限</h2><span class="hint">最小权限 · 越权 / 导出需审批</span></div>
+          <div class="card-bd">
+            <div>
+              <div class="acctrow"><div class="badge b-ok">已接入</div><b style="width:120px">BOSS 自有账号</b><span class="textfield">采集适配器 · 离线脱敏模拟 / 真实抓取二选一</span><span style="margin-left:auto" class="badge b-info">会话隔离</span></div>
+              <div class="acctrow"><div class="badge b-ok">加密</div><b style="width:120px">简历 Vault</b><span class="textfield">AES-256-GCM · 原文加密落盘，jsonl 仅留脱敏预览</span><span style="margin-left:auto" class="badge b-info">合规</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center;margin-top:6px">
+              <div><label class="f">简历敏感字段解密权限</label><div class="textfield">仅授权 HR 登录后可查看，默认脱敏展示，单次解密留痕。</div></div>
+              <div><label class="f">数据留存与导出策略</label><div class="textfield">批量导出走审计留痕；原始简历加密存储，逾期可脱敏归档。</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-bd" style="padding:0">
+            <div class="acctgrid" id="settingsGrid" style="padding:20px 20px 18px">
+              <div>
+                <!-- 顶部头像 + 基本信息 -->
+                <div class="profilehead">
+                  <div class="pava" id="profileAvatar">B</div>
+                  <div class="pt">
+                    <div class="pn" id="profileName">— <span class="rolebadge ra" id="profileRole">—</span></div>
+                    <div class="pm">账号：<b id="accUsername">—</b> · ID：<b id="accId">—</b></div>
+                  </div>
+                </div>
+                <!-- BOSS 绑定卡片 -->
+                <div class="ibox">
+                  <div class="ibox-hd">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    BOSS 直聘账号绑定
+                    <span class="tag t-unbound" id="boundTag">未绑定</span>
+                  </div>
+                  <div class="ibox-sub">绑定后自动采集时会使用该身份信息发送打招呼和索要简历</div>
+                  <div class="fld">
+                    <label>BOSS 账号（手机号 / 通行证）<span style="color:var(--err)">*</span></label>
+                    <input id="bossAcc" placeholder="输入您登录 BOSS 直聘时使用的账号">
+                  </div>
+                  <div class="fld">
+                    <label>BOSS 昵称（可选，方便识别核对）</label>
+                    <input id="bossNick" placeholder="账号显示的昵称">
+                  </div>
+                  <div class="fld">
+                    <label>会话凭证（可选，支持自动维持登录状态）</label>
+                    <input id="bossTok" placeholder="从浏览器复制的 cookie 或 token，本地加密存储">
+                    <div class="tip">会话凭证仅用于后台采集请求，不会共享给任何第三方</div>
+                  </div>
+                  <div class="bossnote">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="8"/></svg>
+                    <div class="bn-txt"><b>功能说明：</b>仅绑定账号不足以自动打招呼，需要<strong>网页端保持登录会话在线</strong> + <strong>话术已配置</strong> + <strong>候选人过合规筛选</strong> + <strong>在风控额度内</strong>四个条件同时满足才会自动发送</div>
+                  </div>
+                  <div class="bossbtns">
+                    <button class="btn ghost" id="btnScanBoss">扫码登录 · 复用登录态</button>
+                    <button class="btn" id="btnSaveBoss">保存绑定信息</button>
+                  </div>
+                </div>
+                <!-- 修改密码卡片 -->
+                <div class="ibox">
+                  <div class="ibox-hd">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    修改登录密码
+                  </div>
+                  <div class="ibox-sub">定期更换密码有助于保护账号安全</div>
+                  <div class="fld">
+                    <label>原密码</label>
+                    <input type="password" id="pwdOld" placeholder="输入当前密码">
+                  </div>
+                  <div class="fld">
+                    <label>新密码</label>
+                    <input type="password" id="pwdNew" placeholder="设置新密码（至少 4 位）">
+                  </div>
+                  <button class="btn ghost ssave" id="btnChangePwd">确认修改密码</button>
+                </div>
+              </div>
+              <div id="adminBox">
+                <div class="ibox" style="margin-top:0">
+                  <div class="ibox-hd">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    账号管理
+                    <span class="tag t-bound" id="userCount">— 位</span>
+                  </div>
+                  <div class="ibox-sub">管理员可查看系统内所有招聘者账号，支持添加 / 停用操作</div>
+                  <div id="userList" style="margin-top:10px"></div>
+                  <div class="fld" style="margin-top:16px">
+                    <label>新增招聘者账号</label>
+                  </div>
+                  <div class="kvrow">
+                    <div class="fld" style="margin-top:6px">
+                      <label>姓名</label>
+                      <input id="nuName" placeholder="真实姓名">
+                    </div>
+                    <div class="fld" style="margin-top:6px">
+                      <label>用户名</label>
+                      <input id="nuUser" placeholder="用于登录">
+                    </div>
+                  </div>
+                  <div class="kvrow">
+                    <div class="fld" style="margin-top:6px">
+                      <label>初始密码</label>
+                      <input type="password" id="nuPass" placeholder="≥4 位">
+                    </div>
+                    <div class="fld" style="margin-top:6px">
+                      <label>角色</label>
+                      <input id="nuRole" placeholder="admin / recruiter" value="recruiter">
+                    </div>
+                  </div>
+                  <button class="btn sm" id="btnAddUser" style="margin-top:14px;width:100%">新增账号</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW LOGS: 系统运行日志 ============ -->
+      <section class="view" id="v-logs">
+        <div class="card">
+          <div class="card-hd"><h2>系统运行日志</h2><span class="hint">采集 / 调度 / 打招呼 / 异常 · 便于维护排查</span>
+            <div class="t-right">
+              <button class="btn ghost sm" id="btnLogRefresh">刷新</button>
+              <button class="btn sm" id="btnLogClear">清空日志</button>
+            </div>
+          </div>
+          <div class="logtoolbar">
+            <button class="chip chip-on" data-lv="">全部</button>
+            <button class="chip" data-lv="info">信息</button>
+            <button class="chip" data-lv="warn">警告</button>
+            <button class="chip" data-lv="error">错误</button>
+            <span style="margin-left:auto" class="hint">滚动保留最近记录，超出自动淘汰旧日志</span>
+          </div>
+          <div class="logbox" id="logBox"><div class="empty">加载中…</div></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ===== 右侧岗位详情侧边栏（替代原岗位详情弹窗） ===== -->
+  <aside class="job-sidebar" id="jobSidebar">
+    <h3>招聘岗位详情</h3>
+    <div id="jobSideBody"><div class="js-empty">点击左侧「招聘岗位」中的岗位卡片，此处显示岗位详情。</div></div>
+  </aside>
+</div>
+
+<!-- ===== Drawer ===== -->
+<div class="drawer" id="drawer">
+  <div class="drawer-hd">
+    <div class="ava" id="dAva">—</div>
+    <div>
+      <div class="nm" id="dName">—</div>
+      <div class="meta" id="dMeta">—</div>
+    </div>
+    <button class="x" id="drawerClose">×</button>
+  </div>
+  <div class="drawer-bd" id="drawerBody"></div>
+  <div style="padding:14px 20px;border-top:1px solid var(--line);display:flex;background:#fff">
+    <button class="btn ghost sm" style="flex:1" id="btnOrigFile"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>查看原始简历文件</button>
+    <button class="btn ghost sm" style="flex:1" id="btnShowRaw">查看解析原文（解密）</button>
+    <button class="btn sm" style="flex:0" id="btnDecrypt">脱敏字段解密</button>
+  </div>
+</div>
+
+<!-- ===== 岗位详情弹窗（含收集统计 + 跳转候选人库） ===== -->
+<div class="modal" id="jobModal">
+  <div class="modalcard">
+    <div class="modal-hd">
+      <div class="ava" id="jmAva" style="width:38px;height:38px;font-size:15px">岗</div>
+      <div style="display:flex;flex-direction:column"><span class="nm" style="font-size:16px" id="jmTitle">—</span><span class="meta" style="font-size:12px;color:var(--muted)" id="jmMeta">—</span></div>
+      <button class="x" id="jobModalClose">×</button>
+    </div>
+    <div class="modal-bd">
+      <div id="jmInfo"></div>
+      <div class="jobcandline">
+        <span>该岗位已收集候选人 <b id="jmCount">0</b> 位</span>
+        <button class="btn sm" id="jmGoCand" style="margin-left:auto"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>查看该岗位候选人库</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== 扫码登录 BOSS 弹窗 ===== -->
+<div class="scanmodal" id="scanModal">
+  <div class="scanbox">
+    <h3>扫码登录 BOSS 直聘</h3>
+    <div class="scan-sub">请用手机「BOSS 直聘 App」扫描下方二维码完成登录，系统将自动抓取会话凭证并接入采集</div>
+    <div class="scanqrcode" id="scanQr"><span id="scanQrPh">正在启动浏览器，获取二维码…</span></div>
+    <div class="scan-status" id="scanStatus"></div>
+    <div class="scan-foot">
+      <button class="btn ghost sm" id="btnScanCancel">关闭</button>
+      <button class="btn ghost sm" id="btnScanRefresh">刷新二维码</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 登录界面 ===== -->
+<div class="login" id="loginOverlay">
+  <div class="loginbox">
+    <div class="loginhd">
+      <div class="ava" style="width:44px;height:44px;font-size:18px">聘</div>
+      <div><h1>伯乐招聘系统</h1><span>BOSS 直聘采集 · JD 解析 · 简历匹配</span></div>
+    </div>
+    <form id="loginForm" autocomplete="off">
+      <label class="f">招聘者账号</label>
+      <div class="logininput"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><input id="loginUser" placeholder="请输入账号　默认为 wang" autofocus></div>
+      <label class="f" style="margin-top:12px">密码</label>
+      <div class="logininput"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg><input id="loginPass" type="password" placeholder="请输入密码　默认为 boss123"></div>
+      <div class="loginerr" id="loginErr"></div>
+      <button class="btn loginbtn" id="loginBtn" type="submit">登 录</button>
+    </form>
+    <form id="regForm" autocomplete="off" style="display:none">
+      <label class="f">姓名</label>
+      <div class="logininput"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><input id="regName" placeholder="您的真实姓名"></div>
+      <label class="f" style="margin-top:12px">用户名（字母 / 数字，2-24 位）</label>
+      <div class="logininput"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v4c0 4.5-3 8-7 11-4-3-7-6.5-7-11V6z"/></svg><input id="regUser" placeholder="用于登录，如 hr_zhang" autocomplete="username"></div>
+      <label class="f" style="margin-top:12px">密码（至少 4 位）</label>
+      <div class="logininput"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg><input id="regPass" type="password" placeholder="设置登录密码" autocomplete="new-password"></div>
+      <label class="f" style="margin-top:12px">确认密码</label>
+      <div class="logininput"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg><input id="regPass2" type="password" placeholder="再次输入密码" autocomplete="new-password"></div>
+      <div class="loginerr" id="regErr"></div>
+      <button class="btn loginbtn" id="regBtn" type="submit">注 册并登录</button>
+    </form>
+    <div class="loginfoot">
+      <div class="accchips" id="accChips">
+        <button type="button" data-u="wang" data-n="默认管理员">wang / 王先生</button>
+      </div>
+      <div class="hint" id="loginFootHint">没有账号？<a href="javascript:void(0)" id="gotoReg" style="color:var(--brand);font-weight:600">注册新账号</a></div>
+      <div class="hint" style="display:none" id="regFootHint">已有账号？<a href="javascript:void(0)" id="gotoLogin" style="color:var(--brand);font-weight:600">返回登录</a></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+const $ = (s) => document.querySelector(s);
+// 招聘者账号：岗位/JD 按账号隔离；候选人库为所有账号共享
+const RECRUITERS = [
+  { id:'A1', name:'王先生' },
+];
+const state = { jobs:[], candidates:[], resumes:[], matches:[], cycles:[], audit:[], schedules:[], search:null, searchT:null, seg:'all', segT:'all', recruiter:'', token:null, user:null, msgtemplates:[], followup:[], pending:[], hrContact:'', campaigns:[], notifications:[], unread:0, metrics:null };
+
+const api = {
+  get: async (p) => { const r = await fetch(p, { headers: state.token ? { 'x-auth': state.token } : {} }); return r.ok ? (r.status===204?{}:await r.json()) : { error: (await r.json().catch(()=>({}))).error }; },
+  post: async (p, body) => { const r = await fetch(p, { method:'POST', headers:{'Content-Type':'application/json','x-recruiter-id':state.recruiter||'','x-auth':state.token||''}, body: JSON.stringify(body??{...{},recruiterId:state.recruiter}) }); const j = await r.json().catch(()=>({})); return { ok:r.ok, status:r.status, ...j }; },
+  put: async (p, body) => { const r = await fetch(p, { method:'PUT', headers:{'Content-Type':'application/json','x-auth':state.token||''}, body: JSON.stringify(body??{}) }); const j = await r.json().catch(()=>({})); return { ok:r.ok, status:r.status, ...j }; },
+};
+
+const TITLES = {
+  overview:['运营总览','招聘提效模块 · 数据看板'],
+  jobs:['招聘岗位','岗位信息 · 关键词 · 收集统计'],
+  schedule:['采集调度','定时批量 · 频率受控 · 失败熔断'],
+  candidates:['候选人库','随登录账号变化 · 本账号岗位收集的候选人'],
+  talent:['人才库','全员共享 · 不随账号变化 · 全量人才池'],
+  engage:['触达沟通','话术库 · 自动打招呼 · 智能跟进 · 打招呼管控'],
+  tapaudit:['触达审计','打招呼 / 联系 / 交换 · 审计留痕'],
+  audit:['审计留痕','采集 / 访问 / 导出留痕'],
+  settings:['准入与护栏','账号接入 · 最小权限'],
+  logs:['运行日志','系统运行状态 · 业务动作 · 错误告警'],
+};
+const LOG_LV = { info:'log-info', warn:'log-warn', error:'log-err' };
+const LOG_LV_TXT = { info:'信息', warn:'警告', error:'错误', system:'系统', server:'服务', console:'控制台', process:'进程' };
+const STATUS_MAP = { matched:['已匹配','b-ok'], parsed:['已入库','b-info'], screened:['已筛选','b-info'], resume_received:['待核对','b-warn'], sourced:['已寻源','b-gray'], rejected:['已淘汰','b-err'], closed:['已停止采集','b-gray'], open:['采集中','b-info'] };
+
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2400); }
+function at(iso){ try{ return new Date(iso).toLocaleString('zh-CN',{hour12:false}); }catch{ return iso||''; } }
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function scoreHtml(sc){
+  if(sc==null||sc===undefined) return '<span class="scorewrap s-none"><span class="scorebar"><i style="width:0%"></i></span><span class="scorenum">—</span></span>';
+  const c=sc>=70?'high':sc>=50?'mid':'low';
+  return `<span class="scorewrap s-${c}"><span class="scorebar"><i style="width:${Math.min(100,sc)}%"></i></span><span class="scorenum">${sc}</span></span>`;
+}
+function stBadge(status){ const [l,c]=STATUS_MAP[status]||[status||'—','b-gray']; return `<span class="badge ${c}">${l}</span>`; }
+function skillsOf(c){ return (state.resumes.filter(x=>x.candidateId===c.candidateId).at(-1)?.parsed?.skills) ?? c.skills ?? []; }
+// 当前账号可见岗位：岗位归属(recruiterId，缺省视为 A1)与当前账号一致；候选人库全局共享不在此过滤
+function myJobs(){ return state.jobs.filter(j=>(j.recruiterId||'A1')===state.recruiter); }
+
+/* ---------- loaders ---------- */
+async function loadJobs(){ const d=await api.get('/jobs'); state.jobs=d.jobs??[]; }
+async function loadCandidates(){
+  const [c,r,m,cy]=await Promise.all([api.get('/candidates'),api.get('/resumes'),api.get('/matches'),api.get('/cycles')]);
+  state.candidates=c.candidates??[]; state.resumes=r.resumes??[]; state.matches=m.matches??[]; state.cycles=cy.cycles??[];
+}
+async function loadAudit(){ const d=await api.get('/audit'); state.audit=d.audit??[]; }
+async function loadMessagelib(){ const d=await api.get('/api/messagelib'); state.msgtemplates=d.templates??[]; }
+async function loadFollowup(){ const d=await api.get('/api/engage/followup'); state.followup=d.plans??[]; }
+async function loadPending(){ const d=await api.get('/api/engage/manual-pending'); state.pending=d.candidates??[]; }
+async function loadHrContact(){ const d=await api.get('/api/engage/contact'); state.hrContact=d.contact??''; }
+async function loadCampaigns(){ const d=await api.get('/api/engage/campaigns'); state.campaigns=d.campaigns??[]; }
+async function loadNotifications(){ const d=await api.get('/api/engage/notifications'); state.notifications=d.notifications??[]; state.unread=d.unread??0; }
+async function loadMetrics(){ const cid=$('#mtCampaign')?.value||''; state.metrics=await api.get('/api/engage/metrics'+(cid?`?campaignId=${encodeURIComponent(cid)}`:'')); }
+async function reloadSchedules(){ const d=await api.get('/api/sourcing/schedules'); state.schedules=d.schedules??[]; }
+
+let _logLevel=''; let _logTimer=null;
+async function loadLogs(){ const d=await api.get('/api/logs?n=400&level='+encodeURIComponent(_logLevel)); state.logs=d.logs??state.logs??[]; }
+function renderLogs(){
+  const rows=state.logs??[];
+  const box=$('#logBox');
+  if(!rows.length){ box.innerHTML='<div class="empty">暂无运行日志</div>'; return; }
+  box.innerHTML=rows.map((r,i)=>{
+    const lv=LOG_LV[r.level]||'log-info';
+    const lvTxt=LOG_LV_TXT[r.level]||r.level||'信息';
+    const scope=r.scope?`<span class="log-scope">${esc(String(r.scope))}</span>`:'';
+    return `<div class="logline ${lv}" data-i="${i}">
+      <span class="log-ts">${at(r.ts)}</span><span class="badge log-lv">${lvTxt}</span>${scope}
+      <code class="log-msg">${esc(String(r.message??''))}</code>
+    </div>`;
+  }).join('');
+}
+function bindLogChips(){
+  document.querySelectorAll('#v-logs .logtoolbar .chip').forEach((c)=>c.addEventListener('click',async()=>{
+    document.querySelectorAll('#v-logs .logtoolbar .chip').forEach(x=>x.classList.toggle('chip-on',x===c));
+    _logLevel=c.dataset.lv||'';
+    await loadLogs(); renderLogs();
+  }));
+}
+bindLogChips();
+$('#btnLogRefresh')?.addEventListener('click',async()=>{ await loadLogs(); renderLogs(); });
+$('#btnLogClear')?.addEventListener('click',async()=>{
+  if(!confirm('确定清空全部运行日志吗？')) return;
+  const r=await api.post('/api/logs/clear');
+  if(r.ok===false){ toast(r.error||'清空失败'); return; }
+  state.logs=[]; renderLogs(); toast('运行日志已清空');
+});
+
+/* ---------- 用户系统：登录 / 会话 / 退出（登录决定所属账号，替代左下角切换器） ---------- */
+const showLogin=()=>$('#loginOverlay').classList.add('open');
+const hideLogin=()=>$('#loginOverlay').classList.remove('open');
+function applyUser(user){
+  state.user=user; state.recruiter=user.id;
+  $('#footAva').textContent=user.id;
+  $('#footName').textContent=`${user.name} · ${user.id}`;
+  updateBossBar();
+}
+const setToken=(t)=>{ state.token=t||null; if(t) localStorage.setItem('hr_token',t); else localStorage.removeItem('hr_token'); };
+
+$('#loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const b=$('#loginBtn'); b.disabled=true; b.textContent='登录中…';
+  const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#loginUser').value.trim(),password:$('#loginPass').value})}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
+  b.disabled=false; b.textContent='登 录';
+  if(r.ok&&r.user){ setToken(r.token); applyUser(r.user); hideLogin(); $('#loginErr').textContent=''; await loadAll(); navTo('overview'); toast(`欢迎回来，${r.user.name}`); }
+  else $('#loginErr').textContent=r.error||'登录失败';
+});
+$('#accChips').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-u]'); if(!b) return;
+  $('#loginUser').value=b.dataset.u; $('#loginPass').value='boss123'; $('#loginErr').textContent=''; $('#loginPass').focus();
+});
+/* ---------- 新账号注册：登录 / 注册 切换 ---------- */
+function toggleAuth(showReg){
+  $('#loginForm').style.display=showReg?'none':'block';
+  $('#regForm').style.display=showReg?'block':'none';
+  $('#loginFootHint').style.display=showReg?'none':'block';
+  $('#regFootHint').style.display=showReg?'block':'none';
+  ['loginErr','regErr'].forEach(id=>$('#'+id).textContent='');
+  (showReg?$('#regName'):$('#loginUser')).focus();
+}
+$('#gotoReg').addEventListener('click',()=>toggleAuth(true));
+$('#gotoLogin').addEventListener('click',()=>toggleAuth(false));
+$('#regForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const name=$('#regName').value.trim(), uname=$('#regUser').value.trim(), p1=$('#regPass').value, p2=$('#regPass2').value;
+  $('#regErr').textContent='';
+  if(!name||!uname||!p1){ $('#regErr').textContent='请完整填写姓名 / 用户名 / 密码'; return; }
+  if(p1!==p2){ $('#regErr').textContent='两次输入的密码不一致'; return; }
+  const b=$('#regBtn'); b.disabled=true; b.textContent='注册中…';
+  const r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,username:uname,password:p1})}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
+  b.disabled=false; b.textContent='注 册并登录';
+  if(r.ok&&r.user){ setToken(r.token); applyUser(r.user); hideLogin(); await loadAll(); navTo('overview'); toast('✓ 注册成功，正在为你登录'); }
+  else $('#regErr').textContent=r.error||'注册失败';
+});
+async function logout(){
+  if(state.token){ try{ await fetch('/api/auth/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:state.token})}); }catch{} }
+  setToken(null); state.user=null; state.recruiter=''; updateBossBar();
+  $('#loginUser').value=''; $('#loginPass').value=''; showLogin(); toast('已退出登录');
+}
+$('#logoutBtn').addEventListener('click',logout);
+
+/* ---------- 设置：账号管理 / 绑定 BOSS（随“设置”模块渲染） ---------- */
+function renderSettings(){
+  const u=state.user||{};
+  $('#profileAvatar').textContent=(u.name||'B').charAt(0);
+  const roleTxt=u.role==='admin'?'管理员':'招聘者';
+  $('#profileName').innerHTML=`${esc(u.name||'—')} <span class="rolebadge ${u.role==='admin'?'':'ra'}" id="profileRole">${roleTxt}</span>`;
+  $('#accUsername').textContent=u.username||'—';
+  $('#accId').textContent=u.id||'—';
+  renderBossForm(); loadUsers();
+}
+function renderBossForm(){
+  const b=state.user?.boss;
+  if(b){ $('#bossAcc').value=b.account||''; $('#bossNick').value=b.nick||''; }
+  $('#bossTok').value='';
+  const tag=$('#boundTag');
+  if(b){
+    tag.textContent='已绑定';
+    tag.className='tag t-bound';
+    tag.title=`${b.account}${b.masked?' · 凭证 '+b.masked:''}`;
+  } else {
+    tag.textContent='未绑定';
+    tag.className='tag t-unbound';
+    tag.title='';
+  }
+}
+$('#btnSaveBoss').addEventListener('click',async()=>{
+  const acc=$('#bossAcc').value.trim();
+  if(!acc){ toast('请输入真实 BOSS 账号'); return; }
+  const r=await fetch(`/api/users/${state.user.id}/boss`,{method:'POST',headers:{'Content-Type':'application/json','x-auth':state.token},body:JSON.stringify({bossAccount:acc,bossNick:$('#bossNick').value.trim(),bossToken:$('#bossTok').value.trim()})}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
+  if(r.ok&&r.boss){ state.user.boss=r.boss; updateBossBar(); renderBossForm(); toast('✓ BOSS 账号已绑定'); }
+  else toast('✗ '+(r.error||'绑定失败'));
+});
+/* ---------- 扫码登录 BOSS：复用 BOSS 网页版扫码流程自动抓取会话 cookie ---------- */
+const scanState = { timer: null, sessionId: '', beganAt: 0, qrEl: null, loggedIn: false };
+function scanOpen(){
+  const m=$('#scanModal'); m.classList.add('show');
+  $('#scanStatus').textContent=''; $('#scanStatus').className='scan-status';
+  const qr=$('#scanQr'); qr.innerHTML='<span id="scanQrPh">正在启动浏览器，获取二维码…</span>';
+  $('#scanQrPh').textContent='正在启动浏览器，获取二维码…';
+}
+function scanClose(stop=true){
+  const m=$('#scanModal'); m.classList.remove('show');
+  clearInterval(scanState.timer); scanState.timer=null;
+  if(stop&&scanState.sessionId){ fetch('/api/scan-boss/stop',{method:'POST',headers:{'x-auth':state.token}}); scanState.sessionId=''; }
+}
+async function scanStart(){
+  const r=await fetch('/api/scan-boss/start',{method:'POST',headers:{'x-auth':state.token}}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
+  if(!r.ok){ scanStatusTxt('err', '启动扫码失败：'+(r.error||'未知错误')); return false; }
+  scanState.sessionId=r.sessionId||String(state.user.id);
+  scanState.beganAt=Date.now();
+  return true;
+}
+function scanStatusTxt(kind,msg){ const el=$('#scanStatus'); el.textContent=msg; el.className='scan-status'+(kind?' '+kind:''); }
+function scanDraw(img){
+  const qr=$('#scanQr');
+  if(!scanState.qrEl){ scanState.qrEl=document.createElement('img'); qr.innerHTML=''; qr.appendChild(scanState.qrEl); }
+  if(img) scanState.qrEl.src='data:image/png;base64,'+img;
+}
+async function scanTick(){
+  if(!scanState.sessionId) return;
+  const r=await fetch('/api/scan-boss/poll?sessionId='+encodeURIComponent(scanState.sessionId),{headers:{'x-auth':state.token}}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
+  if(!r.ok){ scanStatusTxt('err', r.error||'轮询失败'); return; }
+  scanDraw(r.img);
+  if(r.loggedIn||r.status==='logged_in'){
+    if(!scanState.loggedIn){ scanState.loggedIn=true; scanStatusTxt('ok','✓ 登录成功，会话凭证已自动抓取'); }
+    clearInterval(scanState.timer); scanState.timer=null;
+    const me=await api.get('/api/auth/me');
+    if(me.ok&&me.user){ state.user=me.user; updateBossBar(); renderBossForm(); }
+    const acc=state.user?.boss?.account||'';
+    toast(acc?`✓ 扫码登录成功，已接入 BOSS ${acc}`:'✓ 扫码登录成功，会话凭证已接入；请在下方填写账号后保存');
+    setTimeout(()=>scanClose(false),900);
+    return;
+  }
+  if(Date.now()-scanState.beganAt>180000){ scanStatusTxt('err','二维码已过期，请点击"刷新二维码"重新获取'); }
+  else if(r.status==='opening'){} 
+  else if(r.status==='waiting'&&r.img){} 
+  else if(r.cookieCount>0&&!r.loggedIn){ scanStatusTxt('','请用手机 BOSS 直聘 App 扫码（当前已读取 '+r.cookieCount+' 个会话标记）'); }
+}
+$('#btnScanBoss').addEventListener('click',async()=>{
+  if(!state.user){ toast('请先登录'); return; }
+  scanOpen(); scanState.loggedIn=false; scanState.qrEl=null;
+  if(await scanStart()){
+    scanState.timer=setInterval(scanTick,1500);
+    scanTick();
+  }
+});
+$('#btnScanRefresh').addEventListener('click',async()=>{
+  clearInterval(scanState.timer); scanState.timer=null; scanState.loggedIn=false; scanState.qrEl=null;
+  $('#scanQr').innerHTML='<span id="scanQrPh">正在重新获取二维码…</span>';
+  scanStatusTxt('','正在重新获取二维码…');
+  if(await scanStart()){ scanState.timer=setInterval(scanTick,1500); scanTick(); }
+});
+$('#btnScanCancel').addEventListener('click',()=>{ scanClose(true); });
+$('#btnChangePwd').addEventListener('click',async()=>{
+  const old=$('#pwdOld').value, nw=$('#pwdNew').value;
+  if(!nw||nw.length<4){ toast('新密码至少 4 位'); return; }
+  const r=await fetch(`/api/users/${state.user.id}/password`,{method:'POST',headers:{'Content-Type':'application/json','x-auth':state.token},body:JSON.stringify({old,password:nw})}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
+  if(r.ok){ $('#pwdOld').value=''; $('#pwdNew').value=''; toast('✓ 密码已修改'); } else toast('✗ '+(r.error||'修改失败'));
+});
+async function loadUsers(){
+  const r=await api.get('/api/users');
+  if(!r.ok){ $('#adminBox').style.display='none'; return; }
+  const isAdmin=r.self?.role==='admin';
+  $('#adminBox').style.display=isAdmin?'block':'none';
+  $('#settingsGrid')?.classList.toggle('c-single', !isAdmin);
+  const us=r.users||[];
+  $('#userCount').textContent=`${us.length} 位`;
+  if(us.length) $('#userList').innerHTML=us.map(u=>`
+    <div class="urow">
+      <div style="flex:1;min-width:0"><b>${esc(u.name)}</b> <span class="textfield">${esc(u.username)} · ${esc(u.role)}</span>${u.boss?`<div class="textfield">BOSS ${esc(u.boss.account)}${u.boss.masked?' · '+esc(u.boss.masked):''}</div>`:''}</div>
+      <span class="badge ${u.active?'b-ok':'b-err'}">${u.active?'启用':'停用'}</span>
+      ${u.id===r.self.id?'<span class="textfield">(我)</span>':(isAdmin?`<button class="btn ghost sm" data-u="${esc(u.id)}" data-a="pwd">重置密码</button><button class="btn ghost sm" data-a="act" data-u="${esc(u.id)}">${u.active?'停用':'启用'}</button>`:'')}
+    </div>`).join('');
+  $('#userList').querySelectorAll('button[data-a]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const id=btn.dataset.u, a=btn.dataset.a;
+    if(a==='pwd'){
+      const nu=prompt('为该账号设置新密码（≥4位）：'); if(!nu||nu.length<4){ toast('密码至少4位'); return; }
+      const rr=await fetch(`/api/users/${id}/password`,{method:'POST',headers:{'Content-Type':'application/json','x-auth':state.token},body:JSON.stringify({password:nu})}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
+      toast(rr.ok?'✓ 密码已重置':'✗ '+(rr.error||'失败'));
+    } else {
+      const cur=(r.users||[]).find(x=>x.id===id);
+      if(cur&&cur.active&&!confirm(`确定停用账号 ${cur.name}？（停用后无法登录）`)) return;
+      const rr=await fetch(`/api/users/${id}/active`,{method:'POST',headers:{'Content-Type':'application/json','x-auth':state.token},body:JSON.stringify({active:!cur?.active})}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
+      toast(rr.ok?'✓ 账号状态已更新':'✗ '+(rr.error||'失败'));
+    }
+    loadUsers();
+  }));
+}
+$('#btnAddUser').addEventListener('click',async()=>{
+  const name=$('#nuName').value.trim(), uname=$('#nuUser').value.trim(), pass=$('#nuPass').value, role=$('#nuRole').value.trim();
+  if(!name||!uname||!pass){ toast('请填写姓名/用户名/初始密码'); return; }
+  const r=await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json','x-auth':state.token},body:JSON.stringify({name,username:uname,password:pass,role})}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
+  if(r.ok){ ['nuName','nuUser','nuPass'].forEach(id=>$('#'+id).value=''); toast(`✓ 账号 ${r.user.username} 已创建`); loadUsers(); }
+  else toast('✗ '+(r.error||'创建失败'));
+});
+
+async function boot(){
+  const h=await api.get('/health').catch(()=>({ok:false}));
+  const ok=!!h.ok;
+  try{ $('#healthDot').className='dot'+(ok?'':' warn'); $('#healthTxt').textContent=ok?'● 网关已连接':'● 网关未连接'; }catch(e){}
+  // 登录前置：未登录必须先展示登录页。任何后台渲染失败都不得阻断登录页弹出。
+  let authed=false;
+  const token=localStorage.getItem('hr_token');
+  if(token){
+    try{
+      const me=await fetch('/api/auth/me?token='+encodeURIComponent(token)).then(x=>x.json()).catch(()=>({ok:false}));
+      if(me.ok&&me.user){ authed=true; state.token=token; applyUser(me.user); hideLogin(); }
+    }catch(e){}
+    if(!authed) localStorage.removeItem('hr_token');
+  }
+  if(!authed){ showLogin(); }
+  try{ renderPipe(); updateBossBar(); }catch(e){}
+  if(authed){
+    try{ await loadAll(); navTo('overview'); } catch(e){ if(!state.user){ showLogin(); } }
+  }
+}
+async function loadAll(){
+  await Promise.all([loadJobs(),loadCandidates(),loadAudit(),reloadSchedules(),loadMessagelib(),loadFollowup()]);
+  renderOverview(); renderJobs(); renderSchedules(); renderAudit(); renderSeg(); fillJobFilter(); fillSourceFilter(); renderCandidates(); renderTalentSeg(); fillTalentSource(); renderTalent(); fillSchJob(); renderEngage();
+}
+
+/* ---------- overview ---------- */
+function renderOverview(){
+  const scored=state.matches.filter(m=>m.matchScore!=null);
+  const avg=scored.length?Math.round(scored.reduce((s,m)=>s+m.matchScore,0)/scored.length):null;
+  const myj=myJobs();
+  $('#kCands').textContent=state.candidates.length;
+  $('#kJobs').textContent=myj.length;
+  $('#kMatched').textContent=scored.length;
+  $('#kAvgScore').textContent=avg??'—';
+  const parsed=state.resumes.filter(r=>r.status==='parsed').length;
+  $('#kParsed').textContent=parsed;
+  $('#kSched').textContent=state.schedules.length;
+  const last=state.cycles.at(-1);
+  $('#kCycle').textContent=last?`${last.jobId} · ${last.status}`:'—';
+  $('#pJd').textContent=myj.length?`${myj.length} 岗位已解析`:'—';
+  $('#pCollect').textContent=`${state.candidates.length} 已入库`;
+  $('#pParse').textContent=`${parsed}/${state.resumes.length} 已解析`;
+  $('#pMatch').textContent=scored.length?`${scored.length} 已匹配`:'—';
+  // top candidates by score
+  const tb=$('#ovCand');
+  const rows=scored.slice().sort((a,b)=>(b.matchScore??-1)-(a.matchScore??-1)).slice(0,8).map(m=>{
+    const c=state.candidates.find(x=>x.candidateId===m.candidateId); if(!c) return null;
+    const job=(myJobs().find(j=>j.jobId===c.jobId)||state.jobs.find(j=>j.jobId===c.jobId));
+    return `<tr data-c="${esc(c.candidateId)}"><td><span class="cell-name">${esc(c.name||'—')}<small>${esc(c.candidateId)} · ${esc(c.source)}</small></span></td><td>${esc(job?.jobTitle||c.jobId||'—')}</td><td>${c.workExperienceYears??'—'} 年</td><td>${skillsOf(c).slice(0,3).map(s=>`<span class="skill">${esc(s)}</span>`).join('')||'—'}</td><td>${stBadge(c.status)}</td><td>${scoreHtml(m.matchScore)}</td><td style="text-align:right;color:var(--brand)">→</td></tr>`;
+  }).filter(Boolean).join('');
+  tb.innerHTML=rows||'<tr><td colspan="7" class="empty">暂无匹配数据，请先运行采集。</td></tr>';
+}
+$('#ovCand')?.addEventListener('click',e=>{ const tr=e.target.closest('tr[data-c]'); if(tr) openDrawer(tr.dataset.c); });
+
+/* ---------- jobs ---------- */
+function candCountOf(jobId){ return state.candidates.filter(c=>c.jobId===jobId).length; }
+function renderJobs(){
+  const box=$('#jobListBox');
+  const jobs=myJobs();
+  if(!jobs.length){ box.innerHTML=`<div class="empty" style="grid-column:1/-1">当前账号 ${state.recruiter} 暂无岗位，请在下方新增。</div>`; return; }
+  box.innerHTML=jobs.map(j=>{
+    const n=candCountOf(j.jobId);
+    return `<div class="jobcard" data-job="${esc(j.jobId)}">
+    <div class="jt">${esc(j.jobTitle)}<span class="jid">${esc(j.jobId)}</span><span class="stat">${stBadge(j.status)}</span></div>
+    <div class="jobcandline">已收集 <b>${n}</b> 位候选人 <span class="textfield">· 点击卡片查看详情 / 跳转候选人库</span></div>
+    <div class="kw">${(j.parsedKeywords||j.hardSkills||[]).slice(0,8).map(k=>`<span class="skill">${esc(k)}</span>`).join('')||'<span class="textfield">— 暂无关键词</span>'}</div>
+    <div class="ftr">创建 <span>${at(j.meta?.createdAt)}</span>
+      <span class="jobactions">
+        <button class="btn ghost sm" data-jobact="details">详情</button>
+        ${j.status==='closed'?'<button class="btn sm" data-jobact="reopen">恢复采集</button>':'<button class="btn ghost sm" data-jobact="close">停止采集</button>'}
+        <button class="btn ghost sm danger" data-jobact="delete">删除</button>
+      </span>
+    </div>
+  </div>`;
+  }).join('');
+  box.querySelectorAll('.jobcard').forEach(card=>{
+    card.addEventListener('click',()=>openJobSide(card.dataset.job));
+    card.querySelectorAll('button[data-jobact]').forEach(btn=>btn.addEventListener('click',async e=>{
+      e.stopPropagation();
+      const jobId=card.dataset.job, act=btn.dataset.jobact;
+      if(act==='details'){ openJobSide(jobId); return; }
+      if(act==='close'||act==='reopen'){
+        if(act==='close'&&!confirm(`确定停止岗位 ${jobId} 的采集？停止后不再寻源，可随时「恢复采集」。`)) return;
+        const r=await api.post('/api/jobs/'+encodeURIComponent(jobId)+'/control',{action:act});
+        toast(r.ok?('✓ 已'+(act==='close'?'停止采集':'恢复采集')):('✗ '+(r.error||'操作失败')));
+        await loadAll(); return;
+      }
+      if(act==='delete'){
+        if(!confirm(`确定删除岗位 ${jobId} ？其定时任务一并删除，候选人保留在共享库。`)) return;
+        const r=await fetch('/api/jobs/'+encodeURIComponent(jobId),{method:'DELETE'}).then(x=>x.json()).catch(()=>({error:'请求失败'}));
+        toast(r.ok?'✓ 岗位已删除':'✗ '+(r.error||'删除失败'));
+        await loadAll(); return;
+      }
+    }));
+  });
+}
+$('#jdForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const body={ jobId: $('#jJobId').value.trim(), jobTitle: $('#jTitle').value.trim(), jdRaw: $('#jJd').value.trim() };
+  if(!body.jobId||!body.jdRaw){ toast('请填写 岗位ID 与 JD 原文'); return; }
+  const btn=$('#jbtn'); btn.disabled=true; const old=btn.textContent; btn.textContent='解析中…';
+  const r=await api.post('/api/jobs',body);
+  btn.disabled=false; btn.textContent=old;
+  if(r.ok){ toast(`✓ 岗位 ${r.jobTitle} 已创建，关键词：${(r.keywords||[]).join('、')}`); $('#jJobId').value=''; $('#jTitle').value=''; $('#jJd').value=''; }
+  else toast('✗ 创建失败：'+(r.error||''));
+  await loadAll();
+});
+
+/* ---------- 岗位详情侧边栏（点击岗位卡片 / 详情 → 右侧展示） ---------- */
+let _jmJob=null;
+function openJobSide(jobId){
+  const j=state.jobs.find(x=>x.jobId===jobId); if(!j){ toast('未找到岗位'); return; }
+  _jmJob=jobId;
+  const box=$('#jobSideBody');
+  const n=candCountOf(jobId);
+  box.innerHTML=`
+    <div class="js-title">${esc(j.jobTitle||jobId)}</div>
+    <div class="js-sub">${esc(jobId)}${STATUS_MAP[j.status]?.[0]?' · '+esc(STATUS_MAP[j.status][0]):''}</div>
+    <div class="kv">
+      <div><div class="k">状态</div><div class="v">${stBadge(j.status)}</div></div>
+      <div><div class="k">已收集候选人</div><div class="v"><b>${n}</b> 位</div></div>
+      <div><div class="k">搜索 / 硬技能关键词</div><div class="v">${esc((j.parsedKeywords||j.hardSkills||[]).slice(0,10).join('、')||'—')}</div></div>
+      <div><div class="k">创建时间</div><div class="v">${at(j.meta?.createdAt)}</div></div>
+    </div>
+    <div class="js-actions">
+      <button class="btn sm" data-sidebar="cand">查看候选人库</button>
+      ${j.status==='closed'
+        ?'<button class="btn ghost sm" data-sidebar="reopen">恢复采集</button>'
+        :'<button class="btn ghost sm" data-sidebar="close">停止采集</button>'}
+      <button class="btn ghost sm danger" data-sidebar="delete">删除岗位</button>
+    </div>
+    <div style="margin-top:14px"><div class="dt">JD 原文</div><div class="jdsnippet">${esc(j.jdRaw||'—')}</div></div>`;
+  box.querySelectorAll('button[data-sidebar]').forEach(btn=>btn.addEventListener('click',async e=>{
+    const act=btn.dataset.sidebar;
+    if(act==='cand'){ state.activeJob=jobId; fillJobFilter(); navTo('candidates'); return; }
+    if(act==='close'||act==='reopen'){
+      if(act==='close'&&!confirm(`确定停止岗位 ${jobId} 的采集？停止后不再寻源，可随时「恢复采集」。`)) return;
+      const r=await api.post('/api/jobs/'+encodeURIComponent(jobId)+'/control',{action:act});
+      toast(r.ok?('✓ 已'+(act==='close'?'停止采集':'恢复采集')):('✗ '+(r.error||'操作失败')));
+      await loadAll(); openJobSide(jobId); return;
+    }
+    if(act==='delete'){
+      if(!confirm(`确定删除岗位 ${jobId} ？其定时任务一并删除，候选人保留在共享库。`)) return;
+      const r=await fetch('/api/jobs/'+encodeURIComponent(jobId),{method:'DELETE'}).then(x=>x.json()).catch(()=>({error:'请求失败'}));
+      toast(r.ok?'✓ 岗位已删除':'✗ '+(r.error||'删除失败'));
+      box.innerHTML='<div class="js-empty">岗位已删除。点击左侧岗位卡片查看其它详情。</div>';
+      await loadAll(); return;
+    }
+  }));
+}
+
+/* ---------- 岗位详情（收集统计 + 跳转候选人库） ---------- */
+function openJobModal(jobId){
+  const j=state.jobs.find(x=>x.jobId===jobId); if(!j){ toast('未找到岗位'); return; }
+  _jmJob=jobId;
+  $('#jmTitle').textContent=j.jobTitle||jobId;
+  $('#jmAva').textContent=(j.jobTitle||'岗')[0]||'岗';
+  $('#jmMeta').textContent=`${jobId} · ${STATUS_MAP[j.status]?.[0]||j.status||'—'} · 创建于 ${at(j.meta?.createdAt)}`;
+  $('#jmCount').textContent=candCountOf(jobId);
+  $('#jmInfo').innerHTML=`
+    <div class="kv">
+      <div><div class="k">状态</div><div class="v">${stBadge(j.status)}</div></div>
+      <div><div class="k">岗位 ID</div><div class="v">${esc(jobId)}</div></div>
+      <div><div class="k">搜索 / 硬技能关键词</div><div class="v">${esc((j.parsedKeywords||j.hardSkills||[]).slice(0,8).join('、')||'—')}</div></div>
+      <div><div class="k">创建时间</div><div class="v">${at(j.meta?.createdAt)}</div></div>
+    </div>
+    <div><div class="dt">JD 原文</div><div class="jdsnippet">${esc(j.jdRaw||'—')}</div></div>`;
+  $('#jobModal').classList.add('open');
+}
+$('#jobModalClose').addEventListener('click',()=>$('#jobModal').classList.remove('open'));
+$('#jobModal').addEventListener('click',e=>{ if(e.target===$('#jobModal')) $('#jobModal').classList.remove('open'); });
+$('#jmGoCand').addEventListener('click',()=>{
+  $('#jobModal').classList.remove('open');
+  if(_jmJob){ state.activeJob=_jmJob; fillJobFilter(); $('#fJob').focus(); }
+  navTo('candidates');
+});
+
+/* ---------- 候选人库：岗位 / 来源 / 学历 等复合筛选 ---------- */
+function clearAllFilters(){
+  ['fJob','fSource','fDeg','fYears','fScore','fTouch','fContact','fCreated','fKw','fSkill','fEdu'].forEach(id=>{ const el=$('#'+id); if(el){ if(el.tagName==='SELECT') el.value=''; else el.value=''; } });
+  state.activeJob=null; state.search=null; state.seg='all';
+  renderSeg(); renderCandidates(); fillJobFilter();
+}
+$('#btnClearFilters').addEventListener('click',clearAllFilters);
+['fJob','fSource','fDeg','fYears','fScore','fTouch','fContact','fCreated'].forEach(id=>{const el=$('#'+id); if(el) el.addEventListener('change',()=>{ state.search=null; renderCandidates(); });});
+
+/* ---------- schedule ---------- */
+function fillSchJob(){
+  const jobs=myJobs();
+  $('#schJob').innerHTML=jobs.map(j=>`<option value="${esc(j.jobId)}">${esc(j.jobTitle||j.jobId)}</option>`).join('')||'<option value="">（请先创建岗位）</option>';
+}
+
+/* ---------- 采集调度：BOSS 账号卡 + 工作流步骤条 ---------- */
+const PIPE_STEPS=[
+  {label:'解析 JD',note:'抽取学历 / 经验 / 硬技能关键词，沉淀为岗位'},
+  {label:'BOSS 主动搜索',note:'以当前 BOSS 账号搜索匹配候选人（按关键词）'},
+  {label:'发送打招呼',note:'向候选人发送问候，等待回应'},
+  {label:'索要简历',note:'回应后索要 docx / PDF 原始简历并入库'},
+  {label:'AI 解析简历',note:'结构化学历 / 经历 / 技能标签'},
+  {label:'岗位匹配',note:'生成匹配分并沉淀到候选人库'},
+];
+function renderPipe(doneSteps){
+  const list=doneSteps&&doneSteps.length?doneSteps.map(s=>({label:s.label,note:s.note||'',done:true})):PIPE_STEPS.map((s,i)=>({...s,dom:true}));
+  $('#pipe').innerHTML=list.map((s,i)=>`<div class="pex ${s.done?'done':''}"><div class="pd">${s.done?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>':(i+1)}</div><div class="pl">${esc(s.label||'')}${s.note?'<div class="pnote">'+esc(s.note)+'</div>':''}</div></div>`).join('');
+}
+function updateBossBar(){
+  const u=state.user;
+  $('#bossAva').textContent=u?u.id:'–';
+  $('#bossName').textContent=u?`BOSS 账号 ${u.id} · ${u.name}`:'BOSS 账号 · 未登录';
+}
+['bossTieBtn','bossGoAcct'].forEach(id=>{const el=$('#'+id); if(el) el.addEventListener('click',()=>navTo('settings'));});
+function renderSchedules(){
+  const el=$('#schedList');
+  if(!state.schedules.length){ el.innerHTML='<div class="empty">暂无定时任务。上方新增一个按岗位周期触发的批量任务。</div>'; return; }
+  el.innerHTML=state.schedules.map(s=>{
+    const st=s.lastStatus||'pending';
+    const cb=st==='ok'?'b-ok':st.startsWith('error')?'b-err':'b-warn';
+    return `<div style="padding:9px 0;border-bottom:1px solid #f0f2f7;display:flex;gap:10px;align-items:flex-start">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px"><b>${esc(s.jobId)}</b><span class="textfield">每 ${s.intervalMinutes} 分钟</span><span class="textfield">${esc(s.keyword||'')}</span><span class="badge ${cb}">${st}</span></div>
+        <div class="textfield" style="margin-top:3px">上次：${s.lastRunAt?at(s.lastRunAt):'—'} · 下次：${s.nextRunAt?at(s.nextRunAt):'—'}</div>
+      </div>
+      ${s.enabled?'<button class="btn ghost sm" data-act="pause" data-id="'+s.scheduleId+'">暂停</button>':'<button class="btn sm" data-act="resume" data-id="'+s.scheduleId+'">恢复</button>'}
+      <button class="btn ghost sm" data-act="runNow" data-id="'+s.scheduleId+'">立即执行</button>
+      <button class="btn ghost sm danger" data-act="remove" data-id="'+s.scheduleId+'">删除</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('button[data-act]').forEach(b=>b.addEventListener('click',async()=>{
+    const r=await api.post('/api/sourcing/schedules/control',{scheduleId:b.dataset.id,action:b.dataset.act});
+    if(r.ok){ toast(`✓ 定时任务已${b.dataset.act==='pause'?'暂停':b.dataset.act==='resume'?'恢复':b.dataset.act==='remove'?'删除':'立即执行'}`);}
+    else toast('✗ '+(r.error||'操作失败'));
+    await reloadSchedules(); renderSchedules(); renderOverview();
+  }));
+}
+$('#btnAddSch').addEventListener('click',async()=>{
+  const jobId=$('#schJob').value; if(!jobId){ toast('请先创建岗位'); return; }
+  const r=await api.post('/api/sourcing/schedules',{jobId,keyword:$('#schKw').value.trim(),intervalMinutes:+$('#schInterval').value||60});
+  if(r.ok){ toast(`✓ 已新增定时任务 ${r.scheduleId}（每 ${r.intervalMinutes} 分钟）`); $('#schKw').value=''; }
+  else toast('✗ '+(r.error||'创建失败'));
+  await reloadSchedules(); renderSchedules(); renderOverview();
+});
+
+/* ---------- collect ---------- */
+function logLine(t){
+  const log=$('#collectLog');
+  if(!log.dataset.seeded){ log.textContent=''; log.dataset.seeded='1'; }
+  log.innerHTML+=t+'\n'; log.scrollTop=log.scrollHeight;
+}
+async function collect(usePython,btnId){
+  const jobId=$('#schJob').value || (myJobs()[0]?.jobId);
+  if(!jobId){ logLine('<span class="err">! 请先在 岗位/JD 配置 创建岗位</span>'); return; }
+  const btn=$(btnId); const old=btn.textContent; btn.disabled=true; btn.innerHTML='<span class="spin"></span> 运行中';
+  logLine(`→ ${usePython?'Python 采集':'离线冒烟'} 岗位 <span class="dim">${jobId}</span> …`);
+  try{
+    const ep=usePython?'/api/sourcing/collect':'/api/sourcing/run';
+    const r=await api.post(ep,{jobId});
+    if(r.ok){
+      logLine(`<span class="ok">✓ </span>${r.summary??r.note??'完成'}`);
+      if(r.greeted!=null) logLine(`<span class="ok">→ BOSS 打招呼：账号 ${state.recruiter} 发出 ${r.greeted} 位 · 获取简历 ${r.candidates??0} 份</span>`);
+      if(Array.isArray(r.steps)&&r.steps.length){
+        renderPipe(r.steps);
+        r.steps.forEach(s=>logLine(`   ✓ ${esc(s.label)}${s.note?' — '+esc(s.note):''}`));
+      }
+    }
+    else logLine(`<span class="err">✗ </span>${r.error??r.note??'失败'}`);
+  }catch(e){ logLine(`<span class="err">✗ 请求失败：</span>${e.message}`); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+  await loadAll();
+}
+$('#btnCollect').addEventListener('click',()=>collect(true,'#btnCollect'));
+$('#btnSmoke').addEventListener('click',()=>collect(false,'#btnSmoke'));
+$('#btnGreet').addEventListener('click',async()=>{
+  const jobId=$('#schJob').value||(myJobs()[0]?.jobId);
+  if(!jobId){ toast('请先选择目标岗位'); return; }
+  const b=$('#btnGreet'), old=b.textContent; b.disabled=true; b.innerHTML='<span class="spin"></span> 打招呼中';
+  try{
+    const r=await api.post('/api/sourcing/greet',{jobId});
+    b.textContent=old; b.disabled=false;
+    if(r.ok){
+      $('#greetStat').innerHTML=`已向 <b>${r.count}</b> 位候选人发送打招呼`;
+      logLine(`<span class="ok">✓ </span>BOSS 打招呼：账号 ${state.recruiter} → 岗位 ${jobId}，已向 ${r.count} 位候选人发送`);
+      await loadAll(); toast(`✓ 已向 ${jobId} 的 ${r.count} 位候选人发送打招呼`);
+    } else toast('✗ '+(r.error||'打招呼失败'));
+  }catch(e){ b.textContent=old; b.disabled=false; toast('✗ '+e.message); }
+});
+$('#btnRecommend').addEventListener('click',async()=>{
+  const jobId=$('#schJob').value||(myJobs()[0]?.jobId);
+  if(!jobId){ toast('请先选择目标岗位'); return; }
+  const b=$('#btnRecommend'), old=b.textContent; b.disabled=true; b.innerHTML='<span class="spin"></span> 寻访中';
+  try{
+    const r=await api.post('/api/sourcing/recommend',{jobId,recruiterId:state.recruiter});
+    b.textContent=old; b.disabled=false;
+    if(r.ok){
+      logLine(`<span class="ok">✓ </span>推荐牛人寻访：岗位 ${jobId}，命中 ${r.fetched} 人 · 新注入 ${r.injected.length} · 与既有去重 ${r.deduped}`);
+      await loadAll(); toast(`✓ 推荐寻访完成：命中 ${r.fetched} · 注入 ${r.injected.length} · 去重 ${r.deduped}`);
+    } else toast('✗ '+(r.error||'推荐寻访失败'));
+  }catch(e){ b.textContent=old; b.disabled=false; toast('✗ '+e.message); }
+});
+$('#runJob').addEventListener('click',()=>collect(false,'#runJob'));
+$('#topRun').addEventListener('click',async()=>{
+  if(!myJobs().length){ toast('请先创建岗位'); navTo('jobs'); return; }
+  await collect(true,'#topRun');
+});
+$('#btnRefresh').addEventListener('click',async()=>{ $('#btnRefresh').disabled=true; await loadAll(); $('#btnRefresh').disabled=false; toast('✓ 已刷新全部视图'); });
+
+/* ---------- candidates：候选人库（随账号） + 人才库（全员共享） ---------- */
+function scopeMine(){ const ids=new Set(myJobs().map(j=>j.jobId)); return state.candidates.filter(c=>ids.has(c.jobId)); }
+function scopeAll(){ return state.candidates.slice(); }
+function calSeg(rows){ const c={}; rows.forEach(cd=>{ c[cd.status]=(c[cd.status]||0)+1; });
+  return [['all','全部',rows.length],['matched','已匹配',c.matched||0],['parsed','已入库',c.parsed||0],['screened','已筛选',c.screened||0],['sourced','已寻源',c.sourced||0],['rejected','已淘汰',c.rejected||0]]; }
+function readF(p,id){ const e=document.getElementById(p+id); return e?e.value:''; }
+function whereRows(base,p,seg,search){
+  let rows=search??base.slice();
+  if(seg!=='all') rows=rows.filter(c=>c.status===seg);
+  const kw=readF(p,'fKw').trim().toLowerCase(), sk=readF(p,'fSkill').trim().toLowerCase(), ed=readF(p,'fEdu').trim().toLowerCase();
+  const jobId=readF(p,'fJob'), src=readF(p,'fSource'), deg=readF(p,'fDeg');
+  const yMin=parseFloat(readF(p,'fYears')), sMin=parseFloat(readF(p,'fScore'));
+  const touch=readF(p,'fTouch'), contact=readF(p,'fContact'), created=readF(p,'fCreated');
+  if(kw) rows=rows.filter(c=>`${c.name??''} ${c.candidateId??''} ${c.salaryExpected??''} ${c.source??''}`.toLowerCase().includes(kw));
+  if(sk) rows=rows.filter(c=>skillsOf(c).some(s=>String(s).toLowerCase().includes(sk))||(c.skills??[]).some(s=>String(s).toLowerCase().includes(sk)));
+  if(ed) rows=rows.filter(c=>{ const edu=state.resumes.filter(x=>x.candidateId===c.candidateId).at(-1)?.parsed?.education??c.education??{}; return `${edu.school??''} ${edu.degree??''} ${edu.major??''}`.toLowerCase().includes(ed); });
+  if(jobId) rows=rows.filter(c=>c.jobId===jobId);
+  if(src) rows=rows.filter(c=>c.source===src);
+  if(deg) rows=rows.filter(c=>{ const edu=state.resumes.filter(x=>x.candidateId===c.candidateId).at(-1)?.parsed?.education??c.education??{}; return `${edu.degree??''}`.includes(deg); });
+  if(!isNaN(yMin)&&yMin>0) rows=rows.filter(c=>(parseFloat(c.workExperienceYears)||0)>=yMin);
+  if(!isNaN(sMin)&&sMin>0) rows=rows.filter(c=>{ const m=state.matches.filter(x=>x.candidateId===c.candidateId).at(-1); return (m?.matchScore??0)>=sMin; });
+  if(touch) rows=rows.filter(c=>c.touchStatus===touch);
+  if(contact) rows=rows.filter(c=>{ const has=(c.phone||c.contactResolved===true); return contact==='has'?has:!has; });
+  if(created) rows=rows.filter(c=>{ const t=new Date((c.createdAt??c.meta?.createdAt)||0).getTime(); if(!t) return created==='older'; const now=Date.now(), day=86400000; if(created==='today') return t>=now-1*day; if(created==='week') return t>=now-7*day; if(created==='month') return t>=now-30*day; return t<now-30*day; });
+  return rows.map(c=>{ const m=state.matches.filter(x=>x.candidateId===c.candidateId).at(-1); return {c,score:m?.matchScore??null}; })
+    .sort((a,b)=>(b.score??-1)-(a.score??-1));
+}
+function renderCandInto(tbodyId,countId,rows){
+  const tb=$(tbodyId);
+  if(!rows.length){ tb.innerHTML=`<tr><td colspan="7" class="empty">${tbodyId==='#talentTbody'?'暂无人才。各账号采集的候选人都会沉淀到人才库。':'暂无候选人。请先在调度视图运行采集。'}</td></tr>`; }
+  else tb.innerHTML=rows.map(({c,score})=>`
+    <tr data-c="${esc(c.candidateId)}">
+      <td><span class="cell-name">${esc(c.name||'—')}<small>${esc(c.candidateId)} · ${esc(c.source)}</small></span></td>
+      <td><span class="tag">${esc(c.source)}</span></td>
+      <td>${c.workExperienceYears??'—'} 年</td>
+      <td>${skillsOf(c).slice(0,6).map(s=>`<span class="skill">${esc(s)}</span>`).join('')||'—'}</td>
+      <td>${esc(c.salaryExpected||'面议')}</td>
+      <td>${stBadge(c.status)}</td>
+      <td>${scoreHtml(score)}</td>
+    </tr>`).join('');
+  const ce=$(countId); if(ce) ce.textContent=`共 ${rows.length} 条记录 · 敏感字段默认脱敏 · 原始简历加密存储`;
+  tb.querySelectorAll('tr[data-c]').forEach(tr=>tr.addEventListener('click',()=>{
+    openDrawer(tr.dataset.c);
+    tb.querySelectorAll('tr[data-c]').forEach(o=>o.classList.remove('sel'));
+    tr.classList.add('sel');
+  }));
+}
+
+/* —— 候选人库：随当前登录账号变化，仅显示本账号岗位下收集的候选人 —— */
+function renderSeg(){
+  const base=scopeMine();
+  $('#statusSeg').innerHTML=calSeg(base).map(([k,l,n])=>`<button data-f="${k}" class="${state.seg===k?'active':''}">${l} ${n}</button>`).join('');
+  $('#navCandBadge').style.display=base.length?'':'none'; $('#navCandBadge').textContent=base.length;
+}
+function currentRows(){ return whereRows(scopeMine(),'',state.seg,state.search); }
+function renderCandidates(){ renderCandInto('#candTbody','#candCount',currentRows()); }
+function fillJobFilter(){
+  const cur=$('#fJob').value;
+  $('#fJob').innerHTML='<option value="">全部岗位</option>'+myJobs().map(j=>`<option value="${esc(j.jobId)}">${esc(j.jobTitle||j.jobId)}</option>`).join('');
+  if(state.activeJob && myJobs().some(j=>j.jobId===state.activeJob)) $('#fJob').value=state.activeJob;
+  else if(cur) $('#fJob').value=cur;
+}
+function fillSourceFrom(p,base){ const list=[...new Set(base.map(c=>c.source).filter(Boolean))]; const el=$('#'+p+'fSource'); if(!el) return; const cur=el.value; el.innerHTML='<option value="">全部来源</option>'+list.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join(''); if(cur) el.value=cur; }
+function fillSourceFilter(){ fillSourceFrom('', scopeMine()); }
+$('#statusSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-f]'); if(!b) return;
+  state.seg=b.dataset.f; renderSeg(); renderCandidates();
+});
+async function doSearch(){ const r=await api.get('/api/candidates/search?'+new URLSearchParams({keyword:readF('','fKw').trim(),skill:readF('','fSkill').trim(),education:readF('','fEdu').trim(),limit:200})); state.search=r.candidates??[]; renderCandidates(); toast(`✓ 检索命中 ${state.search.length} 位`); }
+$('#btnSearch').addEventListener('click',doSearch);
+$('#fKw').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
+$('#btnReset').addEventListener('click',clearAllFilters);
+
+/* —— 人才库：全员共享，不随账号变化；无“岗位”筛选 —— */
+function renderTalentSeg(){
+  const base=scopeAll();
+  $('#talentSeg').innerHTML=calSeg(base).map(([k,l,n])=>`<button data-f="${k}" class="${state.segT===k?'active':''}">${l} ${n}</button>`).join('');
+  $('#navTalentBadge').style.display=base.length?'':'none'; $('#navTalentBadge').textContent=base.length;
+}
+function talentRows(){ return whereRows(scopeAll(),'t',state.segT,state.searchT); }
+function renderTalent(){ renderCandInto('#talentTbody','#talentCount',talentRows()); }
+function fillTalentSource(){ fillSourceFrom('t', scopeAll()); }
+$('#talentSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-f]'); if(!b) return;
+  state.segT=b.dataset.f; renderTalentSeg(); renderTalent();
+});
+async function doSearchTalent(){ const r=await api.get('/api/candidates/search?'+new URLSearchParams({keyword:readF('t','fKw').trim(),skill:readF('t','fSkill').trim(),education:readF('t','fEdu').trim(),limit:200})); state.searchT=r.candidates??[]; renderTalent(); toast(`✓ 人才库检索命中 ${state.searchT.length} 位`); }
+$('#tBtnSearch').addEventListener('click',doSearchTalent);
+$('#tKw').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearchTalent(); });
+function clearTalentFilters(){
+  ['fSource','fDeg','fYears','fScore','fTouch','fContact','fCreated','fKw','fSkill','fEdu'].forEach(id=>{ const el=$('#t'+id); if(el) el.value=''; });
+  state.segT='all'; state.searchT=null; renderTalentSeg(); renderTalent(); fillTalentSource();
+}
+$('#tBtnReset').addEventListener('click',clearTalentFilters);
+$('#tBtnClearFilters').addEventListener('click',clearTalentFilters);
+['fSource','fDeg','fYears','fScore','fTouch','fContact','fCreated'].forEach(id=>{ const el=$('#t'+id); if(el) el.addEventListener('change',()=>{ state.searchT=null; renderTalent(); }); });
+
+/* ---------- drawer ---------- */
+function resumeOf(cid){ return state.resumes.filter(x=>x.candidateId===cid).at(-1)||null; }
+function openDrawer(candId){
+  _drawerCand = candId;
+  const c=state.candidates.find(x=>x.candidateId===candId)||{candidateId:candId};
+  const r=resumeOf(candId); const m=state.matches.filter(x=>x.candidateId===candId).at(-1);
+  const p=r?.parsed||{};
+  $('#dAva').textContent=(c.name||'?')[0]||'?';
+  $('#dName').textContent=c.name&&c.name!==c.candidateId?c.name:c.candidateId;
+  $('#dMeta').textContent=`${c.candidateId} · ${c.source||'—'} · ${c.workExperienceYears??'—'}年经验 · 期望 ${c.salaryExpected||'面议'}`;
+  const body=$('#drawerBody');
+  body.innerHTML=`
+    <div class="dsec"><div class="dt">JD 匹配</div>
+      ${m?`<div style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:13px">${scoreHtml(m.matchScore)}<span class="textfield">依据：${esc(m.evidence||'—')}</span></div>`:'<p class="textfield">暂无匹配记录。</p>'}
+    </div>
+    <div class="dsec"><div class="dt">基本信息</div>
+      <div class="kv">
+        <div><div class="k">学历/院校</div><div class="v">${esc(p.education?.school||c.education?.school||'—')}</div></div>
+        <div><div class="k">专业/学位</div><div class="v">${esc(p.education?.major||c.education?.major||'—')}${p.education?.degree?' · '+esc(p.education.degree):''}</div></div>
+        <div><div class="k">来源</div><div class="v">${esc(c.source||'—')}</div></div>
+        <div><div class="k">状态</div><div class="v">${stBadge(c.status)}</div></div>
+      </div>
+    </div>
+    <div class="dsec"><div class="dt">工作经历</div>
+      ${(p.experiences||[]).length?`<ul class="pl">${p.experiences.map(e=>`<li><span class="dur">${esc(e.duration||'')}</span><div class="co">${esc(e.company||'')}${e.role?' · '+esc(e.role):''}</div><div class="ro">${esc((e.highlights||[]).join('；'))}</div></li>`).join('')}</ul>`:'<p class="textfield">—</p>'}
+    </div>
+    <div class="dsec"><div class="dt">技能标签</div>
+      <div>${(p.skills||c.skills||[]).map(s=>`<span class="skill">${esc(s)}</span>`).join('')||'<span class="textfield">—</span>'}</div>
+    </div>
+    <div class="dsec"><div class="dt">来源与风险</div>
+      <p class="textfield">来源：${esc(c.source||'—')} · 简历解析引擎 ${esc(r?.meta?.engine||'—')}<br/>敏感字段（电话/邮箱）默认脱敏，点下方「脱敏字段解密」单次留痕解密；「查看原始简历文件」为 BOSS 索要的原始 docx/PDF，无真实文件时按解析结果合成样例。</p>
+    </div>
+    <div class="dsec" id="origzone" style="display:none"><div class="dt">原始简历文件</div><div class="textfield" id="origInfo">加载中…</div></div>
+    <div class="dsec" id="rawzone" style="display:none"><div class="dt">解析原文（解密）</div><div class="rawtext" id="rawText">加载中…</div></div>`;
+  $('#drawer').classList.add('open');
+  $('#btnShowRaw').disabled=false; $('#btnDecrypt').disabled=false; $('#btnOrigFile').disabled=false;
+  renderOriginalInfo(candId);
+}
+
+// 展示原始简历文件元数据（存在真实上传文件则显示文件名/大小；否则提示可合成）
+async function renderOriginalInfo(candId){
+  const info=await api.get('/api/candidates/'+encodeURIComponent(candId)+'/original/info').catch(()=>({found:false}));
+  const zone=$('#origzone');
+  if(info.found && info.meta){
+    zone.style.display=''; $('#origInfo').innerHTML=`已存在文件：<b>${esc(info.meta.filename||'')}</b>（${fmtSize(info.meta.size)||'—'}）· ${esc(info.meta.mime||'')}<br/>点击下方「查看原始简历文件」下载。`;
+  }else{
+    zone.style.display=''; $('#origInfo').innerHTML='尚未上传原始文件。点击下方按钮将按解析结果<b>生成一份样例 docx</b>，用于演示"点候选人→查看原始简历文件"。';
+  }
+}
+function fmtSize(n){ if(n==null) return null; if(n<1024) return n+' B'; if(n<1048576) return (n/1024).toFixed(1)+' KB'; return (n/1048576).toFixed(1)+' MB'; }
+$('#drawerClose').addEventListener('click',()=>$('#drawer').classList.remove('open'));
+$('#drawer').addEventListener('click',e=>{ if(e.target===$('#drawer')) $('#drawer').classList.remove('open'); });
+$('#btnOrigFile').addEventListener('click',async()=>{
+  const cid=currentDrawerCand(); if(!cid){ toast('无候选人'); return; }
+  $('#btnOrigFile').disabled=true;
+  try{
+    const url='/api/candidates/'+encodeURIComponent(cid)+'/original/file';
+    // 先探测是否可生成；后端 GET 会按需合成，直接触发下载
+    const a=document.createElement('a'); a.href=url; a.download=''; document.body.appendChild(a); a.click(); a.remove();
+    toast('已开始下载 / 打开原始简历文件');
+    setTimeout(()=>renderOriginalInfo(cid),600);
+  }catch(e){ toast('✗ '+e.message); }
+  finally{ $('#btnOrigFile').disabled=false; }
+});
+$('#btnShowRaw').addEventListener('click',async()=>{
+  const cid=currentDrawerCand(); if(!cid){ toast('无候选人'); return; }
+  $('#btnShowRaw').disabled=true; $('#rawzone').style.display='block'; $('#rawText').textContent='解密中…';
+  const r=await api.get('/api/resumes/'+encodeURIComponent(cid)+'/text');
+  $('#rawText').textContent=(r.found&&r.text)?r.text:'（未找到加密原文，可能为脱敏种子数据）';
+  $('#btnShowRaw').disabled=false;
+});
+$('#btnDecrypt').addEventListener('click',()=>{
+  toast('🔒 脱敏字段解密需授权 HR 权限，本次操作为演示（静态脱敏）。');
+});
+let _drawerCand=null;
+function currentDrawerCand(){ return _drawerCand; }
+
+/* ---------- audit ---------- */
+function renderAudit(){
+  const box=$('#auditBox');
+  if(!state.audit.length){ box.innerHTML='<div class="empty">暂无审计记录</div>'; return; }
+  box.innerHTML=state.audit.slice().reverse().slice(0,60).map(a=>`
+    <div class="item"><div class="ic">⚙</div><div class="act">${esc(a.action)}<small>${esc((a.detail&&(a.detail.candidateId||a.detail.jobId||a.detail.scheduleId))||'')}</small></div><div class="who">${esc(a.actor||'')}</div><div class="ts">${at(a.ts)}</div></div>`).join('');
+}
+$('#btnAuditRefresh').addEventListener('click',async()=>{ await loadAudit(); renderAudit(); toast('✓ 已刷新审计'); });
+
+/* ---------- 触达/沟通：话术库 + 智能跟进 + 触达审计 ---------- */
+const TIER_LABEL={first:'初次打招呼',second:'二次激活',third:'三次及以上',exchange:'交换联系方式（F-2）'};
+const TIER_HINT={first:'匹配达标自动发送',second:'第 2 轮跟进应用',third:'第 3 轮及以后应用',exchange:'简历缺电话自动发送 · 话术含 [我方联系方式]'};
+const TOUCH_TAG={greet:'打招呼',follow_up:'重发跟进',request_resume:'索要简历',request_phone:'索要电话',agree_resume:'同意收取简历',exchange_contact:'交换联系方式'};
+function renderMsgLib(){
+  const box=$('#msgTiers'); if(!state.msgtemplates.length){ box.innerHTML='<div class="empty">话术库为空，等待初始化…</div>'; return; }
+  const byTier={}; (state.msgtemplates||[]).forEach(t=>{(byTier[t.tier]=byTier[t.tier]||[]).push(t);});
+  box.innerHTML=['first','second','third','exchange'].map(tier=>{
+    const list=(byTier[tier]||[]).slice().sort((a,b)=>a.updatedAt<b.updatedAt?1:-1);
+    const active=list.find(x=>x.active)||list.find(x=>x.source==='preset')||list[0];
+    if(!active) return '';
+    return `<div class="tier">
+      <div class="tier-hd"><b>${TIER_LABEL[tier]}</b><span class="tag">${TIER_HINT[tier]}</span>
+        <span style="margin-left:auto" class="badge ${active.source==='preset'?'b-info':'b-brand'}">${active.source==='preset'?'BOSS 常用语':'HR 自定义'}</span></div>
+      <div class="now"><div class="v">${esc(active.content)}</div><div class="s">当前生效 · ${esc(active.note||'')}</div></div>
+      <div class="verlist">${list.map(x=>`<div class="tver" data-activate="${esc(x.templateId)}" title="点击切换为生效版本"><div class="c">${esc(x.content)}</div><span class="act">${x.source==='preset'?'常用语':'自定义'}${x.templateId===active.templateId?' · <b style="color:var(--brand)">生效</b>':' · 点击启用'}</span></div>`).join('')}</div>
+      <div class="add">
+        <textarea id="ta-${tier}" placeholder="写入新话术版本…（含占位符 [岗位]，命中后将替换为岗位名）"></textarea>
+        <button class="btn sm" data-save-tier="${tier}">保存并启用</button>
+        <button class="btn ghost sm" data-preset-tier="${tier}">换回常用语</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderEngage(){
+  renderMsgLib();
+  renderPending();
+  renderHrContact();
+  renderCampaignForm();
+  renderCampaigns();
+  renderNotifications();
+  renderMetrics();
+  const plans=state.followup||[];
+  $('#fupTbody').innerHTML=plans.length?plans.map(p=>{
+    const track=p.track==='read'?'已读':'未读';
+    const [st,sc]=p.status==='sleeping'?['沉睡','b-gray']:p.status==='engaging'?['跟进中','b-warn']:['待触达','b-info'];
+    return `<tr><td class="cell-name">${esc(p.name)}<small>${esc(p.candidateId)}</small></td><td><span class="badge ${p.track==='read'?'b-ok':'b-info'}">${track}</span></td><td>${p.touchCount}</td><td>${p.mode==='weekly'?'周频':'日频'}</td><td>${p.nextDueAt?at(p.nextDueAt):'—'}</td><td><span class="badge ${sc}">${st}</span></td></tr>`;
+  }).join(''):'<tr><td colspan="6" class="empty">暂无跟进计划（已触达候选人将在此显示）</td></tr>';
+}
+function renderTapAudit(){
+  const acts=Object.keys(TOUCH_TAG).map(a=>`sourcing.${a}`);
+  const hit=(state.audit||[]).filter(ev=>acts.includes(ev.action)||ev.action==='engage.sweep'||ev.action==='engage.sleep'||ev.action==='messagelib.activate');
+  const box=$('#engageAudit');
+  box.innerHTML=hit.length?hit.slice().reverse().slice(0,40).map(a=>{
+    const key=a.action.startsWith('sourcing.')?a.action.slice(9):a.action;
+    const tag=TOUCH_TAG[key]||a.action.replace('messagelib.','话术库·').replace('engage.','跟进·');
+    const d=a.detail||{}; const rd=d.round?` · 轮次${d.round}`:''; const mv=d.messageVersion?` · 话术${String(d.messageVersion).slice(0,8)}`:''; const rs=d.result?` · ${d.result}`:'';
+    return `<div class="item"><div class="ic">${a.action==='messagelib.activate'?'⚙':TOUCH_TAG[key]?'💬':'🔄'}</div><div class="act">${esc(tag)}${d.candidateId?`<small>${esc(d.candidateId)}</small>`:''}<small>${rd}${mv}${rs}</small></div><div class="who">${esc(a.actor||'')}</div><div class="ts">${at(a.ts)}</div></div>`;
+  }).join(''):'<div class="empty">暂无触达审计记录</div>';
+}
+$('#btnTapAuditRefresh')?.addEventListener('click',()=>{ loadAudit().then(renderTapAudit); });
+$('#msgTiers').addEventListener('click',async(e)=>{
+  const sv=e.target.closest('[data-save-tier]');
+  const pr=e.target.closest('[data-preset-tier]');
+  const ac=e.target.closest('[data-activate]');
+  if(sv){
+    const tier=sv.dataset.saveTier; const content=$('#ta-'+tier).value;
+    if(!content.trim()) return toast('话术内容不能为空');
+    const r=await api.post('/api/messagelib',{tier,source:'custom',content,activate:true});
+    if(r.ok){ toast('✓ 已保存并启用新话术版本'); await loadMessagelib(); renderEngage(); } else toast(r.error||'保存失败');
+  } else if(pr){
+    const tier=pr.dataset.presetTier;
+    const r=await api.post('/api/messagelib/preset',{tier});
+    if(r.ok){ toast('✓ 已换回该档 BOSS 常用语'); await loadMessagelib(); renderEngage(); } else toast(r.error||'操作失败');
+  } else if(ac){
+    const r=await api.post('/api/messagelib/'+encodeURIComponent(ac.dataset.activate)+'/activate',{});
+    if(r && r.templateId){ toast('✓ 已切换生效版本'); await loadMessagelib(); renderEngage(); } else toast('切换失败');
+  }
+});
+$('#btnMsgRefresh').addEventListener('click',async()=>{ await loadMessagelib(); renderEngage(); toast('✓ 已刷新话术库'); });
+$('#btnAutoGreet').addEventListener('click',async()=>{
+  const th=Number($('#egThreshold').textContent)||60;
+  const targets=(state.matches||[]).filter(m=>m.matchScore!=null&&m.matchScore>=th && !(state.candidates.find(c=>c.candidateId===m.candidateId)?.greetedAt));
+  if(!targets.length) return toast('暂无匹配达标且未打招呼的候选人');
+  $('#egAutoCount').textContent='触发中…';
+  const out=[]; let ok=0;
+  for(const m of targets){
+    const r=await api.post('/api/engage/auto-greet',{candidateId:m.candidateId,jobId:m.jobId,matchScore:m.matchScore,recruiterId:state.recruiter});
+    const st=!r.skipped&&(r.ok||r.already)?'✓ 已打招呼':(r.skipped||r.reason||'跳过');
+    if(st.startsWith('✓')) ok++; out.push({candidateId:m.candidateId,status:st});
+  }
+  $('#egAutoCount').textContent=`${ok}/${targets.length} 已自动打招呼`;
+  $('#egAutoList').innerHTML=out.map(o=>`<span class="chip" style="display:inline-flex">${esc(o.candidateId)} · ${esc(o.status)}</span>`).join('');
+  await loadAll(); renderEngage();
+});
+$('#btnSweep').addEventListener('click',async()=>{
+  const r=await api.post('/api/engage/followup/sweep',{});
+  toast(`✓ 扫描完成：发送 ${(r.sent||[]).length} · 沉睡 ${(r.slept||[]).length}`);
+  await loadFollowup(); await loadAudit(); renderEngage();
+});
+
+/* ---------- F组：自动收取（F-1）/ 交换联系方式（F-2）/ 打招呼批次（F-3）/ 提醒+复盘（F-4） ---------- */
+function renderPending(){
+  const list=state.pending||[];
+  $('#pendingTbody').innerHTML=list.length?list.map(c=>`<tr>
+    <td class="cell-name">${esc(c.name)}<small>${esc(c.candidateId)}</small></td>
+    <td>${esc(c.jobId||'—')}</td>
+    <td><span class="badge b-err">${esc(c.manualReason||'收取异常')}</span></td>
+    <td><button class="btn sm" data-retry="${esc(c.candidateId)}">重试自动收取</button></td>
+  </tr>`).join(''):'<tr><td colspan="4" class="empty">暂无人工待处理（自动收取异常时在此显示）</td></tr>';
+}
+$('#pendingTbody').addEventListener('click',async(e)=>{
+  const b=e.target.closest('[data-retry]'); if(!b) return;
+  const cid=b.dataset.retry; b.disabled=true; b.textContent='收取中…';
+  const r=await api.post(`/api/engage/manual-pending/${encodeURIComponent(cid)}/retry`,{recruiterId:state.recruiter});
+  if(r.ok&&r.resumeReceived){ toast('✓ 已自动收取并触发解析'); await loadAll(); renderEngage(); }
+  else{ b.disabled=false; b.textContent='重试自动收取'; toast('✗ '+(r.error||r.reason||'收取失败')); }
+});
+$('#btnPendingRefresh').addEventListener('click',async()=>{ await loadPending(); renderPending(); toast('✓ 已刷新人工待处理清单'); });
+
+function renderHrContact(){
+  $('#hrContactInput').value=state.hrContact||'';
+  $('#hrContactHint').innerHTML=state.hrContact
+    ?`<span class="chip">当前：${esc(state.hrContact)}</span><span class="chip">简历缺电话的候选人将自动收到含此联系方式的交换话术</span>`
+    :'<span class="chip">尚未配置 · 交换话术将使用默认占位提示</span>';
+}
+$('#btnSaveContact').addEventListener('click',async()=>{
+  const v=$('#hrContactInput').value.trim();
+  if(!v) return toast('联系方式不能为空');
+  const r=await api.put('/api/engage/contact',{contact:v});
+  if(r.ok){ state.hrContact=r.contact; renderHrContact(); toast('✓ 我方联系方式已保存'); } else toast('✗ '+(r.error||'保存失败'));
+});
+
+function renderCampaignForm(){
+  const jobs=myJobs().filter(j=>j.status!=='closed');
+  const sel=$('#cgMode').value;
+  $('#cgJobQuotas').innerHTML=jobs.length?`<label class="f">${sel==='all_jobs'?'各职位额度（可留空使用默认 20）':'勾选职位并设置额度'}</label>
+  <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">${jobs.map(j=>`<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px">
+    <input type="checkbox" data-cgjob="${esc(j.jobId)}" ${sel==='all_jobs'?'checked':''} style="width:auto">
+    <span>${esc(j.jobTitle||j.jobId)} <small style="color:#8b97bd">${esc(j.jobId)}</small></span>
+    <input type="number" min="0" data-cgquota="${esc(j.jobId)}" placeholder="额度" style="width:90px;margin-left:auto">
+  </label>`).join('')}</div>`:'<div class="empty">当前账号暂无 open 岗位</div>';
+}
+$('#cgMode').addEventListener('change',renderCampaignForm);
+$('#cgForm').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const mode=$('#cgMode').value;
+  const jobs=[];
+  document.querySelectorAll('[data-cgjob]').forEach(cb=>{
+    if(cb.checked){
+      const q=Number(document.querySelector(`[data-cgquota="${CSS.escape(cb.dataset.cgjob)}"]`)?.value);
+      jobs.push({jobId:cb.dataset.cgjob,quota:Number.isFinite(q)&&q>=0?q:undefined});
+    }
+  });
+  const b=$('#cgBtn'), old=b.textContent; b.disabled=true; b.textContent='创建中…';
+  const r=await api.post('/api/engage/campaigns',{mode,jobs,recruiterId:state.recruiter});
+  b.disabled=false; b.textContent=old;
+  if(r.campaignId){ toast('✓ 批次已创建，可运行'); await loadCampaigns(); renderCampaigns(); }
+  else toast('✗ '+(r.error||'创建失败'));
+});
+
+const CAMP_ST={running:['进行中','b-info'],paused:['已暂停','b-warn'],finished:['已结束','b-gray']};
+const ENTRY_ST={pending:['待打','b-gray'],running:['进行中','b-info'],quota_reached:['到额','b-ok'],exhausted:['遍历完','b-ok'],done:['完成','b-ok']};
+function renderCampaigns(){
+  const list=state.campaigns||[];
+  $('#campaignList').innerHTML=list.length?list.map(c=>{
+    const [sl,sc]=CAMP_ST[c.status]||[c.status,'b-gray'];
+    return `<div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <b style="font-size:13px">${c.mode==='all_jobs'?'全部职位顺序':'指定职位'}</b>
+        <span class="badge ${sc}">${sl}</span>
+        <small style="color:#8b97bd">${esc(c.campaignId)} · ${at(c.createdAt)}</small>
+        <span style="margin-left:auto;display:flex;gap:6px">
+          ${c.status==='running'?`<button class="btn ghost sm" data-cgctl="pause" data-id="${esc(c.campaignId)}">暂停</button>`:''}
+          ${c.status==='paused'?`<button class="btn ghost sm" data-cgctl="resume" data-id="${esc(c.campaignId)}">恢复</button>`:''}
+          ${c.status!=='finished'?`<button class="btn ghost sm" data-cgctl="finish" data-id="${esc(c.campaignId)}">结束</button>
+          <button class="btn sm" data-cgrun="${esc(c.campaignId)}">运行批次</button>`:''}
+        </span>
+      </div>
+      ${c.note?`<div class="hint" style="margin-top:6px">${esc(c.note)}</div>`:''}
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${(c.jobs||[]).map(j=>{
+        const [el,ec]=ENTRY_ST[j.state]||[j.state,'b-gray'];
+        return `<span class="chip">${esc(j.jobId)} · ${j.greeted}/${j.quota||'∞'} <span class="badge ${ec}">${el}</span></span>`;
+      }).join('')}</div>
+    </div>`;
+  }).join(''):'<div class="empty">暂无批次 · 上方新建</div>';
+  const sel=$('#mtCampaign'); const cur=sel.value;
+  sel.innerHTML='<option value="">全部职位（当前账号）</option>'+list.map(c=>`<option value="${esc(c.campaignId)}">批次 ${esc(c.campaignId)}</option>`).join('');
+  if(list.some(c=>c.campaignId===cur)) sel.value=cur;
+}
+$('#campaignList').addEventListener('click',async(e)=>{
+  const ctl=e.target.closest('[data-cgctl]'); const run=e.target.closest('[data-cgrun]');
+  if(ctl){
+    const r=await api.post(`/api/engage/campaigns/${encodeURIComponent(ctl.dataset.id)}/control`,{action:ctl.dataset.cgctl});
+    if(r.ok){ toast('✓ 批次状态已更新'); await loadCampaigns(); renderCampaigns(); } else toast('✗ '+(r.error||'操作失败'));
+  } else if(run){
+    const b=run; b.disabled=true; const old=b.textContent; b.innerHTML='<span class="spin"></span> 运行中';
+    const r=await api.post(`/api/engage/campaigns/${encodeURIComponent(run.dataset.cgrun)}/control`,{action:'run'});
+    b.disabled=false; b.textContent=old;
+    if(r.ok){ toast(r.paused?`⚠ 批次暂停：${r.reason||'护栏拦截'}`:'✓ 批次已运行至结束'); await Promise.all([loadCampaigns(),loadNotifications(),loadMetrics()]); renderCampaigns(); renderNotifications(); renderMetrics(); }
+    else toast('✗ '+(r.error||'运行失败'));
+  }
+});
+$('#btnCampaignRefresh').addEventListener('click',async()=>{ await Promise.all([loadCampaigns(),loadNotifications()]); renderCampaigns(); renderNotifications(); toast('✓ 已刷新批次'); });
+
+function renderNotifications(){
+  const list=state.notifications||[];
+  $('#notifyBox').innerHTML=list.length?list.map(n=>`<div class="item" style="${n.read?'opacity:.5':''}">
+    <div class="ic">${n.type==='campaign_finished'?'🏁':'🔔'}</div>
+    <div class="act">${esc(n.title)}${n.read?'':' <span class="badge b-err">未读</span>'}<small>${esc(n.body||'')}</small></div>
+    <div class="ts">${at(n.createdAt)}</div>
+  </div>`).join(''):'<div class="empty">暂无提醒 · 批次结束后自动推送</div>';
+  $('#btnNotifyRead').textContent=state.unread?`全部已读（${state.unread}）`:'全部已读';
+}
+$('#btnNotifyRead').addEventListener('click',async()=>{
+  const r=await api.post('/api/engage/notifications/read',{id:'all'});
+  if(r.ok){ await loadNotifications(); renderNotifications(); toast('✓ 已全部标记已读'); }
+});
+$('#mtCampaign').addEventListener('change',async()=>{ await loadMetrics(); renderMetrics(); });
+$('#btnMetricsRefresh').addEventListener('click',async()=>{ await loadMetrics(); renderMetrics(); toast('✓ 已刷新复盘指标'); });
+$('#btnMetricsExport').addEventListener('click',()=>{
+  const cid=$('#mtCampaign').value;
+  location.href='/export/engage-metrics.csv'+(cid?`?campaignId=${encodeURIComponent(cid)}`:'');
+});
+function renderMetrics(){
+  const m=state.metrics; if(!m) return;
+  const rows=m.perJob||[];
+  $('#metricsTbody').innerHTML=rows.length?rows.map(x=>`<tr>
+    <td class="cell-name">${esc(x.jobTitle)}<small>${esc(x.jobId)}</small></td>
+    <td><b>${x.greeted}</b></td>
+    <td>${x.read} / ${x.unread}</td>
+    <td>${Math.round((x.replyRate||0)*100)}%</td>
+    <td>${Math.round((x.convertRate||0)*100)}%</td>
+    <td>${x.sleeping}</td>
+  </tr>`).join(''):'<tr><td colspan="6" class="empty">暂无数据</td></tr>';
+  const t=m.totals||{};
+  $('#metricsTotals').innerHTML=`<span class="chip">总打招呼 <b>${t.greeted??0}</b></span><span class="chip">已读率 <b>${Math.round((t.readRate||0)*100)}%</b></span><span class="chip">回复率 <b>${Math.round((t.replyRate||0)*100)}%</b></span><span class="chip">转化率 <b>${Math.round((t.convertRate||0)*100)}%</b></span><span class="chip">沉睡 <b>${t.sleeping??0}</b></span>`
+    +(m.campaign?`<span class="chip">批次进度 ${m.campaign.totalGreeted??0} 人</span>`:'');
+}
+
+/* ---------- nav ---------- */
+function navTo(v){
+  document.body.classList.toggle('jobs-view',v==='jobs');
+  document.querySelectorAll('.navitem').forEach(x=>x.classList.toggle('active',x.dataset.view===v));
+  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));
+  const t=TITLES[v]; if(t){ $('#pageTitle').textContent=t[0]; $('#pageSub').textContent=t[1]; }
+  if(v==='audit'){ loadAudit().then(renderAudit); }
+  if(v==='logs'){ loadLogs().then(renderLogs); }
+  if(v==='engage'){ Promise.all([loadMessagelib(),loadFollowup(),loadAudit(),loadPending(),loadHrContact(),loadCampaigns(),loadNotifications(),loadMetrics()]).then(renderEngage); }
+  if(v==='settings'&&state.user){ renderSettings(); }
+}
+document.querySelectorAll('.navitem').forEach(b=>b.addEventListener('click',()=>navTo(b.dataset.view)));
+
+boot();
+</script>
+</body>
+</html>

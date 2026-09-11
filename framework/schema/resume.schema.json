@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hr:schema:resume",
+  "title": "Resume",
+  "description": "简历解析结果（复用 InterviewPrep 的结构化抽取）",
+  "type": "object",
+  "required": ["resumeId", "candidateId", "status", "meta"],
+  "properties": {
+    "resumeId": { "type": "string" },
+    "candidateId": { "type": "string" },
+    "status": { "type": "string", "enum": ["stored", "parsed", "parse_failed"] },
+    "format": { "type": "string", "enum": ["pdf", "docx", "html", "image", "text"] },
+    "storageRef": { "type": ["string", "null"] },
+    "rawText": { "type": "string" },
+    "parsed": {
+      "type": "object",
+      "properties": {
+        "education": {
+          "type": "object",
+          "properties": { "school": { "type": "string" }, "degree": { "type": "string" }, "major": { "type": "string" } }
+        },
+        "contact": {
+          "type": "object",
+          "description": "简历中抽取的联系方式：phone 缺失即视为『缺电话』，触发自动索要电话",
+          "properties": { "phone": { "type": ["string", "null"] }, "email": { "type": ["string", "null"] } }
+        },
+        "experiences": { "type": "array", "items": { "type": "object" } },
+        "projects": { "type": "array", "items": { "type": "object" } },
+        "skills": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["createdAt", "parsedAt"],
+      "properties": {
+        "createdAt": { "type": "string", "format": "date-time" },
+        "parsedAt": { "type": "string", "format": "date-time" },
+        "engine": { "type": "string" }
+      }
+    }
+  }
+}
