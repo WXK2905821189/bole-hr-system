@@ -22,7 +22,7 @@ export class ParserService {
       status: 'parsed',
       format,
       storageRef: null,
-      rawText: maskedPreview(rawText),
+      rawText: String(rawText ?? '').trim(),
       parsed: {
         education: structured.education ?? {},
         contact: {
@@ -35,10 +35,6 @@ export class ParserService {
       },
       meta: { createdAt: new Date().toISOString(), parsedAt: new Date().toISOString(), engine },
     };
-    // 合规红线：简历原文加密落盘（files/<candidateId>.enc），jsonl 仅存脱敏预览与引用
-    if (rawText && this.vault?.enabled) {
-      resume.storageRef = this.vault.put(rawText, candidateId);
-    }
     this.validate.assertValid('resume', resume);
     await this.store.write('resumes.jsonl', resume);
     // 发布解析完成事件 → 触发匹配服务（resume.parsed 订阅者）
@@ -48,11 +44,24 @@ export class ParserService {
 
   async #byLlm(rawText) {
     if (this.llm.ready) {
-      const out = extractJson(await this.llm.complete(RESUME_PARSE_SYSTEM, rawText));
-      if (out.education || out.skills?.length) return out;
+      try {
+        const out = extractJson(await this.llm.complete(RESUME_PARSE_SYSTEM, rawText));
+        if (out.education || out.skills?.length) return out;
+      } catch { /* 网关不可用时回退启发式 */ }
     }
     const skills = this.#heuristicSkills(rawText);
     return { education: {}, experiences: [], projects: [], skills, strengths: [], weaknesses: [] };
+  }
+
+  // M6 · 前置匹配用：仅解析结构化简历，不落盘、不发事件（供在线简历差距分析打分）
+  async parseRaw(rawText, engine = 'llm') {
+    const structured = await this.#byLlm(rawText);
+    return {
+      education: structured.education ?? {},
+      experiences: structured.experiences ?? [],
+      projects: structured.projects ?? [],
+      skills: structured.skills?.length ? structured.skills : this.#heuristicSkills(rawText),
+    };
   }
 
   #heuristicSkills(text) {
@@ -75,10 +84,4 @@ export class ParserService {
     const m = String(text ?? '').match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
     return m ? m[0] : null;
   }
-}
-
-// 脱敏预览：简历原文一律入库加密文件，jsonl 只留前置摘要（个人/敏感内容不落明文）
-function maskedPreview(rawText, max = 160) {
-  const s = String(rawText ?? '').trim().replace(/\s+/g, ' ');
-  return s.length > max ? s.slice(0, max) + '…' : s;
 }

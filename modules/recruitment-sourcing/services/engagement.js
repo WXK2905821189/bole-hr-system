@@ -69,13 +69,13 @@ export class EngagementService {
     return this.store.readAll('engagements.jsonl').filter((e) => e.candidateId === candidateId).length;
   }
 
-  // 触达后联动候选人 touchStatus: 触达动作=>跟进中; 回复=>已回复; stop标记=>沉睡
+  // 触达后联动候选人 touchStatus: 触达动作=>跟进中; 回复=>已回复(并唤醒沉睡, 清理粘滞标记); stop标记=>沉睡
   #applyTouchStatus(candidateId, action, stopFlag) {
     const cands = this.store.readAll('candidates.jsonl');
     const c = cands.find((x) => x.candidateId === candidateId);
     if (!c) return;
-    if (stopFlag) c.touchStatus = 'sleeping';
-    else if (action === 'reply') c.touchStatus = 'replied';
+    if (stopFlag) c.touchStatus = 'sleeping', c.sleeping = true;
+    else if (action === 'reply') { c.touchStatus = 'replied'; c.sleeping = false; c.sleepingAt = null; } // 回复即唤醒（标记保留但不再粘滞）
     else if (TOUCH_ACTIONS.includes(action)) c.touchStatus = 'engaging';
     else if (!c.touchStatus) c.touchStatus = 'pending';
     this.store.writeAll('candidates.jsonl', cands);

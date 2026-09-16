@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>伯乐AI · 招聘提效系统 — 新版 UI 设计稿 v2.0</title>
+<style>
+  :root{
+    /* ---- 色板：精密运营台 ---- */
+    --brand:#2f54eb; --brand-d:#1f3bb0; --brand-soft:#eef2ff;
+    --ink:#10141f; --bg:#f2f4f9; --canvas:#fbfcfe; --card:#ffffff;
+    --line:#e4e8f0; --line-s:#d3d9e6;
+    --muted:#5b6b84; --faint:#94a3bd;
+    --ok:#178a5e; --ok-bg:#e6f6ec;
+    --warn:#c07000; --warn-bg:#fbf3e2;
+    --err:#d24545; --err-bg:#fdecec;
+    --info:#2563eb; --info-bg:#eef4ff;
+    --gold:#d99a2b; --gold-bg:#fbf3e2;      /* 伯乐·识才 */
+    --violet:#7c3aed; --violet-bg:#f4edff;
+    --sidebar-bg:linear-gradient(180deg,#0d1430 0%,#0a1026 60%,#0c1228 100%);
+    --sidebar-ink:#c7d2ea; --sidebar-mut:#5c6b93; --sidebar-soft:rgba(255,255,255,.055);
+    --r-sm:8px; --r:11px; --r-lg:14px;
+    --sh:0 1px 2px rgba(16,24,40,.05),0 1px 4px rgba(16,24,40,.06);
+    --sh-md:0 6px 22px rgba(16,24,40,.09);
+    --sh-lg:0 14px 36px rgba(16,24,40,.14);
+    --side-w:236px;
+    --mono:"SF Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+    --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+    --grid:linear-gradient(#0000 95%,rgba(47,84,235,.05) 95%),linear-gradient(90deg,#0000 95%,rgba(47,84,235,.05) 95%);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);
+    background-image:radial-gradient(1000px 500px at 82% -8%,rgba(47,84,235,.06),transparent 60%),
+      radial-gradient(800px 420px at -4% 18%,rgba(217,154,43,.05),transparent 60%);
+    -webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{margin:0;letter-spacing:-.02em}
+  a{color:var(--brand);text-decoration:none}
+  .mono{font-family:var(--mono)}
+  .num{font-variant-numeric:tabular-nums}
+  .tag{display:inline-block;background:var(--brand-soft);color:var(--brand-d);border-radius:5px;padding:2px 7px;font-size:11px;margin:0 2px 0 0;font-weight:500}
+  .tag.gold{background:var(--gold-bg);color:#a16b12}
+
+  /* ================= COVER ================= */
+  .cover{padding:56px 7vw 40px;position:relative;overflow:hidden}
+  .cover::before{content:"";position:absolute;inset:0;background-image:var(--grid);background-size:34px 34px;opacity:.6;pointer-events:none}
+  .cover .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--brand-d);font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:6px 13px;border:1px solid var(--line);border-radius:99px;background:var(--card);box-shadow:var(--sh)}
+  .cover h1{font-size:clamp(30px,4.6vw,48px);font-weight:800;margin-top:22px;line-height:1.08;max-width:860px}
+  .cover h1 .hl{background:linear-gradient(92deg,var(--brand),#6b8bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .cover h1 .hl.gold{background:linear-gradient(92deg,#c78214,#e0b250);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .cover .sub{max-width:720px;color:var(--muted);font-size:16px;line-height:1.8;margin-top:16px}
+  .cover .meta{display:flex;gap:22px;flex-wrap:wrap;margin-top:26px;font-size:12.5px;color:var(--muted)}
+  .cover .meta b{color:var(--ink);font-weight:700;margin-right:4px}
+
+  /* stat strip */
+  .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1200px;margin:8px 7vw 0}
+  .strip .st{border:1px solid var(--line);border-left:3px solid var(--brand);background:var(--card);border-radius:12px;padding:16px 18px;box-shadow:var(--sh)}
+  .strip .st.g{ border-left-color:var(--ok)}
+  .strip .st.w{ border-left-color:var(--gold)}
+  .strip .st.v{ border-left-color:var(--violet)}
+  .strip .lab{font-size:12px;color:var(--muted)}
+  .strip .val{font-size:26px;font-weight:750;margin-top:6px}
+  .strip .val small{font-size:13px;color:var(--muted);font-weight:500;margin-left:2px}
+  .strip .delta{font-size:11.5px;color:var(--muted);margin-top:5px}
+  .strip .delta b{color:var(--ok)}.strip .delta b.w{color:var(--warn)}
+
+  /* ================= LAYOUT & NAV DOC ================= */
+  .wrap{max-width:1320px;margin:0 auto;padding:0 30px 80px}
+  .doccard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-md);overflow:hidden}
+  .doccard + .doccard{margin-top:26px}
+  .doccard > .doc-hd{padding:20px 26px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .doc-hd .no{width:30px;height:30px;flex:none;border-radius:9px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;box-shadow:0 4px 10px rgba(47,84,235,.32)}
+  .doc-hd h2{font-size:18px;font-weight:750}
+  .doc-hd .hint{color:var(--muted);font-size:12.5px;margin-left:4px}
+  .doc-hd .t-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .doc-bd{padding:24px 26px}
+
+  /* principle grid */
+  .princ{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .princ .p{position:relative;border:1px solid var(--line);border-radius:12px;padding:18px;background:linear-gradient(180deg,var(--canvas),#fff)}
+  .princ .p .hic{width:34px;height:34px;border-radius:9px;background:var(--brand-soft);color:var(--brand-d);display:grid;place-items:center;font-size:16px;margin-bottom:12px}
+  .princ .p b{font-size:14px;display:block}
+  .princ .p p{margin:7px 0 0;font-size:12.5px;color:var(--muted);line-height:1.7}
+
+  /* token swatches */
+  .tokens{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .tgroup h4{font-size:12px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+  .swatches{display:flex;flex-wrap:wrap;gap:10px}
+  .sw{width:76px;height:58px;border-radius:10px;border:1px solid var(--line);overflow:hidden;font-size:10.5px;color:#fff;position:relative;box-shadow:var(--sh)}
+  .sw .nm{position:absolute;left:8px;bottom:7px;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.22)}
+  .sw .hv{position:absolute;right:7px;top:7px;font-family:var(--mono);font-size:9px;opacity:.8}
+  .type-row{display:flex;align-items:baseline;gap:16px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .type-row:last-child{border-bottom:none}
+  .type-row .name{width:110px;flex:none;font-size:11.5px;color:var(--faint);font-family:var(--mono)}
+  .radius-row{display:flex;gap:22px;align-items:center;padding:8px 0}
+  .rbox{width:46px;height:46px;background:var(--brand);}
+  .sp-list{display:flex;flex-direction:column;gap:8px}
+  .sp-bar{height:10px;border-radius:6px;background:linear-gradient(90deg,var(--brand),#dbe4ff)}
+  .sp-bar.w4{width:4px}.sp-bar.w6{width:6px}.sp-bar.w8{width:8px}
+
+  /* two col tables */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid2b{display:grid;grid-template-columns:1.6fr 1fr;gap:20px}
+
+  /* ================= APP SHELL FRAME ================= */
+  .frame{position:relative;border:1px solid var(--line-s);border-radius:16px;overflow:hidden;box-shadow:var(--sh-md);background:#0e1526}
+  .frame-cap{display:flex;gap:6px;align-items:center;padding:9px 14px;background:#0c1228;border-bottom:1px solid rgba(255,255,255,.07)}
+  .frame-cap .dot{width:10px;height:10px;border-radius:50%}
+  .frame-cap .url{margin-left:10px;font-family:var(--mono);font-size:11px;color:#6d7ba6}
+  .shell{display:grid;grid-template-columns:var(--side-w) 1fr;min-height:560px;}
+  .shell[data-extra="panel"]{grid-template-columns:var(--side-w) 1fr 320px}
+
+  /* sidebar (in-frame) */
+  .nav{background:var(--sidebar-bg);color:var(--sidebar-ink);display:flex;flex-direction:column;position:relative}
+  .nav::after{content:"";position:absolute;inset:0;background-image:var(--grid);background-size:26px 26px;opacity:.22;pointer-events:none}
+  .nav .logo{display:flex;align-items:center;gap:10px;padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.07);position:relative}
+  .nav .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--brand),#6b8bff);display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;box-shadow:0 5px 14px rgba(47,84,235,.42)}
+  .nav .name{font-weight:650;color:#fff;font-size:13.5px;letter-spacing:.01em}
+  .nav .name small{display:block;font-size:10.5px;color:#7f8db5;font-weight:500;margin-top:1px}
+  .nav nav{flex:1;overflow:auto;padding:10px 10px;position:relative}
+  .navsec{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--sidebar-mut);padding:14px 10px 5px;font-weight:700}
+  .navitem{display:flex;align-items:center;gap:10px;padding:8.5px 10px;border-radius:8px;color:#b6c1dd;cursor:pointer;font-size:13px;transition:.14s;border:none;background:transparent;width:100%;text-align:left;font-family:inherit}
+  .navitem:hover{background:var(--sidebar-soft);color:#fff}
+  .navitem.on{background:var(--brand);color:#fff;font-weight:650;box-shadow:0 5px 14px rgba(47,84,235,.4)}
+  .navitem svg{width:17px;height:17px;flex:none}
+  .navitem .n{margin-left:auto;background:var(--err);color:#fff;font-size:10px;border-radius:99px;padding:1px 7px;font-weight:700}
+  .navitem .n.w{background:var(--gold)}
+  .riskbox{margin:10px 10px;padding:11px 12px;border-radius:10px;background:rgba(184,83,9,.13);border:1px solid rgba(236,158,58,.34);position:relative}
+  .riskbox .t{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:650;color:#f2c069}
+  .riskbox .row{font-size:10.5px;color:#c6cde0;margin-top:6px;display:flex;gap:5px;flex-wrap:wrap}
+  .riskbox .row b{color:#f2c069;font-weight:650}
+  .foot{padding:13px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px;font-size:12px;position:relative}
+  .foot .ava{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a78bfa);display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700;flex:none}
+  .foot .fname{color:#fff;font-weight:600;font-size:12px}
+  .foot .fsub{font-size:10px;color:#8b97bd;display:block}
+
+  /* main in-frame */
+  .main{background:var(--canvas);display:flex;flex-direction:column;min-width:0}
+  .top{position:relative;height:54px;background:rgba(251,252,254,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 22px}
+  .top h3{font-size:15px;font-weight:750}
+  .top .crumb{font-size:12px;color:var(--muted)}
+  .top .headr{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .health{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);background:#fff;border:1px solid var(--line);padding:5px 10px;border-radius:99px}
+  .health .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px var(--ok-bg)}
+  .health .dot.w{background:var(--warn);box-shadow:0 0 0 3px var(--warn-bg)}
+  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--brand);color:#fff;border:1px solid var(--brand);border-radius:8px;padding:7px 13px;font-size:12px;font-weight:650;cursor:pointer;font-family:inherit}
+  .btn.ghost{background:#fff;color:var(--brand);border-color:var(--line-s)}
+  .btn.sm{padding:5px 9px;font-size:11.5px;border-radius:7px}
+  .btn.gold{background:var(--gold);border-color:var(--gold);color:#fff}
+
+  .content{padding:18px 22px 30px;display:flex;flex-direction:column;gap:16px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:11px;padding:14px 16px;position:relative;overflow:hidden;box-shadow:var(--sh)}
+  .kpi::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--brand)}
+  .kpi.g::before{background:var(--ok)}.kpi.w::before{background:var(--gold)}.kpi.i::before{background:var(--info)}
+  .kpi .lab{font-size:11px;color:var(--muted)}
+  .kpi .val{font-size:24px;font-weight:780;margin-top:6px;letter-spacing:-.02em}
+  .kpi .val small{font-size:12px;color:var(--muted);font-weight:500}
+  .kpi .delta{font-size:11px;color:var(--muted);margin-top:5px}
+  .kpi .delta b{color:var(--ok)}.kpi .delta b.w{color:var(--warn)}
+  .kpi .ico{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--brand);background:var(--brand-soft)}
+  .kpi.g .ico{background:var(--ok-bg);color:var(--ok)}.kpi.w .ico{background:var(--gold-bg);color:#b06a00}.kpi.i .ico{background:var(--info-bg);color:var(--info)}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+  .card-hd{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line)}
+  .card-hd h4{font-size:13.5px;font-weight:730}
+  .card-hd .hint{color:var(--muted);font-size:11.5px}
+  .card-hd .tr{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .card-bd{padding:16px}
+  .split{display:grid;grid-template-columns:1.6fr 1fr;gap:16px}
+
+  /* pipe */
+  .pipe{display:flex;gap:6px}
+  .pipe .step{flex:1;text-align:center;font-size:10.5px;color:var(--muted)}
+  .pipe .step .bar{height:7px;border-radius:6px;margin-bottom:6px;background:#e9edf5;position:relative;overflow:hidden}
+  .pipe .step.ok .bar{background:var(--ok)}.pipe .step.run .bar{background:var(--brand)}
+  .pipe .step.run .bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 5px,rgba(255,255,255,.4) 5px,transparent 8px);animation:strip 1s linear infinite}
+  @keyframes strip{to{background-position:16px 0}}
+  .pipe .step.w .bar{background:var(--warn)}
+  .pipe .step .n{font-weight:650;color:var(--ink)}
+
+  /* table mini */
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  thead th{text-align:left;padding:8px 12px;font-size:11px;font-weight:650;color:var(--muted);background:#f8fafc;border-bottom:1px solid var(--line);white-space:nowrap}
+  tbody td{padding:9px 12px;border-bottom:1px solid #f0f2f7;vertical-align:middle}
+  .cell-n{font-weight:650}
+  .cell-n small{display:block;color:var(--faint);font-weight:400;font-size:10px;font-family:var(--mono)}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:650}
+  .badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+  .b-ok{background:var(--ok-bg);color:var(--ok)}.b-warn{background:var(--warn-bg);color:var(--warn)}.b-err{background:var(--err-bg);color:var(--err)}.b-info{background:var(--info-bg);color:var(--info)}.b-gray{background:#eef1f6;color:#64748b}
+  .score{display:flex;align-items:center;gap:8px}
+  .score .bar{flex:1;max-width:42px;height:6px;background:#eef1f6;border-radius:99px;overflow:hidden}
+  .score .bar i{display:block;height:100%}
+  .score .n{font-weight:750;font-size:12px;min-width:20px;text-align:right}
+  .sk{display:inline-block;background:#f1f5f9;color:#475569;border-radius:5px;padding:1px 6px;font-size:10px;margin:0 1px 0 0}
+  .touch{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:650}
+  .touch::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+  .t-pen{background:#eef1f6;color:#64748b}.t-eng{background:var(--info-bg);color:var(--info)}.t-rep{background:var(--ok-bg);color:var(--ok)}.t-slp{background:var(--violet-bg);color:var(--violet)}
+  .seg{display:inline-flex;background:#eef1f6;border-radius:8px;padding:3px}
+  .seg button{border:none;background:transparent;padding:5px 11px;font-size:11px;border-radius:6px;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:500}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--sh);font-weight:600}
+
+  /* ===== PAGE CARDS INDEX ===== */
+  .pageidx{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:10px}
+  .pageidx a{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:#fff;font-size:12px;color:var(--ink);font-weight:600;transition:.14s}
+  .pageidx a:hover{border-color:var(--brand);box-shadow:var(--sh-md);transform:translateY(-2px)}
+  .pageidx .ic{width:26px;height:26px;border-radius:7px;background:var(--brand-soft);color:var(--brand-d);display:grid;place-items:center;font-size:13px;flex:none}
+  .pageidx a:nth-child(2) .ic{background:var(--ok-bg);color:var(--ok)}
+  .pageidx a:nth-child(3) .ic{background:var(--gold-bg);color:#a16b12}
+  .pageidx a:nth-child(4) .ic{background:var(--info-bg);color:var(--info)}
+  .pageidx a:nth-child(5) .ic{background:var(--violet-bg);color:var(--violet)}
+
+  .note{display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--line-s);border-left:3px solid var(--gold);background:var(--gold-bg);border-radius:8px;padding:11px 14px;margin-top:16px;font-size:12px;color:#6b5a1f;line-height:1.7}
+  .note .ic{font-size:14px}
+  .legend-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:11.5px;color:var(--muted)}
+  .legend-row .badge{margin-right:2px}
+  .sw-lg{width:44px;height:30px;border-radius:7px;border:1px solid var(--line);display:grid;place-items:center;font-size:9px;color:#fff;font-weight:700}
+
+  /* annotations to frames */
+  .ann{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:12px;color:var(--muted);line-height:1.7}
+  .ann .an{width:22px;height:22px;flex:none;border-radius:99px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800}
+  .ann .an.g{background:var(--ok)}.ann .an.w{background:var(--gold)}.ann .an.v{background:var(--violet)}
+
+  .etalabel{position:absolute;inset:0;display:grid;place-items:center;color:#4d5a80;font-size:12px;font-weight:600;background:
+    linear-gradient(45deg,transparent 48%,rgba(77,90,128,.14) 49%,rgba(77,90,128,.14) 51%,transparent 52%)}
+
+  @media(max-width:1080px){.princ,.tokens,.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.split{grid-template-columns:1fr}.pageidx{grid-template-columns:repeat(2,1fr)}.strip{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:720px){.strip{grid-template-columns:1fr}.shell,.shell[data-extra="panel"]{grid-template-columns:1fr}.nav{display:none}}
+</style>
+</head>
+<body>
+
+<!-- =============== COVER =============== -->
+<div class="cover">
+  <span class="kicker">◆ 伯乐 AI · 招聘提效模块 — UI 设计稿 v2.0</span>
+  <h1>「识才信号台」<br/>从 <span class="hl">自动索简历</span> 到 <span class="hl gold">触达成交</span> 的精密运营台</h1>
+  <p class="sub">新版 UI 以「识才信号台」为概念种子：把招聘提效的每一步抽象为一道「信号」——寻源扫描、信号入库、触达脉冲、成交复盘。系统仍是每日高频使用的运营工具，因此本设计在<b>精密运营台 (precision operations)</b> 基础上注入克制的品牌叙事，用「电感靛蓝」承载主操作、「伯乐琥珀金」标记关键状态，层次分明、扫读即懂。</p>
+  <div class="meta">
+    <span><b>系统</b>伯乐AI · 招聘提效</span>
+    <span><b>角色</b>HR 招聘专员（高频日活）</span>
+    <span><b>形态</b>桌面端业务控制台 · 三栏/双栏自适应</span>
+    <span><b>技术</b>纯 HTML/CSS/JS · 无构建 · 内网私有</span>
+    <span><b>版本</b>2026-09-11 · v2.0 设计稿</span>
+  </div>
+</div>
+
+<div class="strip">
+  <div class="st"><div class="lab">今日索取简历</div><div class="val num">46<small>份</small></div><div class="delta">昨日同期 <b>+12%</b> · 日上限 200</div></div>
+  <div class="st g"><div class="lab">入库成功率</div><div class="val num">91<small>%</small></div><div class="delta"><b>达标</b> · 阈值 ≥ 90%</div></div>
+  <div class="st w"><div class="lab">仓口伯乐指数</div><div class="val num">82<small>/100</small></div><div class="delta">高匹配候选 <b>+18</b> · 本周</div></div>
+  <div class="st v"><div class="lab">触达响应率</div><div class="val num">48<small>%</small></div><div class="delta">近 7 天 · 目标 ≥ 50%</div></div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ S0 设计方向 ============ -->
+  <div class="doccard" id="s0">
+    <div class="doc-hd"><div class="no">0</div><h2>设计方向与概念</h2><span class="hint">Design Direction · 伯乐=识才</span>
+      <div class="t-right"><span class="tag gold">概念种子</span><span class="tag">精密运营台</span></div></div>
+    <div class="doc-bd">
+      <div class="princ">
+        <div class="p"><div class="hic">◎</div><b>信号扫描 · 持续寻源</b><p>以「雷达 + 信号灯」隐喻贯穿：检索命中、解析入库、匹配打分均呈现为可读的管道与信号，让采集过程「可视化而非黑盒」。</p></div>
+        <div class="p"><div class="hic">⇶</div><b>触达脉冲 · 分级推进</b><p>打招呼、跟进、唤醒等触达动作抽象为「脉冲节拍」，话术库与跟进引擎以节奏 + 状态呈现，契合每日高频操作</p></div>
+        <div class="p"><div class="hic">◎</div><b>伯乐金 · 状态唯一主色</b><p>靛蓝为主操作、琥珀金只用于「值得注意」（待招呼/已读未回/风控），其余状态以克制中性色承载，避免彩虹仪表盘</p></div>
+      </div>
+      <div class="note"><span class="ic">◈</span><span><b>品牌叙事落到视觉：</b>「伯乐」= 一眼识才。据此，候选人行内用「伯乐指数 / 匹配分」做主视觉信号，触达状态用信号灯式色点，采集调度用雷达扫描动画——每个高频页面都有一处可记忆的「识别时刻」，而非千篇一律的表格。</span></div>
+    </div>
+  </div>
+
+  <!-- ============ S1 设计令牌 ============ -->
+  <div class="doccard" id="s1">
+    <div class="doc-hd"><div class="no">1</div><h2>设计令牌</h2><span class="hint">Design Tokens · 色彩 / 字体 / 圆角 / 阴影 / 间距</span>
+      <div class="t-right"><span class="tag">可复用为 CSS 变量</span></div></div>
+    <div class="doc-bd">
+      <div class="tokens">
+        <div class="tgroup"><h4>品牌与状态色</h4><div class="swatches">
+          <div class="sw" style="background:#2f54eb"><span class="nm">靛蓝 brand</span><span class="hv">#2f54eb</span></div>
+          <div class="sw" style="background:#1f3bb0"><span class="nm">brand-d</span><span class="hv">hover</span></div>
+          <div class="sw" style="background:#d99a2b"><span class="nm">伯乐金 gold</span><span class="hv">#d99a2b</span></div>
+          <div class="sw" style="background:#178a5e"><span class="nm">成功 ok</span><span class="hv">#178a5e</span></div>
+          <div class="sw" style="background:#c07000"><span class="nm">警示 warn</span><span class="hv">#c07000</span></div>
+          <div class="sw" style="background:#d24545"><span class="nm">失败 err</span><span class="hv">#d24545</span></div>
+          <div class="sw" style="background:#7c3aed"><span class="nm">沉睡 violet</span><span class="hv">#7c3aed</span></div>
+          <div class="sw" style="background:#2563eb"><span class="nm">信息 info</span><span class="hv">#2563eb</span></div>
+        </div></div>
+        <div class="tgroup"><h4>中性与画布</h4><div class="swatches">
+          <div class="sw" style="background:#f2f4f9"><span class="nm" style="color:#1f2937">页面底</span><span class="hv" style="color:#1f2937">bg</span></div>
+          <div class="sw" style="background:#fbfcfe"><span class="nm" style="color:#1f2937">画布</span><span class="hv" style="color:#1f2937">canvas</span></div>
+          <div class="sw" style="background:#ffffff;border:1px solid var(--line-s)"><span class="nm" style="color:#1f2937">卡片</span><span class="hv" style="color:#1f2937">card</span></div>
+          <div class="sw" style="background:#10141f"><span class="nm">墨黑 ink</span><span class="hv">#10141f</span></div>
+          <div class="sw" style="background:#0d1430"><span class="nm">侧栏深</span><span class="hv">sidebar</span></div>
+          <div class="sw" style="background:#5b6b84"><span class="nm">次级 muted</span><span class="hv">#5b6b84</span></div>
+          <div class="sw" style="background:#e4e8f0"><span class="nm" style="color:#1f2937">边框 line</span><span class="hv" style="color:#1f2937">#e4e8f0</span></div>
+          <div class="sw" style="background:#eef2ff"><span class="nm" style="color:#1f2937">靛浅 soft</span><span class="hv" style="color:#1f2937">#eef2ff</span></div>
+        </div></div>
+      </div>
+
+      <div class="grid2" style="margin-top:22px">
+        <div class="tgroup"><h4>字体分级 · 中文排版</h4>
+          <div class="type-row"><span class="name">Display / 01</span><div style="font-size:28px;font-weight:800;letter-spacing:-.03em">识才信号台</div></div>
+          <div class="type-row"><span class="name">Title / 02</span><div style="font-size:20px;font-weight:780">候选人库</div></div>
+          <div class="type-row"><span class="name">H3 / title</span><div style="font-size:15px;font-weight:730">智能跟进引擎</div></div>
+          <div class="type-row"><span class="name">Body / 13</span><div style="font-size:13px">正文以 13px 为主，行高 1.7，扫读优先</div></div>
+          <div class="type-row"><span class="name">Meta / 11</span><div style="font-size:11px;color:var(--muted)">辅助说明 · 时间戳 · 版本</div></div>
+          <div class="type-row"><span class="name">Mono</span><div class="mono" style="font-size:11px">cand_09271 · CG-1031 · 09:18:04</div></div>
+        </div>
+        <div class="tgroup"><h4>圆角 · 阴影 · 实色比例</h4>
+          <div class="radius-row"><span class="mono" style="font-size:11px;color:var(--faint)">6px · 标签</span><div class="rbox" style="width:30px;height:30px;border-radius:6px"></div><span class="mono" style="font-size:11px;color:var(--faint)">11px · 卡片</span><div class="rbox" style="border-radius:11px"></div><span class="mono" style="font-size:11px;color:var(--faint)">14px · 弹层</span><div class="rbox" style="border-radius:14px;width:54px"></div></div>
+          <div class="sp-list" style="margin-top:14px">
+            <div class="sp-bar w8"></div><span class="mono" style="font-size:10.5px;color:var(--faint)">间距 · 8 / 16 / 24</span>
+          </div>
+          <div class="legend-row" style="margin-top:6px">主按钮实心靛蓝 · 次按钮白底描边 · 危险操作左置（防误触）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ S2 应用外壳 ============ -->
+  <div class="doccard" id="s2">
+    <div class="doc-hd"><div class="no">2</div><h2>应用外壳 · 新版导航</h2><span class="hint">App Shell · 三段式导航 + 智能搜索</span>
+      <div class="t-right"><span class="legend-row"><span class="badge b-ok">信号</span><span class="badge b-warn">注意</span><span class="badge b-err">告警</span></span></div></div>
+    <div class="doc-bd">
+      <div class="frame">
+        <div class="frame-cap"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">bole-hr.local/modules/recruitment-sourcing</span></div>
+        <div class="shell" data-extra="panel">
+          <!-- sidebar -->
+          <div class="nav">
+            <div class="logo"><div class="mark">聘</div><div><span class="name">伯乐识才台<small>招募提效模块 · 已启用</small></span></div></div>
+            <nav>
+              <div class="navsec">运营台</div>
+              <button class="navitem on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="3" y="10" width="8" height="11" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/></svg>运营总览</button>
+              <button class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>招聘岗位</button>
+              <button class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 11h16"/></svg>采集调度</button>
+              <button class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.5-3.5 3-5.5 5.5-5.5s5 2 5.5 5.5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 13.5c2.8.3 4.5 2.3 4.9 5.5"/></svg>候选人库<span class="n">3</span></button>
+              <button class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l-6 5v13h12V8l-6-5z" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.4"/></svg>人才库</button>
+              <div class="navsec">沟通 · 触达</div>
+              <button class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.5 8.5 0 01-12.8 7.3L3 21l1.6-4.4A8.5 8.5 0 1121 11.5z" stroke-linejoin="round"/><path d="M8.5 11.5h7M8.5 14.5h4"/></svg>触达沟通<span class="n w">4</span></button>
+              <button class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M6 7h12l-1.5 13a2 2 0 01-2 1.8H9.5a2 2 0 01-2-1.8L6 7z"/><path d="M10 11v5M14 11v5"/></svg>触达审计</button>
+              <div class="navsec">治理</div>
+              <button class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-linecap="round"/><rect x="7" y="9.5" width="10" height="5" rx="2.5" transform="rotate(45 12 12)"/></svg>审计留痕</button>
+              <button class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z"/><path d="M19 12a7 7 0 01.1-1l2-1.5-2-3.4-2.4.7a7.5 7.5 0 00-1.7-1L14.8 3.4h-5.6l-.4 2.4a7.5 7.5 0 00-1.7 1l-2.4-.7-2 3.4 2 1.5a7 7 0 000 2l-2 1.5 2 3.4 2.4-.7a7.5 7.5 0 001.7 1l.4 2.4h5.6l.4-2.4a7.5 7.5 0 001.7-1l2.4.7 2-3.4-2-1.5a7 7 0 01-.1-1z" stroke-linecap="round" stroke-linejoin="round"/></svg>准入与护栏</button>
+              <div class="navsec">系统</div>
+              <button class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M8 9h8M8 12h8M8 15h5"/></svg>运行日志</button>
+            </nav>
+            <div class="riskbox"><div class="t">⚠ 风控护栏 · 关注中</div><div class="row">今日索取 <b>46/200</b> · 账号 B2 冷却 · 熔断启用</div></div>
+            <div class="foot"><div class="ava">王</div><div style="flex:1;min-width:0"><span class="fname">招聘专员 · 王女士</span><span class="fsub">岗位按登录账号隔离 · BOSS A1</span></div><button class="btn ghost sm">退出</button></div>
+          </div>
+          <!-- main -->
+          <div class="main">
+            <div class="top"><div><h3>运营总览</h3><div class="crumb">候选人寻源 · 控制台</div></div>
+              <div class="headr"><div class="health"><span class="dot"></span>网关已连接</div>
+                <button class="btn ghost sm">刷新</button><button class="btn sm">运行采集</button></div></div>
+            <div class="content">
+              <div class="kpis">
+                <div class="kpi"><div class="ico">◎</div><div class="lab">今日索取简历</div><div class="val num">46<small>份</small></div><div class="delta">昨日同期 <b>+12%</b></div></div>
+                <div class="kpi g"><div class="ico">✓</div><div class="lab">入库成功率</div><div class="val num">91<small>%</small></div><div class="delta"><b>达标</b> · 阈值 ≥90%</div></div>
+                <div class="kpi i"><div class="ico">◎</div><div class="lab">解析准确率</div><div class="val num">94<small>%</small></div><div class="delta">近 7 天</div></div>
+                <div class="kpi w"><div class="ico">◎</div><div class="lab">待人工核对</div><div class="val num">12<small>人</small></div><div class="delta">本周新增 <b class="w">38</b></div></div>
+              </div>
+              <div class="split">
+                <div class="card"><div class="card-hd"><h4>采集流水线</h4><span class="hint">按当前配置预期</span><div class="tr"><span class="badge b-ok">运行中</span></div></div><div class="card-bd">
+                  <div class="pipe">
+                    <div class="step ok"><div class="bar"></div><span class="n">检索</span></div>
+                    <div class="step ok"><div class="bar"></div><span class="n">筛选</span></div>
+                    <div class="step run"><div class="bar"></div><span class="n">索取</span></div>
+                    <div class="step ok"><div class="bar"></div><span class="n">解析入库</span></div>
+                    <div class="step w"><div class="bar"></div><span class="n">JD 匹配</span></div>
+                  </div>
+                  <div style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.7">下一周期：<b style="color:var(--ink)">「前端工程师」</b> 今日 17:00 · 间隔 3–8s · 4 账号轮询 · 每次写入审计。</div></div></div>
+                <div class="card"><div class="card-hd"><h4>入库质量</h4><span class="hint">近7天样本</span></div><div class="card-bd">
+                  <div style="display:flex;gap:18px;align-items:center">
+                    <div style="width:62px;height:62px;border-radius:50%;background:conic-gradient(var(--ok) 0 73%,var(--gold) 73% 91%,var(--err) 91% 100%);position:relative"><div style="position:absolute;inset:9px;background:#fff;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px">73%</div></div>
+                    <div style="font-size:11.5px;color:var(--muted);line-height:2"><span style="display:flex;gap:6px"><span class="sw-lg" style="background:var(--ok);width:9px;height:9px;align-self:center"> </span>达标 73</span><span style="display:flex;gap:6px"><span class="sw-lg" style="background:var(--gold);width:9px;height:9px;align-self:center"> </span>复核 18</span><span style="display:flex;gap:6px"><span class="sw-lg" style="background:var(--err);width:9px;height:9px;align-self:center"> </span>失败 9</span></div>
+                  </div></div></div>
+              </div>
+            </div>
+          </div>
+          <!-- right panel: 触达信号 -->
+          <div style="background:#fbfcfe;border-left:1px solid var(--line);padding:14px">
+            <div style="font-size:11px;font-weight:700;color:var(--faint);letter-spacing:.08em;margin-bottom:10px">触达信号 · 今日</div>
+            <div class="card" style="box-shadow:none"><div class="card-bd" style="padding:12px">
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <div style="display:flex;align-items:center;gap:8px;font-size:11.5px"><span class="touch t-rep">已回复</span><b class="num">17</b></div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:11.5px"><span class="touch t-eng">跟进中</span><b class="num">9</b></div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:11.5px"><span class="touch t-slp">沉睡</span><b class="num">3</b></div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:11.5px"><span class="touch t-pen">待跟</span><b class="num">6</b></div>
+              </div>
+              <div style="margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;font-size:10.5px;color:var(--faint);line-height:1.7">「触达信号」是运营总览右侧新增的常驻信息栏，替代原先被折叠的入口，随时可见响应脉搏。</div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ann"><span class="an">A</span><span><b>三段式侧栏导航</b>（运营台 / 沟通·触达 / 治理+系统）——将「人才库」新增为独立入口、触达模块独立成组，层级比旧版「运营台/沟通/治理」更清晰；菜单项带实时角标（待核对、待跟上）。</span></div>
+      <div class="ann"><span class="an g">B</span><span><b>常驻「触达信号」右栏</b>：运营总览右侧的信息面板实时反映触达脉搏，把原先需跳转才能看到的沟通状态前置到首页。</span></div>
+      <div class="ann"><span class="an w">C</span><span><b>新增「伯乐指数 / 匹配分」视觉信号</b>：KPI 卡与候选人行内统一用匹配分给出「识才」主视觉，弱化纯数字罗列。</span></div>
+    </div>
+  </div>
+
+  <!-- ============ S3 运营总览 ============ -->
+  <div class="doccard" id="s1-overview">
+    <div class="doc-hd"><div class="no">3</div><h2>页面设计 · 01 运营总览</h2><span class="hint">Overview · 信号看板 + 采集流水线 + 触达看板</span>
+      <div class="t-right"><a class="tag" href="#s2">返回外壳 ↑</a></div></div>
+    <div class="doc-bd">
+      <div class="frame"><div class="frame-cap"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">/overview</span></div>
+        <div class="shell"><div class="nav"><div style="padding:20px;color:#8b97bd;font-size:11px">⇽ 侧栏（同 S2）</div></div>
+          <div class="main"><div class="top"><h3>运营总览</h3><div class="headr"><span class="health"><span class="dot"></span>网关已连接</span></div></div>
+            <div class="content">
+              <div class="kpis">
+                <div class="kpi"><div class="ico">◎</div><div class="lab">今日索取简历</div><div class="val num">46<small>份</small></div><div class="delta">昨日同期 <b>+12%</b> · 上限 200</div></div>
+                <div class="kpi g"><div class="ico">✓</div><div class="lab">入库成功率</div><div class="val num">91<small>%</small></div><div class="delta"><b>达标</b> · 阈值 ≥90%</div></div>
+                <div class="kpi i"><div class="ico">◎</div><div class="lab">解析准确率</div><div class="val num">94<small>%</small></div><div class="delta"><b>↑1.2pp</b> · 近7天</div></div>
+                <div class="kpi w"><div class="ico">◎</div><div class="lab">待人工核对</div><div class="val num">12<small>人</small></div><div class="delta">本周新增 <b class="w">38</b></div></div>
+              </div>
+              <div class="split">
+                <div class="card"><div class="card-hd"><h4>采集流水线</h4><div class="tr"><span class="badge b-ok">运行中</span></div></div><div class="card-bd">
+                  <div class="pipe"><div class="step ok"><div class="bar"></div><span class="n">检索</span></div><div class="step ok"><div class="bar"></div><span class="n">筛选</span></div><div class="step run"><div class="bar"></div><span class="n">索取</span></div><div class="step ok"><div class="bar"></div><span class="n">解析</span></div><div class="step w"><div class="bar"></div><span class="n">匹配</span></div></div>
+                </div></div>
+                <div class="card"><div class="card-hd"><h4>触达看板</h4><div class="tr"><span class="badge b-gray">快捷入口</span></div></div><div class="card-bd">
+                  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+                    <div style="border:1px solid var(--line);border-radius:10px;padding:10px"><span class="touch t-pen">待跟</span><div style="font-size:20px;font-weight:780" class="num">6</div></div>
+                    <div style="border:1px solid var(--line);border-radius:10px;padding:10px"><span class="touch t-eng">跟进中</span><div style="font-size:20px;font-weight:780" class="num">9</div></div>
+                    <div style="border:1px solid var(--line);border-radius:10px;padding:10px"><span class="touch t-rep">已回复</span><div style="font-size:20px;font-weight:780" class="num">17</div></div>
+                    <div style="border:1px solid var(--line);border-radius:10px;padding:10px"><span class="touch t-slp">沉睡</span><div style="font-size:20px;font-weight:780" class="num">3</div></div>
+                  </div></div></div>
+              </div>
+              <div class="card"><div class="card-hd"><h4>今日候选高峰（按匹配分）</h4><span class="hint">Top 6 · 点击查看详情</span></div>
+                <div class="card-bd" style="padding:0"><table><thead><tr><th>候选人</th><th>年限</th><th>核心技能</th><th>解析</th><th>伯乐指数</th></tr></thead><tbody>
+                  <tr><td class="cell-n">陈亦凡<small>cand_09271 · BOSS</small></td><td>5 年</td><td><span class="sk">Vue3</span><span class="sk">TS</span><span class="sk">Node</span></td><td><span class="badge b-ok">已匹配</span></td><td><div class="score"><span class="bar"><i style="width:82%;background:var(--ok)"></i></span><span class="n" style="color:var(--ok)">82</span></div></td></tr>
+                  <tr><td class="cell-n">赵子昂<small>cand_09268 · BOSS</small></td><td>6 年</td><td><span class="sk">Java</span><span class="sk">Spring</span><span class="sk">MySQL</span></td><td><span class="badge b-ok">已匹配</span></td><td><div class="score"><span class="bar"><i style="width:91%;background:var(--ok)"></i></span><span class="n" style="color:var(--ok)">91</span></div></td></tr>
+                  <tr><td class="cell-n">周明轩<small>cand_09264 · BOSS</small></td><td>4 年</td><td><span class="sk">Python</span><span class="sk">RAG</span><span class="sk">AI</span></td><td><span class="badge b-ok">已匹配</span></td><td><div class="score"><span class="bar"><i style="width:88%;background:var(--ok)"></i></span><span class="n" style="color:var(--ok)">88</span></div></td></tr>
+                </tbody></table></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann"><span class="an g">升级</span><span>两张需求卡（采集流水线 / 入库质量）压入首屏同行；「触达看板」四状态卡直接可点跳转到候选人库对应筛选。</span></div>
+    </div>
+  </div>
+
+  <!-- ============ S4 采集调度 ============ -->
+  <div class="doccard" id="s2-schedule">
+    <div class="doc-hd"><div class="no">4</div><h2>页面设计 · 02 采集调度</h2><span class="hint">Schedule · 雷达扫描动效 + BOSS 账号卡 + 实时终端</span>
+      <div class="t-right"><span class="tag gold">雷达动效</span></div></div>
+    <div class="doc-bd">
+      <div class="grid2b">
+        <div class="frame" style="min-height:440px"><div class="frame-cap"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">/schedule</span></div>
+          <div class="shell"><div class="nav"><div style="padding:20px;color:#8b97bd;font-size:11px">侧栏</div></div>
+            <div class="main"><div class="content">
+              <div class="split">
+                <div class="card"><div class="card-hd"><h4>采集任务</h4><span class="hint">定时批量 · 护栏</span></div><div class="card-bd">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div><label class="tag">目标岗位</label><div style="border:1px solid var(--line-s);border-radius:8px;padding:8px 10px;font-size:12px;margin-top:5px">前端工程师 (frontend_01)</div></div>
+                    <div><label class="tag">运行周期</label><div style="border:1px solid var(--line-s);border-radius:8px;padding:8px 10px;font-size:12px;margin-top:5px">工作日 09:00 / 14:00 / 17:00</div></div>
+                    <div><label class="tag">账号轮询</label><div style="border:1px solid var(--line-s);border-radius:8px;padding:8px 10px;font-size:12px;margin-top:5px">A1 主账号 · 4 账号轮询</div></div>
+                    <div><label class="tag">随机间隔</label><div style="border:1px solid var(--line-s);border-radius:8px;padding:8px 10px;font-size:12px;margin-top:5px">3 – 8 秒</div></div>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">
+                    <span class="sk">间隔随机化</span><span class="sk">会话上限 80/次</span><span class="sk">冷却 30min</span><span class="sk">熔断 3 连败</span><span class="sk gold" style="background:var(--gold-bg);color:#a16b12">日上限护栏 200</span>
+                  </div>
+                  <div style="display:flex;gap:8px;align-items:center;margin-top:14px"><button class="btn sm">▸ 立即运行</button><span style="font-size:11px;color:var(--faint)">每次运行写入审计</span></div>
+                  <div style="background:#0e1526;color:#cfe0ff;border-radius:9px;padding:10px 12px;font-family:var(--mono);font-size:10.5px;line-height:1.8;margin-top:12px"><span style="color:#7f8db5">[09:00:01]</span> 调度触发 job=frontend_01<br/><span style="color:#7f8db5">[09:00:02]</span> 检索命中 245 人 <span style="color:#5c6b93">(5.2s)</span><br/>索取 46 份 <span style="color:#5ce0a0">✓ 42 成功 · 1 失败隔离</span><br/><span style="color:#f5c069">⚠ 账号 B2 冷却 → 已切换 A1</span></div>
+                </div></div>
+                <div class="card"><div class="card-hd"><h4>BOSS 账号信号</h4><div class="tr"><span class="badge b-ok">A1 在线</span></div></div><div class="card-bd">
+                  <div style="text-align:center;border:1px solid var(--line);border-radius:11px;padding:4px 4px 12px;background:linear-gradient(135deg,#0f172a,#15213b);color:#fff">
+                    <div style="position:relative;width:70px;height:70px;margin:10px auto 8px">
+                      <div style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(59,130,246,.5);animation:scan 2.2s ease-out infinite"></div>
+                      <div style="position:absolute;inset:7px;border-radius:50%;border:2px solid rgba(59,130,246,.3);animation:scan 2.2s .7s ease-out infinite"></div>
+                      <div style="position:absolute;inset:8px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--violet));display:grid;place-items:center;font-weight:800;font-size:15px">A1</div>
+                    </div>
+                    <style>@keyframes scan{0%{transform:scale(.6);opacity:.8}100%{transform:scale(1.45);opacity:0}}</style>
+                    <div style="font-size:13px;font-weight:700">BOSS 主账号</div>
+                    <div style="font-size:10.5px;color:#8b97bd;margin-top:2px">今日已索取 46 / 200 · 会话隔离</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:7px;margin-top:10px;font-size:11.5px;color:var(--muted)">
+                    <span style="display:flex;justify-content:space-between"><span>B2 备用账号</span><span class="badge b-warn">冷却中</span></span>
+                    <span style="display:flex;justify-content:space-between"><span>风控熔断</span><span class="badge b-ok">已启用</span></span>
+                    <span style="display:flex;justify-content:space-between"><span>冷启动关联</span><span class="badge b-info">待绑定</span></span>
+                  </div></div></div>
+              </div>
+            </div></div>
+          </div>
+        </div>
+        <div class="card"><div class="card-hd"><h4>采集流程 · 六步信号</h4><span class="hint">新工作流可视化</span></div><div class="card-bd">
+          <div style="display:flex;flex-direction:column;gap:0">
+            <div style="display:flex;gap:12px;align-items:flex-start;border-bottom:1px dashed var(--line);padding:9px 2px"><div style="flex:none;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800">✓</div><div style="font-size:12.5px"><b>解析 JD</b><div style="color:var(--muted);font-size:11px">关键词自动抽取</div></div></div>
+            <div style="display:flex;gap:12px;align-items:flex-start;border-bottom:1px dashed var(--line);padding:9px 2px"><div style="flex:none;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800">✓</div><div style="font-size:12.5px"><b>BOSS 主动搜索</b><div style="color:var(--muted);font-size:11px">关键词命中 245 人</div></div></div>
+            <div style="display:flex;gap:12px;align-items:flex-start;border-bottom:1px dashed var(--line);padding:9px 2px"><div style="flex:none;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800">✓</div><div style="font-size:12.5px"><b>发送打招呼</b><div style="color:var(--muted);font-size:11px">3–8s 间隔</div></div></div>
+            <div style="display:flex;gap:12px;align-items:flex-start;border-bottom:1px dashed var(--line);padding:9px 2px"><div style="flex:none;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800">✓</div><div style="font-size:12.5px"><b>索要简历</b><div style="color:var(--muted);font-size:11px">46 份索取</div></div></div>
+            <div style="display:flex;gap:12px;align-items:flex-start;border-bottom:1px dashed var(--line);padding:9px 2px"><div style="flex:none;width:24px;height:24px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800">✓</div><div style="font-size:12.5px"><b>AI 解析</b><div style="color:var(--muted);font-size:11px">字段准确率 94%</div></div></div>
+            <div style="display:flex;gap:12px;align-items:flex-start;padding:9px 2px"><div style="flex:none;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800">◎</div><div style="font-size:12.5px"><b>职位匹配</b><div style="color:var(--muted);font-size:11px">写入伯乐指数</div></div></div>
+          </div>
+          <div class="note"><span class="ic">◈</span><span><b>雷达扫描</b>：BOSS 账号卡用脉冲扫描环表达「正在寻源」，呼应「识才信号台」核心叙事。</span></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ S5 候选人库 ============ -->
+  <div class="doccard" id="s3-candidates">
+    <div class="doc-hd"><div class="no">5</div><h2>页面设计 · 03 候选人库</h2><span class="hint">Candidates · 触达状态四色徽标 + 伯乐指数 + 详情抽屉时间线</span>
+      <div class="t-right"><span class="tag">触达状态列</span><span class="tag">轮次/话术/已读</span></div></div>
+    <div class="doc-bd">
+      <div class="frame"><div class="frame-cap"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">/candidates</span></div>
+        <div class="shell" data-extra="panel"><div class="nav"><div style="padding:20px;color:#8b97bd;font-size:11px">侧栏</div></div>
+          <div class="main"><div class="top"><h3>候选人库</h3><div class="headr"><div class="seg"><button class="on">全部</button><button>已匹配</button><button>待核对</button></div><button class="btn ghost sm">导出 CSV</button></div></div>
+            <div class="content" style="padding-top:12px">
+              <div class="card"><div class="card-bd" style="padding:0"><table><thead><tr><th style="width:22px"><input type="checkbox"></th><th>候选人</th><th>核心技能</th><th>薪资</th><th>触达状态</th><th>轮次</th><th>话术版本</th><th>已读</th><th>解析</th><th>伯乐指数</th></tr></thead><tbody>
+                <tr><td><input type="checkbox"></td><td class="cell-n">陈亦凡<small>cand_09271 · BOSS · 5年</small></td><td><span class="sk">Vue3</span><span class="sk">TS</span><span class="sk">Node</span></td><td class="num">28–35k</td><td><span class="touch t-rep">已回复</span></td><td><span class="badge b-gray num">R2</span></td><td><span class="sk">邀约 v3</span></td><td><span class="badge b-ok">已读</span></td><td><span class="badge b-ok">已匹配</span></td><td><div class="score"><span class="bar"><i style="width:82%;background:var(--ok)"></i></span><span class="n" style="color:var(--ok)">82</span></div></td></tr>
+                <tr><td><input type="checkbox"></td><td class="cell-n">刘思远<small>cand_09270 · BOSS · 3年</small></td><td><span class="sk">React</span><span class="sk">Next</span></td><td class="num">20–26k</td><td><span class="touch t-eng">跟进中</span></td><td><span class="badge b-gray num">R1</span></td><td><span class="sk">初筛 v2</span></td><td><span class="badge b-ok">已读</span></td><td><span class="badge b-gray">已入库</span></td><td><div class="score"><span class="bar"><i style="width:68%;background:var(--warn)"></i></span><span class="n" style="color:var(--warn)">68</span></div></td></tr>
+                <tr><td><input type="checkbox"></td><td class="cell-n">孙晓彤<small>cand_09266 · BOSS · 2年</small></td><td><span class="sk">Go</span><span class="sk">K8s</span></td><td class="num">18–24k</td><td><span class="touch t-pen">待跟</span></td><td><span class="badge b-gray num">—</span></td><td><span class="sk">—</span></td><td><span class="badge b-gray">未读</span></td><td><span class="badge b-warn">待核对</span></td><td><div class="score"><span class="bar"><i style="width:52%;background:var(--err)"></i></span><span class="n" style="color:var(--err)">52</span></div></td></tr>
+                <tr><td><input type="checkbox"></td><td class="cell-n">吴曼青<small>cand_09260 · BOSS · 1年</small></td><td><span class="sk">HTML</span><span class="sk">CSS</span></td><td class="num">12–16k</td><td><span class="touch t-slp">沉睡</span></td><td><span class="badge b-gray num">R2</span></td><td><span class="sk">唤醒 v5</span></td><td><span class="badge b-warn">未读</span></td><td><span class="badge b-err">失败</span></td><td><div class="score"><span class="bar"><i style="width:0;background:var(--faint)"></i></span><span class="n" style="color:var(--faint)">—</span></div></td></tr>
+              </tbody></table></div></div>
+            </div>
+          </div>
+          <div style="background:#fbfcfe;border-left:1px solid var(--line);overflow:auto">
+            <div style="padding:16px">
+              <div style="display:flex;gap:11px;align-items:center"><div style="width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--brand),#7d6bff);display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px">陈</div><div><div style="font-weight:750">陈亦凡 · 前端工程师</div><div class="mono" style="font-size:10.5px;color:var(--faint)">cand_09271 · BOSS · 5年经验</div></div></div>
+              <div class="card" style="margin-top:14px"><div class="card-bd" style="padding:12px">
+                <div style="font-size:10.5px;font-weight:700;color:var(--faint);letter-spacing:.08em;border-bottom:1px dashed var(--line);padding-bottom:6px">触达进度</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-top:10px"><span class="touch t-rep">已回复</span><span style="font-size:11.5px;color:var(--muted)">已触达 <b class="num" style="color:var(--ink)">2</b> 轮</span><span class="badge b-ok">最近已读</span><button class="btn sm" style="margin-left:auto">＋ 发送触达</button></div>
+                <div style="font-size:10.5px;font-weight:700;color:var(--faint);letter-spacing:.08em;border-top:1px dashed var(--line);margin-top:12px;padding-top:10px">沟通时间线</div>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;font-size:11px">
+                  <div style="border-left:2px solid var(--brand);padding:6px 10px;background:#eef2ff;border-radius:0 6px 6px 0"><div style="font-weight:700;color:var(--brand-d)">打招呼 · 岗位邀约 v3 <span style="font-weight:400;color:var(--faint)">今天 10:12 · 已读</span></div><div style="color:var(--muted);margin-top:2px">您的 Vue3/Node 经验与前端岗高度匹配…</div></div>
+                  <div style="border-left:2px solid var(--ok);padding:6px 10px;background:#e6f6ec;border-radius:0 6px 6px 0"><div style="font-weight:700;color:var(--ok)">收到 · 昨天 16:20</div><div style="color:var(--muted);margin-top:2px">方便的话可以发我详细 JD 看看</div></div>
+                </div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann"><span class="an">A</span><span><b>触达状态四色徽标</b>（待跟灰 / 跟进中蓝 / 已回复绿 / 沉睡紫）+ 轮次 + 话术版本 + 已读未读，D-1 所述全部可视化字段已入列表列。</span></div>
+      <div class="ann"><span class="an g">B</span><span><b>伯乐指数列</b>以匹配分 + 色条呈现，替代纯数字，一眼识才。</span></div>
+      <div class="ann"><span class="an w">C</span><span><b>详情右栏</b>展示触达进度与沟通时间线（比原抽屉更前置，保持常开侧栏信息）。</span></div>
+    </div>
+  </div>
+
+  <!-- ============ S6 触达沟通 ============ -->
+  <div class="doccard" id="s4-engage">
+    <div class="doc-hd"><div class="no">6</div><h2>页面设计 · 04 触达沟通</h2><span class="hint">Engage · 话术库 / 自动打招呼 / 智能跟进 / 批次 / 复盘</span>
+      <div class="t-right"><span class="tag gold">子页签工作台</span></div></div>
+    <div class="doc-bd">
+      <div class="frame"><div class="frame-cap"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">/engage</span></div>
+        <div class="shell"><div class="nav"><div style="padding:20px;color:#8b97bd;font-size:11px">侧栏</div></div>
+          <div class="main"><div class="top"><h3>触达沟通</h3><div class="headr"><div class="seg"><button class="on">话术库</button><button>自动打招呼</button><button>跟进引擎</button><button>批次</button><button>数据复盘</button></div></div></div>
+            <div class="content" style="padding-top:12px">
+              <div class="split">
+                <div class="card"><div class="card-hd"><h4>打招呼话术库</h4><div class="tr"><span class="tag gold">阈值 ≥60 分</span></div></div><div class="card-bd">
+                  <div style="display:flex;flex-direction:column;gap:9px">
+                    <div style="border:1px solid var(--line);border-left:3px solid var(--brand);border-radius:8px;padding:10px 12px"><div style="font-size:12.5px;font-weight:700">初次打招呼 <span class="sk">初筛 v2</span></div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.6">匹配达标即发送当前生效「初次」话术…</div><div style="font-size:10px;color:var(--faint);margin-top:6px;text-align:right">已用 68 次</div></div>
+                    <div style="border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:8px;padding:10px 12px"><div style="font-size:12.5px;font-weight:700">二次激活 <span class="sk" style="background:var(--gold-bg);color:#a16b12">激活 v3</span></div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.6">未读 ≥1 天 · 隔天二次提醒…</div><div style="font-size:10px;color:var(--faint);margin-top:6px;text-align:right">已用 31 次</div></div>
+                    <div style="border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:8px;padding:10px 12px"><div style="font-size:12.5px;font-weight:700">三次及以上 <span class="sk" style="background:var(--violet-bg);color:var(--violet)">保活 v4</span></div><div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.6">已读未回复 · 降周频保活…</div><div style="font-size:10px;color:var(--faint);margin-top:6px;text-align:right">已用 9 次</div></div>
+                  </div></div></div>
+                <div class="card"><div class="card-hd"><h4>自动打招呼</h4><div class="tr"><span class="badge b-info">2 人待打招呼</span></div></div><div class="card-bd">
+                  <div class="score" style="margin-bottom:10px"><span style="font-size:11.5px;color:var(--muted)">匹配达标候选</span><div class="bar" style="max-width:none;flex:1"><i style="width:60%;background:var(--brand)"></i></div><span class="n num" style="color:var(--ink)">4</span></div>
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px"><span class="badge b-ok num">82</span><b style="font-size:12px">陈亦凡</b><span style="color:var(--muted);font-size:11px">前端工程师</span><span class="badge b-ok" style="margin-left:auto">已打招呼</span></div>
+                    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px"><span class="badge b-ok num">91</span><b style="font-size:12px">赵子昂</b><span style="color:var(--muted);font-size:11px">后端工程师</span><span class="badge b-ok" style="margin-left:auto">已打招呼</span></div>
+                    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px"><span class="badge b-warn num">88</span><b style="font-size:12px">周明轩</b><span style="color:var(--muted);font-size:11px">数据分析师</span><span class="badge b-warn" style="margin-left:auto">待打招呼</span></div>
+                  </div>
+                  <div style="display:flex;gap:8px;margin-top:12px"><button class="btn sm">发送打招呼</button><button class="btn ghost sm">扫描跟进</button></div>
+                </div></div>
+              </div>
+              <div class="card"><div class="card-hd"><h4>智能跟进引擎</h4><span class="hint">未读隔 1 天激活 · 已读降频保活 · 满 1 月沉睡</span></div>
+                <div class="card-bd" style="padding:0"><table><thead><tr><th>候选人</th><th>轮次</th><th>当前模式</th><th>下次计划</th><th>状态</th></tr></thead><tbody>
+                  <tr><td class="cell-n">刘思远<small>未读</small></td><td class="num"><span class="badge b-gray">R2</span></td><td><span class="sk">3–8s 间隔</span></td><td class="num">今天 15:00</td><td><span class="touch t-eng">跟进中</span></td></tr>
+                  <tr><td class="cell-n">何立伟<small>未读</small></td><td class="num"><span class="badge b-gray">R1</span></td><td><span class="sk">二次激活</span></td><td class="num">今天 17:00</td><td><span class="touch t-eng">跟进中</span></td></tr>
+                  <tr><td class="cell-n">沈慕晴<small>已读</small></td><td class="num"><span class="badge b-gray">R4</span></td><td><span class="sk">降周频</span></td><td class="num">—</td><td><span class="touch t-slp">沉睡</span></td></tr>
+                </tbody></table></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann"><span class="an">A</span><span><b>子页签工作台</b>把「话术库 / 自动打招呼 / 跟进引擎 / 批次 / 数据复盘」聚合成一个完整「触达沟通」页，F-1~F-4 功能全部归拢于此，替代原先分散入口。</span></div>
+      <div class="ann"><span class="an g">B</span><span><b>话术分级用色条</b>（靛蓝初次 / 金二次激活 / 紫保活）区分响应层级，记忆点清晰。</span></div>
+      <div class="ann"><span class="an w">C</span><span><b>数据复盘即 D-2 指标</b>（响应率 / 索要成功率 / 沉睡率 / 转化）作为第五子页签内嵌，指标可导。</span></div>
+    </div>
+  </div>
+
+  <!-- ============ S7 审计 ============ -->
+  <div class="doccard" id="s5-audit">
+    <div class="doc-hd"><div class="no">7</div><h2>页面设计 · 05 审计 / 日志 / 护栏</h2><span class="hint">Audit · 不可篡改 + 运行日志终端 + 护栏配置</span>
+      <div class="t-right"><span class="tag">三合一设计</span></div></div>
+    <div class="doc-bd">
+      <div class="grid2">
+        <div class="frame"><div class="frame-cap"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">/audit</span></div>
+          <div class="shell"><div class="nav"><div style="padding:20px;color:#8b97bd;font-size:11px">侧栏</div></div>
+            <div class="main"><div class="content">
+              <div class="card"><div class="card-hd"><h4>审计留痕</h4><div class="tr"><div class="seg"><button class="on">全部</button><button>采集</button><button>访问</button><button>导出</button></div></div></div><div class="card-bd" style="padding:0">
+                <div style="padding:11px 16px;border-bottom:1px solid #f0f2f7;display:flex;gap:12px;align-items:baseline"><span class="badge b-gray">导出</span><div style="font-size:12px">导出候选人清单<small class="mono" style="color:var(--faint)">export_0909.csv</small></div><span style="margin-left:auto;font-size:10.5px;color:var(--faint)">赵经理·批准 · 09:32</span></div>
+                <div style="padding:11px 16px;border-bottom:1px solid #f0f2f7;display:flex;gap:12px;align-items:baseline"><span class="badge b-info">采集</span><div style="font-size:12px">采集运行<small class="mono" style="color:var(--faint)">#128 frontend_01</small></div><span style="margin-left:auto;font-size:10.5px;color:var(--faint)">系统调度 · 09:00</span></div>
+                <div style="padding:11px 16px;display:flex;gap:12px;align-items:baseline"><span class="badge b-warn">访问</span><div style="font-size:12px">详情脱敏字段解密<small class="mono" style="color:var(--faint)">cand_09271</small></div><span style="margin-left:auto;font-size:10.5px;color:var(--faint)">王女士 · 08:47</span></div>
+              </div></div>
+            </div></div>
+          </div>
+        </div>
+        <div class="frame"><div class="frame-cap"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">/logs</span></div>
+          <div class="shell"><div class="nav"><div style="padding:20px;color:#8b97bd;font-size:11px">侧栏</div></div>
+            <div class="main"><div class="content">
+              <div class="card"><div class="card-hd"><h4>运行日志</h4><div class="tr"><div class="seg"><button class="on">全部</button><button>info</button><button>warn</button><button>err</button></div></div></div><div class="card-bd" style="padding:0;font-family:var(--mono);font-size:11px">
+                <div style="padding:9px 16px;border-bottom:1px dashed #eef1f7;display:flex;gap:10px"><span style="color:var(--faint)">09:00:01</span><span style="background:#eef2ff;color:#4a5fd0;border-radius:99px;padding:0 8px">info</span><span style="color:var(--ink)">调度触发 job=frontend_01</span></div>
+                <div style="padding:9px 16px;border-bottom:1px dashed #eef1f7;display:flex;gap:10px"><span style="color:var(--faint)">09:00:02</span><span style="background:#fff6e8;color:#c07a00;border-radius:99px;padding:0 8px">warn</span><span style="color:#9a6a00">账号 B2 冷却 → 切换 A1</span></div>
+                <div style="padding:9px 16px;display:flex;gap:10px"><span style="color:var(--faint)">09:12:40</span><span style="background:#eef2ff;color:#4a5fd0;border-radius:99px;padding:0 8px">info</span><span style="color:var(--ink)">JD 匹配打分 平均 71 分</span></div>
+              </div></div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+      <div class="note"><span class="ic">◈</span><span><b>审计/日志统一为「不可篡改」叙事</b>——日志用终端等宽字体 + 分级色块，审计用类型徽标，与「信号台」的透明可追溯气质一致。</span></div>
+    </div>
+  </div>
+
+  <!-- ============ S8 关闭 ============ -->
+  <div class="doccard">
+    <div class="doc-hd"><div class="no">8</div><h2>关键交互与可取之处</h2><span class="hint">Interaction Highlights</span></div>
+    <div class="doc-bd">
+      <div class="princ">
+        <div class="p"><div class="hic">◎</div><b>页面加载脉冲</b><p>首屏 KPI 卡以递增 delay 错峰入场，配合右上「网关已连接」心跳点，建立"系统活着"的心理预期。</p></div>
+        <div class="p"><div class="hic">⇶</div><b>触达信号右栏</b><p>运营总览右侧常驻触达状态四色卡，点击即跳候选人库对应筛选，形成"看到→处理"最短路径。</p></div>
+        <div class="p"><div class="hic">✓</div><b>伯乐指数即主信号</b><p>全系统用「匹配分 + 色条」作为候选人主视觉，触达状态作辅助——先识才、再谈沟通。</p></div>
+      </div>
+      <div class="note"><span class="ic">→</span><span><b>下一步：</b>本设计稿为静态视觉稿，供评审。确认方向后可在 ui-prototype 内落地为可交互单页原型（沿用现有 ES Module 架构，无构建）。如需对某个页面深挖或调整配色/叙事方向，可继续迭代。</span></div>
+    </div>
+  </div>
+
+  <div style="margin-top:18px;font-size:12px;color:var(--faint);text-align:center;padding-bottom:30px">伯乐AI · 招聘提效模块 — UI 设计稿 v2.0 · 概念种子「识才信号台」 · 2026-09-11</div>
+</div>
+</body>
+</html>

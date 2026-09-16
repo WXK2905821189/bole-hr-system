@@ -5,10 +5,14 @@ const PHONE_RE = /(?<![\d])1[3-9](?:\d[-\s]?){9}(?!\d)/;
 
 export class SourcingDomain {
   constructor(deps) {
-    this.deps = deps; // { bus, validate, audit, store, services:{ ..., engagement, guardrail, messagelib }, config }
+    this.deps = deps; // { bus, validate, audit, store, services:{ ..., engagement, guardrail, messagelib, rules }, config }
     this.cycleId = 0;
+    this.rules = deps.services?.rules ?? null;
     const e = deps.config?.engage ?? {};
-    this.threshold = Number(e.autoGreetThreshold ?? process.env.HR_ENGAGE_THRESHOLD ?? 60);
+    // 打招呼阈值优先级：匹配规则配置 > 环境变量/启动配置 > 默认 60（等价改造前）
+    const cfgT = this.rules?.get()?.match?.greetThreshold;
+    const t = cfgT ?? Number(e.autoGreetThreshold ?? process.env.HR_ENGAGE_THRESHOLD ?? 60);
+    this.threshold = Number.isFinite(Number(t)) ? Number(t) : 60;
   }
 
   async runSourcingCycle(jobId, jdRaw, keyword, recruiterId) {
@@ -64,7 +68,9 @@ export class SourcingDomain {
     let ok = 0;
     const blocked = [];
     for (const c of targets) {
-      const r = await this.#guardedTouch({ candidateId: c.candidateId, recruiterId, action: 'greet', template: `您好，我是 BOSS 直聘上 ${recruiterId || '招聘方'}，看到您与「${jobTitle || jobId}」岗位很匹配，想进一步了解您的最新情况，方便沟通吗？` });
+      // 与 autoGreet/greetCandidate 同口径：取话术库当前生效的「初次触达」话术
+      const msg = this.deps.services.messagelib.render('first', jobTitle || jobId);
+      const r = await this.#guardedTouch({ candidateId: c.candidateId, recruiterId, action: 'greet', messageVersion: msg.templateId, content: msg.content, round: 1 });
       if (r.blocked) { blocked.push({ candidateId: c.candidateId, reason: r.reason }); }
       else if (r.ok) ok++;
     }
@@ -76,7 +82,10 @@ export class SourcingDomain {
     const cands = this.deps.store.readAll('candidates.jsonl');
     const c = cands.find((x) => x.candidateId === candidateId);
     if (!c) return { ok: false, error: '未找到候选人' };
-    return this.#guardedTouch({ candidateId, recruiterId, action: 'greet', template: `您好，我是 BOSS 直聘上 ${recruiterId || '招聘方'}，看到您的简历非常匹配，方便进一步沟通吗？` });
+    // 与 autoGreet 同口径：取话术库当前生效的「初次触达」话术（岗位占位符已渲染）
+    const job = this.deps.store.readAll('jobs.jsonl').find((j) => j.jobId === c.jobId);
+    const msg = this.deps.services.messagelib.render('first', job?.jobTitle || '');
+    return this.#guardedTouch({ candidateId, recruiterId, action: 'greet', messageVersion: msg.templateId, content: msg.content, round: 1 });
   }
 
   // 索要简历 / 索要电话 / 跟进（与打招呼共用护栏与触达入库）
@@ -183,22 +192,38 @@ export class SourcingDomain {
     return this.#guardedTouch({ candidateId, recruiterId, action: 'follow_up', messageVersion: msg.templateId, content: msg.content, round: nextRound });
   }
 
-  // 触达到期后标记候选人沉睡（停止触达）
+  // 触达到期后标记候选人沉睡（停止触达；标记保留、不删除，可唤醒）
   async markSleeping(candidateId) {
     const cands = this.deps.store.readAll('candidates.jsonl');
     const c = cands.find((x) => x.candidateId === candidateId);
     if (!c) return { ok: false, error: '未找到候选人' };
     c.touchStatus = 'sleeping';
     c.sleeping = true;
+    c.sleepingAt = new Date().toISOString();
     this.deps.store.writeAll('candidates.jsonl', cands);
     this.deps.services.guardrail.triggerCooldown(c.recruiterId || 'A1', 0); // 停止后续触发（时间=0使 check 立即回冷却结束，语义为拒绝新触达由 sleeping 兜底）
     await this.deps.audit.record({ actor: 'system', action: 'engage.sleep', detail: { candidateId, jobId: c.jobId, touchStatus: 'sleeping' } });
     return { ok: true, candidate: c };
   }
 
+  // 人工唤醒沉睡候选人（PRD 6.6A：沉睡 = 标记保留、可唤醒、不删除）：
+  // 恢复触达状态 engaging、清除 sleeping 粘滞标记与沉睡时间，重新纳入跟进扫描；动作写审计。
+  async wakeCandidate(candidateId) {
+    const cands = this.deps.store.readAll('candidates.jsonl');
+    const c = cands.find((x) => x.candidateId === candidateId);
+    if (!c) return { ok: false, error: '未找到候选人' };
+    if (c.touchStatus !== 'sleeping' && !c.sleeping) return { ok: true, already: true, note: '候选人并非沉睡状态', candidate: c };
+    c.touchStatus = 'engaging';
+    c.sleeping = false;
+    c.sleepingAt = null;
+    this.deps.store.writeAll('candidates.jsonl', cands);
+    await this.deps.audit.record({ actor: 'hr', action: 'engage.wake', detail: { candidateId, jobId: c.jobId, touchStatus: 'engaging', manual: true } });
+    return { ok: true, candidate: c };
+  }
+
   // ================= F-1 候选人发送简历 → 自动点击 BOSS「同意」收取 =================
   // 收取成功 → 进入索取成功态(status=resume_received)并触发解析(联 FR-3)；失败/异常 → 转人工待处理；动作写审计、受护栏节流
-  async receiveResumeInbound(candidateId, { rawText = '', fail = false, recruiterId } = {}) {
+  async receiveResumeInbound(candidateId, { rawText = '', fail = false, recruiterId, channel } = {}) {
     const cands = this.deps.store.readAll('candidates.jsonl');
     const c = cands.find((x) => x.candidateId === candidateId);
     if (!c) return { ok: false, error: '未找到候选人' };
@@ -231,6 +256,8 @@ export class SourcingDomain {
     const candsFresh = this.deps.store.readAll('candidates.jsonl');
     const fresh = candsFresh.find((x) => x.candidateId === candidateId);
     fresh.status = 'resume_received';
+    fresh.resumeReceivedAt = new Date().toISOString();
+    fresh.resumeChannel = channel || 'boss';
     fresh.manualPending = false;
     fresh.manualReason = '';
     this.deps.store.writeAll('candidates.jsonl', candsFresh);
@@ -252,6 +279,79 @@ export class SourcingDomain {
   // F-1 待人工处理清单
   listManualPending() {
     return this.deps.store.readAll('candidates.jsonl').filter((c) => c.manualPending);
+  }
+
+  // ================= M2 里程碑 · 自动收简历（批量入站主链路，全程无人工介入） =================
+  // 监听「候选人发送简历」入站事件（BOSS 适配器推送 / /api/sourcing/auto-receive），对每位候选人
+  // **一律自动点「同意」收取**（不设人工确认门槛，PRD 6.3 已确认口径）→ 标记已收 → 自动解析入库 → 缺电话自动交换联系方式；
+  // 逐候选人隔离：任一条失败(异常/交付失败)仅转该人「需人工」，**不拖垮整轮**其余候选人正常处理。
+  // 重复入站幂等（已收则 already，不重复解析/耗动作）。
+  // inbounds: [{ candidateId, rawText?, fail?, channel? }]
+  async autoReceiveResumes(jobId, { inbounds = [], recruiterId } = {}) {
+    const job = this.deps.store.readAll('jobs.jsonl').find((j) => j.jobId === jobId);
+    if (!job) return { ok: false, error: '未找到岗位' };
+    const rid = recruiterId || job.recruiterId || 'A1';
+    const agg = { total: inbounds.length, received: [], idempotent: [], manualPending: [], blocked: [], notFound: [], failed: [] };
+
+    for (const inb of inbounds) {
+      const candidateId = String(inb?.candidateId ?? '').trim();
+      if (!candidateId) { agg.failed.push(null); continue; }
+      const exists = this.deps.store.readAll('candidates.jsonl').some((c) => c.candidateId === candidateId);
+      if (!exists) { agg.notFound.push(candidateId); continue; }
+
+      try {
+        const r = await this.receiveResumeInbound(candidateId, {
+          rawText: inb?.rawText, fail: !!inb?.fail, recruiterId: rid, channel: inb?.channel,
+        });
+        if (r.ok && r.already) agg.idempotent.push(candidateId);
+        else if (r.ok) agg.received.push(candidateId);
+        else if (r.manualPending) agg.manualPending.push(candidateId);
+        else if (r.blocked) agg.blocked.push(candidateId);
+        else agg.failed.push(candidateId);
+      } catch (e) {
+        // 单点失败自动隔离：转该人需人工，本轮其余候选人继续，不把整轮拖垮
+        const cands = this.deps.store.readAll('candidates.jsonl');
+        const cc = cands.find((x) => x.candidateId === candidateId);
+        if (cc) {
+          cc.manualPending = true;
+          cc.manualReason = `收简历异常（已隔离）：${String(e?.message ?? e).slice(0, 120)}`;
+          this.deps.store.writeAll('candidates.jsonl', cands);
+        }
+        agg.failed.push(candidateId);
+        await this.deps.audit.record({ actor: rid, action: 'sourcing.auto_receive.failed', detail: { jobId, candidateId, error: String(e?.message ?? e) } });
+      }
+    }
+
+    await this.deps.audit.record({
+      actor: rid, action: 'sourcing.auto_receive',
+      detail: { jobId, total: agg.total, received: agg.received.length, idempotent: agg.idempotent.length, manualPending: agg.manualPending.length, blocked: agg.blocked.length, notFound: agg.notFound.length, failed: agg.failed.length, candidateIds: agg.received.concat(agg.manualPending, agg.failed) },
+    });
+    const ok = agg.received.length > 0 || agg.idempotent.length > 0 || agg.manualPending.length > 0 || agg.blocked.length > 0;
+    return { ok, jobId, ...agg };
+  }
+
+  // ================= M1–M3 完整流水线（收尾：一次执行串起「寻访打招呼→自动收简历→智能跟进」） =================
+  // ① M1 寻访打招呼（两路合一，寻访送达即自动打招呼）
+  // ② M2 自动收简历（批量入站：一律自动同意→解析入库→缺电话交换；逐条隔离）
+  // ③ M3 跟进扫描（到期重发 / 满月沉睡）
+  // 汇总逐段结果并写流水线审计。inbounds 由 BOSS 适配器直供；缺省则跳过收简历环。
+  // candidates（可选）与 autoSourceAndGreet 同构：{ recommend?, search? } 直供真实两路候选，缺省用模拟兜底。
+  async runAutoPipeline(jobId, { count = 3, inbounds = [], candidates, recruiterId } = {}) {
+    const job = this.deps.store.readAll('jobs.jsonl').find((j) => j.jobId === jobId);
+    if (!job) return { ok: false, error: '未找到岗位' };
+    const rid = recruiterId || job.recruiterId || 'A1';
+
+    const sourcing = await this.autoSourceAndGreet(jobId, { count, keyword: '', recruiterId: rid, candidates });
+    const intake = Array.isArray(inbounds) && inbounds.length
+      ? await this.autoReceiveResumes(jobId, { inbounds, recruiterId: rid })
+      : { ok: false, total: 0, received: [], idempotent: [], manualPending: [], blocked: [], notFound: [], failed: [], skipped: 'no_inbounds' };
+    const fb = await this.deps.services.followup.sweep();
+
+    await this.deps.audit.record({
+      actor: rid, action: 'sourcing.pipeline.cycle',
+      detail: { jobId, sourcingInjected: sourcing.injected?.length ?? 0, intakeReceived: intake.received?.length ?? 0, intakeManual: intake.manualPending?.length ?? 0, followupSent: fb.sent?.length ?? 0, followupSlept: fb.slept?.length ?? 0 },
+    });
+    return { ok: true, jobId, sourcing, intake, followup: { sent: fb.sent?.length ?? 0, slept: fb.slept?.length ?? 0, candidates: fb.candidates ?? [] } };
   }
 
   // ================= F-2 缺联系方式 → 自动发送「交换联系方式」话术（附我方联系方式） =================
@@ -287,6 +387,44 @@ export class SourcingDomain {
     return this.#guardedTouch({ candidateId, recruiterId, action: 'greet', messageVersion: msg.templateId, content: msg.content });
   }
 
+  // ================= M1 里程碑 · 自动寻访打招呼（推荐牛人 + 搜索两路合一，全程无人工介入） =================
+  // 供调度器定时调用：归一化两路候选 → 命中筛选（画像/JD/关键词）→ 跨路去重 → 注入
+  // （source 标记来源）→ 事件链触发「解析→匹配→匹配达标自动打招呼」，全程受护栏节流。
+  // candidates：{ recommend?, search? } 两路由适配器直供的真实 BOSS 数据；缺省用模拟数据兜底。
+  async autoSourceAndGreet(jobId, { count = 3, keyword = '', recruiterId, candidates } = {}) {
+    const job = this.deps.store.readAll('jobs.jsonl').find((j) => j.jobId === jobId);
+    if (!job) return { ok: false, error: '未找到岗位' };
+    const rid = recruiterId || job.recruiterId || 'A1';
+    const hard = (job.hardSkills || []).map((s) => String(s).toLowerCase());
+    const kw = String(keyword || job.jobTitle || '').toLowerCase();
+    const n = Math.max(1, Number(count) || 3);
+
+    const recList = Array.isArray(candidates?.recommend) && candidates.recommend.length
+      ? candidates.recommend.map((rc, i) => this.#normalizeRec(rc, i))
+      : this.#mockRecommends(job, jobId, n);
+    const srhList = Array.isArray(candidates?.search) && candidates.search.length
+      ? candidates.search.map((rc, i) => this.#normalizeRec(rc, i))
+      : this.#mockSearchResults(job, jobId, n);
+    const recHit = recList.filter((rc) => this.#hit(rc, hard, kw));
+    const searchHit = srhList.filter((rc) => this.#hit(rc, hard, kw));
+    const recHard = this.#hardPartition(recHit);
+    const srhHard = this.#hardPartition(searchHit);
+
+    // 两路共用同一去重索引 → 跨路去重：推荐牛人 ∩ 搜索结果 命中一致者不重复注入/耗额度
+    const existing = this.deps.store.readAll('candidates.jsonl');
+    const seenIds = new Set(existing.map((c) => c.candidateId));
+    const seenNamePhone = new Set(existing.map((c) => this.#npKey(c.name, c.phone)));
+
+    const recInj = await this.#injectCandidates(recHard.pass, { source: 'boss_recommend', jobId, hard, kw, rid, seenIds, seenNamePhone });
+    const srhInj = await this.#injectCandidates(srhHard.pass, { source: 'boss', jobId, hard, kw, rid, seenIds, seenNamePhone });
+    const totalInjected = recInj.injected.concat(srhInj.injected);
+    const deduped = recInj.deduped + srhInj.deduped;
+    const hardRejected = recHard.rejected.concat(srhHard.rejected);
+
+    await this.deps.audit.record({ actor: rid, action: 'sourcing.auto_source', detail: { jobId, fetched: { recommend: recList.length, search: srhList.length }, hit: { recommend: recHit.length, search: searchHit.length }, deduped, hardRejected: hardRejected.length, hardRejectedDetail: hardRejected.slice(0, 20), injected: totalInjected.length, candidateIds: totalInjected } });
+    return { ok: true, jobId, fetched: { recommend: recList.length, search: srhList.length }, hit: { recommend: recHit.length, search: searchHit.length }, deduped, hardRejected, injected: totalInjected, candidateIds: totalInjected };
+  }
+
   // ================= F-5 推荐牛人列表寻访：扩展自动打招呼对象（与搜索结果去重，不重复耗额度） =================
   // candidates：适配器直供的推荐列表（真实 BOSS 采集）；缺省时用模拟推荐数据
   async recommendSourcing(jobId, { count = 3, keyword = '', recruiterId, candidates } = {}) {
@@ -298,36 +436,75 @@ export class SourcingDomain {
     const kw = String(keyword || job.jobTitle || '').toLowerCase();
 
     const fetched = Array.isArray(candidates) && candidates.length
-      ? candidates.map((rc, i) => ({
-          candidateId: rc.candidateId ?? `cand_rec_${String(rc.name ?? i).trim().replace(/\s+/g, '_')}`,
-          name: rc.name ?? `推荐牛人${i + 1}`, years: Number(rc.years ?? rc.workExperienceYears ?? 3) || 3,
-          phone: rc.phone ?? null, salaryExpected: rc.salaryExpected ?? '面议',
-          skills: rc.skills ?? [], education: rc.education ?? {},
-          rawText: rc.rawText ?? `${rc.name ?? '推荐牛人'}，${rc.years ?? 3}年经验，${(rc.skills ?? []).join('、')}。`,
-        }))
+      ? candidates.map((rc, i) => this.#normalizeRec(rc, i))
       : this.#mockRecommends(job, jobId, Math.max(1, Number(count) || 3));
-    const hit = fetched.filter((rc) => {
-      const skills = (rc.skills ?? []).map((s) => String(s).toLowerCase());
-      const byProfile = hard.length && skills.some((s) => hard.some((h) => s.includes(h) || h.includes(s)));
-      const byKw = kw && (String(rc.name).toLowerCase().includes(kw) || skills.some((s) => s.includes(kw)));
-      return byProfile || byKw;
-    });
+    const hit = fetched.filter((rc) => this.#hit(rc, hard, kw));
+    const hpart = this.#hardPartition(hit);
 
     // 去重：与既有候选人（含搜索结果命中）按 candidateId / 姓名+电话 归一去重
     const existing = this.deps.store.readAll('candidates.jsonl');
-    const keys = new Set(existing.map((c) => c.candidateId));
-    const namePhone = new Set(existing.map((c) => `${String(c.name ?? '').replace(/\s/g, '')}|${String(c.phone ?? '').replace(/[-\s]/g, '')}`));
+    const seenIds = new Set(existing.map((c) => c.candidateId));
+    const seenNamePhone = new Set(existing.map((c) => this.#npKey(c.name, c.phone)));
+    const { injected, deduped } = await this.#injectCandidates(hpart.pass, { source: 'boss_recommend', jobId, hard, kw, rid, seenIds, seenNamePhone });
+    await this.deps.audit.record({ actor: rid, action: 'sourcing.recommend', detail: { jobId, fetched: fetched.length, hit: hit.length, hardRejected: hpart.rejected.length, hardRejectedDetail: hpart.rejected.slice(0, 20), deduped, injected: injected.length, candidateIds: injected } });
+    return { ok: true, jobId, fetched: fetched.length, hit: hit.length, deduped, injected, candidateIds: injected };
+  }
+
+  // 推荐牛人归一化（直供列表 → 领域候选人结构）
+  #normalizeRec(rc, i) {
+    return {
+      candidateId: rc.candidateId ?? `cand_rec_${String(rc.name ?? i).trim().replace(/\s+/g, '_')}`,
+      name: rc.name ?? `推荐牛人${i + 1}`, years: Number(rc.years ?? rc.workExperienceYears ?? 3) || 3,
+      phone: rc.phone ?? null, salaryExpected: rc.salaryExpected ?? '面议',
+      skills: rc.skills ?? [], education: rc.education ?? {},
+      rawText: rc.rawText ?? `${rc.name ?? '推荐牛人'}，${rc.years ?? 3}年经验，${(rc.skills ?? []).join('、')}。`,
+      level: rc.level ?? null,
+    };
+  }
+
+  // 命中判定：画像技能覆盖硬技能 或 关键词命中
+  #hit(rc, hard, kw) {
+    const skills = (rc.skills ?? []).map((s) => String(s).toLowerCase());
+    const byProfile = hard.length && skills.some((s) => hard.some((h) => s.includes(h) || h.includes(s)));
+    const byKw = kw && (String(rc.name ?? '').toLowerCase().includes(kw) || skills.some((s) => s.includes(kw)));
+    return !!rc.level ? (byProfile || byKw) && rc.level : byProfile || byKw;
+  }
+
+  // 姓名+电话 去重键
+  #npKey(name, phone) {
+    return `${String(name ?? '').replace(/\s/g, '')}|${String(phone ?? '').replace(/[-\s]/g, '')}`;
+  }
+
+  // 硬性筛选（FR-11，Pre-AI 门槛）：不满足硬性门槛/缺必须关键词 → 直接跳过，不进入 AI 匹配、不打招呼。
+  // 返回 { pass, rejected:[{candidateId,name,reason}] }，仅 pass 进入注入。
+  #hardPartition(list) {
+    if (!this.rules) return { pass: list, rejected: [] };
+    const pass = [], rejected = [];
+    for (const rc of list) {
+      const r = this.rules.evaluateHardFilter(rc);
+      const gate = this.rules.passesKeywordGate(rc);
+      if (r.pass && gate.pass) { pass.push(rc); continue; }
+      rejected.push({
+        candidateId: rc.candidateId, name: rc.name,
+        reason: [r.reason, gate.pass ? '' : `缺少必须关键词：${(gate.miss ?? []).join('、')}`].filter(Boolean).join('；') || '硬性筛选未通过',
+      });
+    }
+    return { pass, rejected };
+  }
+
+  // 注入寻访命中候选人（去重 + 写库 + 事件链自动打招呼 + 审计）
+  async #injectCandidates(hit, { source, jobId, hard, kw, rid, seenIds, seenNamePhone }) {
     const injected = [];
     let deduped = 0;
     for (const rc of hit) {
-      const np = `${String(rc.name).replace(/\s/g, '')}|${String(rc.phone ?? '').replace(/[-\s]/g, '')}`;
-      if (keys.has(rc.candidateId) || namePhone.has(np)) { deduped++; continue; }
-      keys.add(rc.candidateId); namePhone.add(np);
+      const np = this.#npKey(rc.name, rc.phone);
+      if (seenIds.has(rc.candidateId) || seenNamePhone.has(np)) { deduped++; continue; }
+      seenIds.add(rc.candidateId); seenNamePhone.add(np);
       const cand = {
-        candidateId: rc.candidateId, source: 'boss_recommend', jobId,
+        candidateId: rc.candidateId, source, jobId,
         name: rc.name, status: 'sourced', workExperienceYears: rc.years,
         salaryExpected: rc.salaryExpected, skills: rc.skills,
-        education: rc.education,
+        education: rc.education, level: rc.level ?? null,
         meta: { createdAt: new Date().toISOString(), masked: true },
       };
       this.deps.validate.assertValid('candidate', cand);
@@ -335,8 +512,7 @@ export class SourcingDomain {
       await this.deps.bus.emit('candidate.sourced', { ...cand, resume: { rawText: rc.rawText, format: 'text' } }, { actor: 'system' });
       injected.push(cand.candidateId);
     }
-    await this.deps.audit.record({ actor: rid, action: 'sourcing.recommend', detail: { jobId, fetched: fetched.length, hit: hit.length, deduped, injected: injected.length, candidateIds: injected } });
-    return { ok: true, jobId, fetched: fetched.length, hit: hit.length, deduped, injected, candidateIds: injected };
+    return { injected, deduped, hit };
   }
 
   // 生成一批贴近真实的「推荐牛人」列表数据（模拟 BOSS 平台推荐）
@@ -362,6 +538,28 @@ export class SourcingDomain {
     return out;
   }
 
+  // 生成一批贴近真实的「搜索结果」列表数据（模拟 BOSS 主动搜索命中；此路来源标记 boss）
+  #mockSearchResults(job, jobId, count) {
+    const NAMES = ['王磊', '周敏', '陈晨', '刘昊', '罗丽', '高翔', '唐悦', '郭涛', '何静', '郑博'];
+    const hard = (job.hardSkills || []).slice(0, 3);
+    const out = [];
+    for (let i = 0; i < count; i++) {
+      const name = NAMES[(Math.floor(Math.random() * NAMES.length) + out.length) % NAMES.length];
+      const years = 2 + Math.floor(Math.random() * 7);
+      const skills = [...hard, '自我驱动', '跨团队沟通'];
+      out.push({
+        candidateId: `cand_srh_${Date.now().toString(36)}_${i}`,
+        name: `${name}${i % 2 ? '·搜索' + (i + 1) : ''}`,
+        years, phone: null,
+        salaryExpected: `${12 + years * 2}~${16 + years * 3}K·14薪`,
+        skills,
+        education: { school: '北京理工大学', major: '软件工程', degree: years >= 5 ? '硕士' : '本科' },
+        rawText: `${name}，${years}年经验，擅长${skills.slice(0, 3).join('、')}，BOSS 搜索命中。`,
+      });
+    }
+    return out;
+  }
+
   // 触达记录查询
   listEngagements(limit = 200) {
     return this.deps.services.engagement.list(limit);
@@ -376,6 +574,8 @@ export class SourcingDomain {
     ];
     const EXPs = [[3, 5], [1, 3], [5, 8], [2, 4]];
     const out = [];
+    // 与真实路径同口径：话术取话术库当前生效的「初次触达」话术
+    const mockGreet = this.deps.services.messagelib.render('first', job.jobTitle || jobId).content;
     const hard = (job.hardSkills || []).slice(0, 3);
     for (let i = 0; i < count; i++) {
       const ts = Date.now();
@@ -393,7 +593,7 @@ export class SourcingDomain {
         salaryExpected: `${12 + years * 2}~${15 + years * 3}K·14薪`,
         skills, education: { school, major, degree },
         greeted: true, greetedAt: now,
-        greetMessage: `您好，我是 BOSS 直聘上 ${recruiterId}，看到您与「${job.jobTitle}」岗位很匹配，方便沟通吗？`,
+        greetMessage: mockGreet,
         startYear: 2026 - years,
         meta: { createdAt: now, masked: true },
       };

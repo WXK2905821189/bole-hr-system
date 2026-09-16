@@ -56,6 +56,27 @@ export const DB = {
     { id: "A1", name: "BOSS 主账号", status: "active", used: 46, limit: 200, note: "会话隔离" },
     { id: "B2", name: "BOSS 备用账号", status: "cooling", used: 80, limit: 200, note: "冷却中 · 10:05 恢复" },
   ],
+  /* 采集调度 · BOSS 一句话体检（四前置，PRD 8.x：会话在线/话术就绪/待触发候选/护栏余量） */
+  scheduleHealth: [
+    { key: "session", label: "BOSS 网页端会话在线", ok: true, note: "持久登录会话有效期 15:42 · profile_dir normal" },
+    { key: "script", label: "打招呼话术就绪", ok: true, note: "初次话术「初筛 · v2」已生效" },
+    { key: "candidates", label: "待触发候选就绪", ok: true, note: "推荐牛人 3 · 搜索 2 · 去重后 4 人待打招呼" },
+    { key: "guard", label: "护栏余量充足", ok: false, note: "「后端工程师」今日已用 78% · 接近日上限禁触达" },
+  ],
+  /* 采集调度 · M1 两路寻访配额（推荐牛人 + 搜索） */
+  sourceQuota: [
+    { channel: "推荐牛人列表", icon: "★", hit: 3, quota: 20, used: 12, active: true, note: "按画像 / JD / 关键词命中即触发打招呼" },
+    { channel: "关键词搜索", icon: "⌕", hit: 2, quota: 15, used: 9, active: true, note: "与推荐牛人命中一致候选人自动去重，不重复耗额度" },
+  ],
+  /* 采集调度 · 风控护栏明细（仅绑定不足以为自助打招呼，详见引导文案） */
+  guards: [
+    { label: "间隔随机化", val: "3–8s", on: true },
+    { label: "会话上限", val: "80 / 次", on: true },
+    { label: "冷却窗口", val: "30 min", on: true },
+    { label: "熔断阈值", val: "3 连败", on: true },
+    { label: "日上限护栏", val: "200", on: true },
+    { label: "敏感字段脱敏", val: "默认开启", on: true },
+  ],
   /* 触达状态中枢：st=待跟 pending / 跟进中 engaging / 已回复 replied / 沉睡 sleeping；round=已触轮次；read=最近已读；ver=当前话术版本 */
   touchMeta: {
     cand_09271: { st: "replied", round: 2, read: true, ver: "岗位邀约 · v3" },
@@ -114,13 +135,19 @@ export const DB = {
       { name: "沈慕晴", track: "已读", round: 4, mode: "降周频", next: "—", st: "sleeping" },
     ],
     pendingRes: [
-      { name: "孙晓彤", job: "数据分析师", reason: "附件格式无法解析", action: "人工处理" },
-      { name: "吴曼青", job: "前端工程师", reason: "疑似重复简历", action: "人工核对" },
+      { id: "pr1", name: "孙晓彤", job: "数据分析师", reason: "附件格式无法解析", action: "人工重试" },
+      { id: "pr2", name: "吴曼青", job: "前端工程师", reason: "疑似重复简历", action: "人工核对" },
     ],
+    /* 自动同意收取简历（M2）：监听发简历事件 → 一律自动同意 → 解析入库（不存文件，登记跟踪） */
+    autoAccept: { on: true, mode: "一律自动同意收取", count: 42, err: 1, fail: 0, note: "收到发简历事件即自动点击「同意」→ 标记已收 → 解析入库（原始文件不落盘）" },
     hrContact: "HR 小王 139-0000-1111（BOSS 站内信）",
+    campaignModes: [
+      { label: "全部职位 · 顺序", desc: "按启用岗位顺序逐个发送" },
+      { label: "指定职位 · 自定义额度", desc: "仅选定岗位，可分配独立额度" },
+    ],
     campaigns: [
-      { id: "CG-1031", mode: "全部职位 · 顺序", jobs: "前端 ↣ 后端 ↣ 数据", quota: "各 20", status: "run", progress: 62, at: "09:30" },
-      { id: "CG-1030", mode: "指定职位 · 自定义额度", jobs: "前端工程师", quota: "15", status: "ok", progress: 100, at: "昨天 14:00" },
+      { id: "CG-1031", mode: "全职业顺序", modeFull: "全部职位 · 顺序", jobs: "前端 ↣ 后端 ↣ 数据", quota: "各 20", status: "run", progress: 62, at: "09:30", control: "stop" },
+      { id: "CG-1030", mode: "指定职位", modeFull: "指定职位 · 自定义额度", jobs: "前端工程师", quota: "15", status: "ok", progress: 100, at: "昨天 14:00", control: "run" },
     ],
     notify: [
       { ts: "09:12", text: "批次 CG-1031 ·「后端工程师」已到额 20 → 自动切换「数据分析师」" },
@@ -141,4 +168,30 @@ export const DB = {
       { act: "交换联系方式", target: "吴曼青 · 前端工程师", who: "王女士", ts: "昨天 16:20", ver: "交换 · v1", res: "已发送" },
     ],
   },
+  /* 人才库：账号无关 · 共享动态池（无「岗位」维度，导航按伯乐指数/状态打标） */
+  talent: [
+    { id: "tt_0115", name: "杜云帆", workYears: 6, skills: ["Java", "分布式", "高并发"], salary: "35–45k", bluescale: 93, touched: true, source: "内部推举" },
+    { id: "tt_0112", name: "苏婉清", workYears: 4, skills: ["Python", "ML", "数据工程"], salary: "30–40k", bluescale: 90, touched: true, source: "往期候选人" },
+    { id: "tt_0109", name: "韩旭", workYears: 3, skills: ["Go", "K8s", "云原生"], salary: "24–32k", bluescale: 86, touched: false, source: "渠道收录" },
+    { id: "tt_0106", name: "罗一鸣", workYears: 5, skills: ["Vue3", "微前端", "工程化"], salary: "28–36k", bluescale: 84, touched: false, source: "内部推举" },
+    { id: "tt_0103", name: "高语嫣", workYears: 2, skills: ["SQL", "Tableau", "AB测试"], salary: "18–25k", bluescale: 81, touched: false, source: "渠道收录" },
+    { id: "tt_0100", name: "魏来", workYears: 7, skills: ["架构", "PostgreSQL", "微服务"], salary: "42–55k", bluescale: 95, touched: true, source: "企业库沉淀" },
+    { id: "tt_0097", name: "任嘉宁", workYears: 3, skills: ["React", "TypeScript", "Next"], salary: "20–28k", bluescale: 79, touched: false, source: "往期候选人" },
+    { id: "tt_0094", name: "袁梦", workYears: 4, skills: ["Go", "Redis", "中间件"], salary: "28–36k", bluescale: 82, touched: true, source: "企业库沉淀" },
+  ],
+  /* 运行日志：系统级流水（含采集 / 触达 / 风控 / 导出），level 分级 */
+  logs: [
+    { ts: "2026-09-11 09:12:40", level: "ok", tag: "匹配", msg: "JD 匹配打分完成 → 平均 71 分 · round #128 frontend_01" },
+    { ts: "2026-09-11 09:08:34", level: "ok", tag: "解析", msg: "解析入库 42 份简历 · 核心字段准确率 94%" },
+    { ts: "2026-09-11 09:04:11", level: "info", tag: "采集", msg: "索取 46 份简历 · 42 成功 / 3 重试 / 1 失败隔离" },
+    { ts: "2026-09-11 09:02:37", level: "warn", tag: "风控", msg: "账号 B2 触发冷却 → 已自动切换账号 A1 续跑" },
+    { ts: "2026-09-11 09:00:02", level: "info", tag: "检索", msg: "检索「前端工程师」命中 245 人 · 间隔等待 5.2s" },
+    { ts: "2026-09-11 09:00:01", level: "info", tag: "调度", msg: "调度触发 · job=frontend_01 round=#128" },
+    { ts: "2026-09-11 08:56:12", level: "ok", tag: "触达", msg: "二次激活 刘思远(前端) · 话术「激活 · v3」问候发送完成" },
+    { ts: "2026-09-11 08:47:20", level: "access", tag: "访问", msg: "王女士 解密访问 cand_09271 手机号 · 已留审计" },
+    { ts: "2026-09-11 08:41:05", level: "ok", tag: "触达", msg: "收取简历 孙晓彤(数据分析) · 附件解析成功入库" },
+    { ts: "2026-09-11 08:31:44", level: "warn", tag: "风控", msg: "账号 B2 触发冷却阈值 · 进入 30 分钟冷却窗口" },
+    { ts: "2026-09-11 08:20:33", level: "info", tag: "配置", msg: "王女士 微调关键词 frontend_01 → +vue3 · 触发下轮轮询" },
+    { ts: "2026-09-10 18:40:02", level: "ok", tag: "批次", msg: "批次 CG-1030 遍历完成 · 共打招呼 15 人 · 待复核复盘" },
+  ],
 };

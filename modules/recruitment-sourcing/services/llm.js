@@ -13,6 +13,44 @@ export class LLMClient {
     return !!(this.baseURL && this.model);
   }
 
+  // 运行时可重配（M4：管理员在设置页改 baseURL/Key/model 后即时生效，无需重启）
+  apply({ baseURL, apiKey, model } = {}) {
+    if (baseURL != null) this.baseURL = String(baseURL).replace(/\/+$/, '');
+    if (apiKey != null) this.apiKey = String(apiKey);
+    if (model) this.model = String(model);
+    return this;
+  }
+
+  // 掩码输出 Key，供状态接口展示（不回传明文）
+  maskKey() {
+    if (!this.apiKey) return '';
+    return this.apiKey.length > 8 ? `${this.apiKey.slice(0, 3)}****${this.apiKey.slice(-3)}` : '****';
+  }
+
+  // M4：自动拉取模型列表（OpenAI 兼容 GET {baseURL}/models）
+  async listModels({ baseURL, apiKey } = {}) {
+    const u = String(baseURL ?? this.baseURL ?? '').replace(/\/+$/, '');
+    const k = String(apiKey ?? this.apiKey ?? '');
+    if (!u) return { ok: false, error: 'baseURL 缺失，无法拉取模型', models: [] };
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), this.timeoutMs);
+    try {
+      const res = await fetch(`${u}/models`, {
+        headers: k ? { Authorization: `Bearer ${k}` } : {},
+        signal: ctrl.signal,
+      });
+      if (!res.ok) return { ok: false, error: `models HTTP ${res.status}`, models: [] };
+      const data = await res.json();
+      const models = (Array.isArray(data?.data) ? data.data : [])
+        .map((m) => String(m?.id ?? '').trim()).filter(Boolean);
+      return { ok: true, models, count: models.length };
+    } catch (e) {
+      return { ok: false, error: String(e?.message ?? e), models: [] };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   async complete(system, user, { jsonSchema = true } = {}) {
     if (!this.ready) throw new Error('LLM 未配置（baseURL/model 缺失）');
     const body = {

@@ -7,6 +7,13 @@ infra/files/*
 # 采集配置可能含账号/会话路径等敏感信息，不复用
 modules/recruitment-sourcing/adapters/sourcing-py/config.json
 
+# BOSS 采集运行时产物（含真实候选人/会话认证数据，禁止入库）
+modules/recruitment-sourcing/adapters/sourcing-py/.greeted.json
+modules/recruitment-sourcing/adapters/sourcing-py/chat_discovery.json
+modules/recruitment-sourcing/adapters/sourcing-py/*_sample.json
+modules/recruitment-sourcing/adapters/sourcing-py/job_shots/
+modules/recruitment-sourcing/adapters/sourcing-py/resume_shots/
+
 # 通用
 node_modules/
 *.log
@@ -15,6 +22,14 @@ node_modules/
 _out.xlsx
 *.xlsx
 .env
+llm.env
 *.key
 __pycache__/
 *.pyc
+
+# Electron 打包产物与本地运行数据
+dist/
+release/
+out/
+dist-electron/
+*.dll

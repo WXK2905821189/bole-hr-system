@@ -31,9 +31,11 @@ export class JdService {
 
   async #byLlm(jdRaw) {
     if (this.llm.ready) {
-      const raw = await this.llm.complete(JD_PARSE_SYSTEM, jdRaw);
-      const r = extractJson(raw);
-      if (r.position || r.hard_skills?.length) return r;
+      try {
+        const raw = await this.llm.complete(JD_PARSE_SYSTEM, jdRaw);
+        const r = extractJson(raw);
+        if (r.position || r.hard_skills?.length) return r;
+      } catch { /* 网关不可用时回退启发式 */ }
     }
     // 离线兜底：启发式提取
     const STOPWORDS = new Set(['招聘','熟练','负责','熟悉','拥有','具备','从事','相关','工作','能力','经验','要求','开发','工程师','以上','优先']);

@@ -20,8 +20,11 @@
   html,body{height:100%}
   body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
   /* ---------- shell ---------- */
-  .shell{display:grid;grid-template-columns:var(--sidebar-w) 1fr 360px;min-height:100vh}
-  .job-sidebar{position:sticky;top:0;height:100vh;background:var(--bg);border-left:1px solid var(--line);padding:16px 14px;overflow:auto}
+  .shell{display:grid;grid-template-columns:var(--sidebar-w) 1fr;min-height:100vh}
+  .job-sidebar{position:fixed;top:0;right:0;bottom:0;width:400px;max-width:94vw;background:var(--canvas);border-left:1px solid var(--line-strong);box-shadow:var(--shadow-lg);transform:translateX(103%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:41;overflow:auto;padding:16px 16px}
+  .job-sidebar.open{transform:none}
+  .job-sidebar .js-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .job-sidebar .js-hd h3{margin:0}
   .job-sidebar .js-empty{text-align:center;color:var(--muted);padding:40px 10px}
   .job-sidebar h3{font-size:14px;font-weight:700;margin:0 0 10px;color:var(--ink)}
   .job-sidebar .js-title{font-size:16px;font-weight:700;color:var(--ink);line-height:1.35}
@@ -29,9 +32,7 @@
   .job-sidebar .js-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
   .job-sidebar .kv{margin-top:4px}
   .job-sidebar .kv .v{overflow-wrap:break-word}
-  @media(max-width:1480px){.shell{grid-template-columns:var(--sidebar-w) 1fr}.job-sidebar{display:none}}
-  body:not(.jobs-view) .shell{grid-template-columns:var(--sidebar-w) 1fr}
-  body:not(.jobs-view) .job-sidebar{display:none}
+  @media(max-width:1480px){.shell{grid-template-columns:var(--sidebar-w) 1fr}}
   /* ---------- sidebar ---------- */
   aside{background:linear-gradient(180deg,#101a33 0%,#0c1226 100%);color:#c7d2ea;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
   .logo{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -128,7 +129,7 @@
   .search input{border:1px solid var(--line-strong);border-radius:8px;padding:8px 12px 8px 32px;font-size:13px;width:180px;font-family:inherit;outline:none;background:#fff;transition:border .15s,box-shadow .15s}
   .search input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,84,235,.12)}
   .search .ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none}
-  select, input[type=text], input[type=number]{border:1px solid var(--line-strong);border-radius:8px;padding:8px 11px;font-size:13px;font-family:inherit;color:var(--ink);outline:none;background:#fff}
+  select, input[type=text], input[type=number], input[type=date]{border:1px solid var(--line-strong);border-radius:8px;padding:8px 11px;font-size:13px;font-family:inherit;color:var(--ink);outline:none;background:#fff}
   select:focus,input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,84,235,.12)}
   input[type=number]{width:110px}
   label.f{font-size:12px;color:var(--muted);font-weight:600}
@@ -202,6 +203,10 @@
   .jdsnippet{background:#0e1526;color:#cfe0ff;border-radius:9px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.7;white-space:pre-wrap;max-height:200px;overflow:auto}
   .jobcandline{display:flex;align-items:center;gap:12px;margin-top:11px;font-size:12.5px;color:var(--muted)}
   .jobcandline b{color:var(--brand);font-size:15px}
+  .jobcard .jmeta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:12px;color:var(--muted)}
+  .jobcard .jmeta .jb{padding:2px 8px;border-radius:6px;background:#f1f5f9;color:#475569}
+  .jobcard .jmeta .jb.on{background:#e8f5ee;color:#1e7f4f}
+  .jobcard .jmeta .jb.off{background:#fdeeee;color:#b34141}
   /* extra candidate filters */
   .filtrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 18px;border-bottom:1px solid var(--line);background:#fbfcfe;font-size:12.5px}
   .filtrow label{font-size:12px;color:var(--faint);font-weight:600}
@@ -210,6 +215,15 @@
   /* BOSS 账号卡 + 采集工作流步骤条 */
   .bossbar{background:linear-gradient(135deg,#0e1526,#15213b)}
   .bossbar .badge{background:rgba(34,197,94,.16);color:#34d399}
+  .bossbar .badge.b-dim{background:rgba(139,151,189,.15);color:#8b97bd}
+  /* 触达沟通 · 子页签导航 */
+  .subnav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .subtab{padding:8px 18px;border-radius:10px;border:1px solid var(--line);background:var(--canvas);font-size:13px;color:var(--muted);cursor:pointer;font-weight:500;transition:all .15s}
+  .subtab:hover{border-color:var(--brand);color:var(--brand)}
+  .subtab.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+  .subpanel{display:none}
+  .subpanel.on{display:block;animation:fadein .18s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
   .bossavatar{flex:none;width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,#2f54eb,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;box-shadow:0 8px 20px rgba(47,84,235,.35)}
   .greetstat{font-size:12.5px;color:#8b97bd;background:#0a0f1d;padding:8px 14px;border-radius:9px;border:1px solid #26304d}
   .pipe{display:flex;flex-direction:column}
@@ -274,6 +288,18 @@
   @media(max-width:760px){.ssec .kvrow{grid-template-columns:1fr 1fr}}
   .urow{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line)}
   .urow:last-child{border-bottom:none}
+  /* M6 · AI 基座接入 */
+  .aidatagrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+  .aidatagrid .full{grid-column:1/-1}
+  .aidatagrid select{width:100%;box-sizing:border-box;border:1px solid var(--line-strong);border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:var(--ink);outline:none;background:#fff}
+  .aidatagrid select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,84,235,.12)}
+  .fld input:disabled,.aidatagrid select:disabled{background:#f3f5f9;color:var(--faint);cursor:not-allowed}
+  .aiops{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+  .aiops .hint{margin-left:auto}
+  .aiplug{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+  .aiplug .chip{background:#eef2ff;color:#4a5fd0;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600}
+  .aikeyrow{display:flex;align-items:center;gap:8px}
+  @media(max-width:760px){.aidatagrid{grid-template-columns:1fr}.aiops .hint{margin-left:0}}
   .spin{display:inline-block;width:12px;height:12px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:r .6s linear infinite;vertical-align:-2px}
   @keyframes r{to{transform:rotate(360deg)}}
   .toast{position:fixed;bottom:24px;right:24px;background:#0e1526;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(8px);transition:.25s;z-index:60}
@@ -282,18 +308,35 @@
   .bossbtns{display:flex;gap:8px;margin-top:14px}
   .bossbtns .btn{flex:1}
   .scanmodal{position:fixed;inset:0;background:rgba(10,15,30,.55);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
-  .scanmodal.show{display:flex}
-  .scanbox{background:#fff;border-radius:14px;padding:20px 22px;width:340px;max-width:100%;box-shadow:var(--shadow-lg);text-align:center}
-  .scanbox h3{margin:0 0 4px;font-size:15px}
-  .scanbox .scan-sub{font-size:12px;color:var(--faint);margin-bottom:14px;line-height:1.6}
-  .scanqrcode{width:230px;height:230px;margin:0 auto;border:1px solid var(--line);border-radius:12px;background:#fafbff;display:flex;align-items:center;justify-content:center;overflow:hidden}
-  .scanqrcode img{width:100%;height:100%;object-fit:contain;display:block}
-  #scanQrPh{font-size:12.5px;color:var(--faint);line-height:1.6;padding:8px}
-  .scan-status{margin-top:12px;font-size:12.5px;color:var(--muted);min-height:18px}
-  .scan-status.ok{color:#1a7f37;font-weight:600}
-  .scan-status.err{color:var(--err)}
-  .scan-foot{margin-top:16px;display:flex;gap:8px;justify-content:center}
-  .scan-foot .btn{min-width:84px}
+   .scanmodal.show{display:flex}
+   .scanbox{background:#fff;border-radius:16px;padding:22px 24px 18px;width:390px;max-width:100%;box-shadow:var(--shadow-lg);text-align:center}
+   .scanbox h3{margin:10px 0 4px;font-size:15px}
+   .scanbox .scan-sub{font-size:12px;color:var(--faint);margin-bottom:12px;line-height:1.6}
+   .scan-hero{display:flex;justify-content:center;margin-top:2px}
+   .scan-ring{width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e9f0ff,#f2edff);position:relative}
+   .scan-ring::before{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid rgba(64,120,255,.28);animation:scanPulse 1.8s ease-out infinite}
+   .scan-ring svg{width:28px;height:28px}
+   .scan-ring .ico-wait{color:#3b6fe0}
+   .scan-ring.ok{background:#e9f8ef}
+   .scan-ring.ok::before{display:none}
+   .scan-ring.ok .ico-ok{color:#1a7f37}
+   .scan-ring.err{background:#fdeeee}
+   .scan-ring.err::before{display:none}
+   .scan-ring.err .ico-err{color:#d24545}
+   @keyframes scanPulse{0%{transform:scale(.92);opacity:.85}100%{transform:scale(1.4);opacity:0}}
+   .scan-steps{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:4px}
+   .scan-step{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--faint)}
+   .scan-step i{width:20px;height:20px;border-radius:50%;background:#eef1f6;color:#9aa4b8;font-style:normal;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
+   .scan-step.act{color:#3b6fe0;font-weight:600}
+   .scan-step.act i{background:#3b6fe0;color:#fff;box-shadow:0 0 0 4px rgba(59,111,224,.14)}
+   .scan-step.done{color:#1a7f37}
+   .scan-step.done i{background:#1a7f37;color:#fff}
+   .scan-stepline{width:16px;height:1px;background:var(--line);flex:none}
+   .scan-status{margin-top:12px;font-size:12.5px;color:var(--muted);min-height:18px}
+   .scan-status.ok{color:#1a7f37;font-weight:600}
+   .scan-status.err{color:var(--err)}
+   .scan-foot{margin-top:14px;display:flex;gap:8px;justify-content:center}
+   .scan-foot .btn{min-width:92px}
   /* ---------- 系统运行日志 ---------- */
   .logtoolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)}
   .logtoolbar .chip{border:1px solid var(--line-strong);background:#fbfcfe;padding:5px 12px;border-radius:999px;font-size:12.5px;color:var(--muted);cursor:pointer;transition:.12s}
@@ -388,7 +431,7 @@
         <div class="kpis">
           <div class="kpi b-brand"><div class="lab">候选人累计入库</div><div class="val"><span id="kCands">0</span><small>人</small></div><div class="delta">岗位 <b id="kJobs">0</b> · 来源含 BOSS/模拟</div></div>
           <div class="kpi b-ok"><div class="lab">已匹配（含匹配分）</div><div class="val"><span id="kMatched">0</span><small>人</small></div><div class="delta">平均分 <b id="kAvgScore">—</b></div></div>
-          <div class="kpi b-info"><div class="lab">简历解析成功</div><div class="val"><span id="kParsed">0</span><small>份</small></div><div class="delta">原文加密存储 · 脱敏展示</div></div>
+          <div class="kpi b-info"><div class="lab">简历解析成功</div><div class="val"><span id="kParsed">0</span><small>份</small></div><div class="delta">简历原文明文可读 · 方便审阅</div></div>
           <div class="kpi b-warn"><div class="lab">定时调度任务</div><div class="val"><span id="kSched">0</span><small>个</small></div><div class="delta">最近周期 <span id="kCycle">—</span></div></div>
         </div>
 
@@ -435,6 +478,10 @@
         <div class="card">
           <div class="card-hd"><h2>新增岗位</h2><span class="hint">自动从 JD 抽取搜索关键词</span></div>
           <div class="card-bd">
+            <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+              <button class="btn ghost" id="btnSyncBossJobs" type="button">从 BOSS 同步在招岗位</button>
+              <span class="hint" id="syncBossHint">复用扫码登录的 BOSS 会话，一键导入账号下在招职位</span>
+            </div>
             <form class="jdform" id="jdForm">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
                 <div><label>岗位编号</label><input id="jJobId" placeholder="例如 frontend_01" /></div>
@@ -458,13 +505,14 @@
           <div class="card-bd" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-top:6px">
             <div class="bossavatar"><span id="bossAva">A1</span></div>
             <div style="flex:1;min-width:230px">
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:16px;color:#fff" id="bossName">BOSS 账号 · 王先生</b><span class="badge">● BOSS 已登录</span></div>
-              <div class="textfield" style="font-size:12px;color:#8b97bd;margin-top:6px">仅<b style="color:#cdd6f4">绑定 BOSS 账号</b>不足以自动打招呼——需保持 BOSS 网页端<b style="color:#cdd6f4">登录会话在线</b>，采集调度才会以该账号身份执行搜索与打招呼；且只对合规筛选通过的候选人发送，受风控护栏控制。</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:16px;color:#fff" id="bossName">BOSS 账号</b><span class="badge b-dim" id="bossBadge">○ BOSS 未登录</span></div>
+              <div class="textfield" style="font-size:12px;color:#8b97bd;margin-top:6px">仅<b style="color:#cdd6f4">绑定 BOSS 账号</b>不足以自动打招呼——需保持 BOSS 网页端<b style="color:#cdd6f4">登录会话在线</b>（绑定后可点右侧「拉起 BOSS 网页端」一键完成），采集调度才会以该账号身份执行搜索与打招呼；且只对合规筛选通过的候选人发送，受风控护栏控制。</div>
             </div>
             <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-width:208px">
               <div class="greetstat" id="bossBound">未绑定 BOSS 直聘账号</div>
               <div class="greetstat" id="greetStat">尚未发送打招呼</div>
               <button class="btn sm" id="bossGoAcct" style="width:100%">去「设置」绑定 BOSS 账号</button>
+              <button class="btn sm" id="bossLaunchWeb" style="width:100%;display:none">拉起 BOSS 网页端</button>
             </div>
           </div>
         </div>
@@ -484,6 +532,10 @@
           <div class="card-bd">
             <div class="pipe" id="pipe"></div>
             <div class="textfield" style="margin-top:14px">运行采集后，系统以<b>当前 BOSS 账号</b>搜索候选人 → 发送打招呼 → 回应后索要简历（docx/PDF）→ AI 解析入库 → 生成岗位匹配分。下方运行终端实时输出每个环节，候选人在线“打招呼”也可手动单独触发。</div>
+            <div class="fgrid" style="margin-top:12px;align-items:flex-end">
+              <div><label class="f">单次打招呼人数</label><input type="number" id="cfgMaxGreet" min="1" max="100" value="5" style="width:120px"/></div>
+              <div class="textfield" style="color:#8b97bd;font-size:12px;padding-top:6px">单次运行最多向若干位候选人在线打招呼（超过即停，配合风控护栏）。</div>
+            </div>
           </div>
         </div>
 
@@ -512,6 +564,7 @@
               <button class="btn ghost sm" id="btnRecommend">⭐ 推荐牛人寻访（所选岗位）</button>
               <button class="btn ghost sm" id="btnSmoke">离线冒烟</button>
               <button class="btn sm" id="btnCollect">运行 BOSS 采集</button>
+              <button class="btn ghost sm danger" id="btnStopAll">⏹ 一键停止所有采集</button>
             </div>
           </div>
           <div class="card-bd">
@@ -551,7 +604,7 @@
             <button class="btn ghost sm" id="btnClearFilters">清除筛选</button>
           </div>
           <div style="overflow:auto">
-            <table><thead><tr><th>候选人</th><th>来源</th><th>年限</th><th>核心技能</th><th>期望薪资</th><th>状态</th><th>匹配分</th></tr></thead>
+            <table><thead><tr><th>候选人</th><th>岗位</th><th>年限</th><th>期望薪资</th><th>触达状态</th><th>轮次</th><th>最近触达</th><th>简历</th><th>匹配分</th><th>操作</th></tr></thead>
             <tbody id="candTbody"></tbody></table>
           </div>
           <div class="pfoot"><span id="candCount"></span></div>
@@ -589,7 +642,7 @@
             <button class="btn ghost sm" id="tBtnClearFilters">清除筛选</button>
           </div>
           <div style="overflow:auto">
-            <table><thead><tr><th>候选人</th><th>来源</th><th>年限</th><th>核心技能</th><th>期望薪资</th><th>状态</th><th>匹配分</th></tr></thead>
+            <table><thead><tr><th>候选人</th><th>岗位</th><th>年限</th><th>期望薪资</th><th>触达状态</th><th>轮次</th><th>最近触达</th><th>简历</th><th>匹配分</th></tr></thead>
             <tbody id="talentTbody"></tbody></table>
           </div>
           <div class="pfoot"><span id="talentCount"></span></div>
@@ -598,103 +651,124 @@
 
       <!-- ============ VIEW 7: ENGAGE（触达/沟通） ============ -->
       <section class="view" id="v-engage">
-        <div class="card">
-          <div class="card-hd"><h2>打招呼话术库</h2><span class="hint">初次 / 二次激活 / 三次及以上 · 常用语或自定义 · 多版本切换 · 写入领域库并过 Schema</span>
-            <div class="t-right"><button class="btn ghost sm" id="btnMsgRefresh">刷新</button></div>
-          </div>
-          <div class="card-bd"><div class="tiergrid" id="msgTiers"></div></div>
+        <div class="subnav">
+          <button class="subtab on" data-sub="msglib">话术库</button>
+          <button class="subtab" data-sub="smart">智能触达</button>
+          <button class="subtab" data-sub="resume">简历收取</button>
+          <button class="subtab" data-sub="batch">批次管理</button>
+          <button class="subtab" data-sub="insight">提醒与复盘</button>
         </div>
 
-        <div class="split2">
+        <div class="subpanel on" data-sub="msglib">
           <div class="card">
-            <div class="card-hd"><h2>自动打招呼</h2><span class="hint">监听 <code style="color:var(--brand)">match.score</code> · 匹配达标即发送当前生效「初次」话术</span>
-              <div class="t-right"><button class="btn sm" id="btnAutoGreet">⚡ 对全部匹配达标候选人打招呼</button></div>
+            <div class="card-hd"><h2>打招呼话术库</h2><span class="hint">初次 / 二次激活 / 三次及以上 · 常用语或自定义 · 多版本切换</span>
+              <div class="t-right"><button class="btn ghost sm" id="btnMsgRefresh">刷新</button></div>
+            </div>
+            <div class="card-bd"><div class="tiergrid" id="msgTiers"></div></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-sub="smart">
+          <div class="split2">
+            <div class="card">
+              <div class="card-hd"><h2>自动打招呼</h2><span class="hint">匹配达标即发送当前生效「初次」话术</span>
+                <div class="t-right"><button class="btn sm" id="btnAutoGreet">⚡ 对全部匹配达标候选人打招呼</button></div>
+              </div>
+              <div class="card-bd">
+                <div class="textfield">触发条件：<b>匹配分 ≥ <span id="egThreshold" style="color:var(--brand)">60</span></b>，且尚未打招呼、未沉睡。发送后进入 <code>touchStatus</code> 状态机并写入审计（轮次/时点/对象/话术版本）。</div>
+                <div style="margin:12px 0"><span class="badge b-info" id="egAutoCount">0 已自动打招呼</span></div>
+                <div class="chiprow" id="egAutoList"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-hd"><h2>智能跟进引擎</h2><span class="hint">未读 / 已读双轨 · 隔 1 天 → ≥5 次降周频 → 满 1 月沉睡</span>
+                <div class="t-right"><button class="btn ghost sm" id="btnSweep">立即扫描</button></div>
+              </div>
+              <div class="card-bd" style="padding:0">
+                <table><thead><tr><th>候选人</th><th>轨</th><th>轮次</th><th>模式</th><th>下次跟进</th><th>状态</th></tr></thead>
+                <tbody id="fupTbody"></tbody></table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-sub="resume">
+          <div class="split2">
+            <div class="card">
+              <div class="card-hd"><h2>简历收取登记</h2><span class="hint">BOSS 聊天扫描自动登记（每 30 分钟 + 手动同步）· 简历经企业邮箱进入 Moka，本系统不存储简历 · 手动登记仅为保底手段</span>
+                <div class="t-right">
+                  <button class="btn sm" id="btnChatScan">同步 BOSS 沟通状态</button>
+                  <button class="btn ghost sm" id="btnPendingRefresh">刷新</button>
+                </div>
+              </div>
+              <div class="card-bd" style="padding:0">
+                <div style="max-height:420px;overflow:auto"><table><thead><tr><th>候选人</th><th>岗位</th><th>触达状态</th><th>简历</th><th>最近触达</th><th>操作</th></tr></thead>
+                <tbody id="pendingTbody"></tbody></table></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-hd"><h2>联系方式交换</h2><span class="hint">简历缺电话 → 自动发送交换话术 · 回复含手机号自动回写</span></div>
+              <div class="card-bd">
+                <label>我方联系方式（替换交换话术中的 [我方联系方式]）</label>
+                <div style="display:flex;gap:8px;margin-top:6px">
+                  <input id="hrContactInput" placeholder="例如：HR小王 13900001111（BOSS 站内信）" style="flex:1">
+                  <button class="btn sm" id="btnSaveContact">保存</button>
+                </div>
+                <div class="chiprow" id="hrContactHint" style="margin-top:12px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-sub="batch">
+          <div class="card">
+            <div class="card-hd"><h2>打招呼批次</h2><span class="hint">全部职位顺序逐个打招呼 / 指定职位 · 各职位额度可自定义 · 到额自动切换 · 全程走风控护栏</span>
+              <div class="t-right"><button class="btn ghost sm" id="btnCampaignRefresh">刷新</button></div>
             </div>
             <div class="card-bd">
-              <div class="textfield">触发条件：<b>匹配分 ≥ <span id="egThreshold" style="color:var(--brand)">60</span></b>，且尚未打招呼、未沉睡。发送后进入 <code>touchStatus</code> 状态机并写入审计（轮次/时点/对象/话术版本）。</div>
-              <div style="margin:12px 0"><span class="badge b-info" id="egAutoCount">0 已自动打招呼</span></div>
-              <div class="chiprow" id="egAutoList"></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-hd"><h2>智能跟进引擎</h2><span class="hint">未读 / 已读双轨 · 隔 1 天 → ≥5 次降周频 → 满 1 月沉睡</span>
-              <div class="t-right"><button class="btn ghost sm" id="btnSweep">立即扫描</button></div>
-            </div>
-            <div class="card-bd" style="padding:0">
-              <table><thead><tr><th>候选人</th><th>轨</th><th>轮次</th><th>模式</th><th>下次跟进</th><th>状态</th></tr></thead>
-              <tbody id="fupTbody"></tbody></table>
+              <form class="jdform" id="cgForm" style="margin-bottom:14px">
+                <div class="fgrid">
+                  <div><label class="f">批次模式</label><select id="cgMode" style="width:100%">
+                    <option value="all_jobs">全部职位 · 按顺序逐个打招呼</option>
+                    <option value="selected_jobs">指定职位 · 自定义额度</option>
+                  </select></div>
+                  <div style="display:flex;align-items:flex-end"><button class="btn" type="submit" style="width:100%" id="cgBtn">创建批次</button></div>
+                </div>
+                <div id="cgJobQuotas" style="margin-top:10px"></div>
+              </form>
+              <div id="campaignList"></div>
             </div>
           </div>
         </div>
 
-        <div class="split2">
-          <div class="card">
-            <div class="card-hd"><h2>自动收取简历（F-1）</h2><span class="hint">候选人发送简历 → 自动点击 BOSS「同意」→ 触发解析；异常转人工待处理</span>
-              <div class="t-right"><button class="btn ghost sm" id="btnPendingRefresh">刷新</button></div>
-            </div>
-            <div class="card-bd" style="padding:0">
-              <table><thead><tr><th>候选人</th><th>岗位</th><th>转人工原因</th><th>操作</th></tr></thead>
-              <tbody id="pendingTbody"></tbody></table>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-hd"><h2>交换联系方式（F-2）</h2><span class="hint">简历缺电话 → 自动发送交换话术（附我方联系方式）· 回复含手机号自动回写</span></div>
-            <div class="card-bd">
-              <label>我方联系方式（替换交换话术中的 [我方联系方式]）</label>
-              <div style="display:flex;gap:8px;margin-top:6px">
-                <input id="hrContactInput" placeholder="例如：HR小王 13900001111（BOSS 站内信）" style="flex:1">
-                <button class="btn sm" id="btnSaveContact">保存</button>
+        <div class="subpanel" data-sub="insight">
+          <div class="split2">
+            <div class="card">
+              <div class="card-hd"><h2>批次提醒</h2><span class="hint">批次到额/遍历完自动提醒 · 页面红点</span>
+                <div class="t-right"><button class="btn ghost sm" id="btnNotifyRead">全部已读</button></div>
               </div>
-              <div class="chiprow" id="hrContactHint" style="margin-top:12px"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-hd"><h2>打招呼批次（F-3 · 职位顺序 + 额度管控）</h2><span class="hint">全部职位顺序逐个打招呼 / 指定职位 · 各职位额度可自定义 · 到额自动切换 · 全程走风控护栏</span>
-            <div class="t-right"><button class="btn ghost sm" id="btnCampaignRefresh">刷新</button></div>
-          </div>
-          <div class="card-bd">
-            <form class="jdform" id="cgForm" style="margin-bottom:14px">
-              <div class="fgrid">
-                <div><label class="f">批次模式</label><select id="cgMode" style="width:100%">
-                  <option value="all_jobs">全部职位 · 按顺序逐个打招呼</option>
-                  <option value="selected_jobs">指定职位 · 自定义额度</option>
-                </select></div>
-                <div style="display:flex;align-items:flex-end"><button class="btn" type="submit" style="width:100%" id="cgBtn">创建批次</button></div>
-              </div>
-              <div id="cgJobQuotas" style="margin-top:10px"></div>
-            </form>
-            <div id="campaignList"></div>
-          </div>
-        </div>
-
-        <div class="split2">
-          <div class="card">
-            <div class="card-hd"><h2>批次结束提醒（F-4）</h2><span class="hint">批次到额/遍历完自动提醒 · 页面红点</span>
-              <div class="t-right"><button class="btn ghost sm" id="btnNotifyRead">全部已读</button></div>
-            </div>
-            <div class="card-bd" style="padding:0">
-              <div class="audit" id="notifyBox" style="max-height:300px"></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-hd"><h2>打招呼数据复盘（F-4）</h2><span class="hint">各职位打招呼量 / 已读未读 / 回复比例 / 索要交换转化 / 沉睡数 / 话术采用</span>
-              <div class="t-right">
-                <select id="mtCampaign" style="width:auto"><option value="">全部职位（当前账号）</option></select>
-                <button class="btn ghost sm" id="btnMetricsRefresh">刷新</button>
-                <button class="btn sm" id="btnMetricsExport">导出 CSV</button>
+              <div class="card-bd" style="padding:0">
+                <div class="audit" id="notifyBox" style="max-height:300px"></div>
               </div>
             </div>
-            <div class="card-bd" style="padding:0">
-              <div style="max-height:300px;overflow:auto"><table><thead><tr><th>职位</th><th>打招呼</th><th>已读</th><th>回复率</th><th>转化率</th><th>沉睡</th></tr></thead>
-              <tbody id="metricsTbody"></tbody></table></div>
-              <div class="chiprow" id="metricsTotals" style="padding:10px 14px"></div>
+            <div class="card">
+              <div class="card-hd"><h2>数据复盘</h2><span class="hint">各职位打招呼量 / 已读未读 / 回复比例 / 转化 / 沉睡数 / 话术采用</span>
+                <div class="t-right">
+                  <select id="mtCampaign" style="width:auto"><option value="">全部职位（当前账号）</option></select>
+                  <button class="btn ghost sm" id="btnMetricsRefresh">刷新</button>
+                  <button class="btn sm" id="btnMetricsExport">导出 CSV</button>
+                </div>
+              </div>
+              <div class="card-bd" style="padding:0">
+                <div style="max-height:300px;overflow:auto"><table><thead><tr><th>职位</th><th>打招呼</th><th>已读</th><th>回复率</th><th>转化率</th><th>沉睡</th></tr></thead>
+                <tbody id="metricsTbody"></tbody></table></div>
+                <div class="chiprow" id="metricsTotals" style="padding:10px 14px"></div>
+              </div>
             </div>
           </div>
         </div>
 
-        </section>
+      </section>
 
       <!-- ============ VIEW 7B: 触达审计（沟通 · 触达审计独立子模块） ============ -->
       <section class="view" id="v-tapaudit">
@@ -710,7 +784,10 @@
       <section class="view" id="v-audit">
         <div class="card">
           <div class="card-hd"><h2>操作审计留痕</h2><span class="hint">采集 / 访问 / 导出 / 调度 · 留痕可溯</span>
-            <div class="t-right"><button class="btn ghost sm" id="btnAuditRefresh">刷新</button></div>
+            <div class="t-right">
+              <span style="display:inline-flex;align-items:center;gap:6px"><label class="hint" for="auditDate">按日期</label><input type="date" id="auditDate" class="lstamp" value=""><button class="btn ghost sm" id="btnAuditDateClear" type="button" title="清除日期筛选">×</button></span>
+              <button class="btn ghost sm" id="btnAuditRefresh">刷新</button>
+            </div>
           </div>
           <div class="audit" id="auditBox"></div>
         </div>
@@ -719,15 +796,48 @@
       <!-- ============ VIEW 6: SETTINGS ============ -->
       <section class="view" id="v-settings">
         <div class="card">
+          <div class="card-hd"><h2>AI 基座 · 大模型接入</h2><span class="hint" id="aiBaseHint">JD 抽词 / 简历结构化 / 深度匹配统一经此基座调用</span>
+            <div class="t-right"><span class="badge b-gray" id="aiStatusChip">检测中</span></div>
+          </div>
+          <div class="card-bd">
+            <div class="bossnote">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5l8-3z"/><path d="M12 8v4M12 15h.01"/></svg>
+              <div class="bn-txt"><b>轻量接入公司 AI Coding 中转平台</b>：仅需 baseURL + API Key，保存即自动探活并应用，无需重启。「默认模型」由平台模型列表自动拉取选择；Key 仅掩码展示，不落明文。</div>
+            </div>
+            <div class="aiplug" id="aiPlug"></div>
+            <div class="aidatagrid">
+              <div class="fld full">
+                <label>API 地址 baseURL <span style="color:var(--err)">*</span></label>
+                <input id="aiBaseUrl" placeholder="https://…/v1">
+              </div>
+              <div class="fld">
+                <label>API Key <span class="hint" id="aiKeyState" style="display:inline;font-weight:400"></span></label>
+                <input id="aiApiKey" type="password" placeholder="sk-…　留空沿用已保存密钥" autocomplete="off">
+              </div>
+              <div class="fld">
+                <label>默认模型</label>
+                <div class="aikeyrow">
+                  <select id="aiModel"><option value="">— 未选择 —</option></select>
+                  <button class="btn ghost sm" id="btnAiListModels" type="button"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 11-2.6-6.4M21 4v5h-5"/></svg>拉取模型</button>
+                </div>
+              </div>
+            </div>
+            <div class="aiops">
+              <button class="btn" id="btnAiSave" type="button">探活并应用配置</button>
+              <span class="hint" id="aiStatusTxt"></span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
           <div class="card-hd"><h2>账号接入与权限</h2><span class="hint">最小权限 · 越权 / 导出需审批</span></div>
           <div class="card-bd">
             <div>
-              <div class="acctrow"><div class="badge b-ok">已接入</div><b style="width:120px">BOSS 自有账号</b><span class="textfield">采集适配器 · 离线脱敏模拟 / 真实抓取二选一</span><span style="margin-left:auto" class="badge b-info">会话隔离</span></div>
-              <div class="acctrow"><div class="badge b-ok">加密</div><b style="width:120px">简历 Vault</b><span class="textfield">AES-256-GCM · 原文加密落盘，jsonl 仅留脱敏预览</span><span style="margin-left:auto" class="badge b-info">合规</span></div>
+              <div class="acctrow"><div class="badge b-warn" id="acctBossBadge">未接入</div><b style="width:120px">BOSS 自有账号</b><span class="textfield" id="acctBossDesc">尚未绑定 BOSS 账号：当前采集以离线模拟运行</span><span style="margin-left:auto;display:flex;gap:8px;align-items:center" id="acctBossOps"></span></div>
+              <div class="acctrow"><div class="badge b-ok">明文</div><b style="width:120px">简历存储</b><span class="textfield">简历原文明文落盘，jsonl 直接可读、可查、可审阅</span><span style="margin-left:auto" class="badge b-info">易读</span></div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center;margin-top:6px">
-              <div><label class="f">简历敏感字段解密权限</label><div class="textfield">仅授权 HR 登录后可查看，默认脱敏展示，单次解密留痕。</div></div>
-              <div><label class="f">数据留存与导出策略</label><div class="textfield">批量导出走审计留痕；原始简历加密存储，逾期可脱敏归档。</div></div>
+              <div><label class="f">简历敏感字段解密权限</label><div class="textfield">电话/邮箱默认脱敏展示，授权 HR 登录后可查看。</div></div>
+              <div><label class="f">数据留存与导出策略</label><div class="textfield">批量导出走审计留痕；简历原文明文存储，便于查看与归档。</div></div>
             </div>
           </div>
         </div>
@@ -766,10 +876,11 @@
                   </div>
                   <div class="bossnote">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="8"/></svg>
-                    <div class="bn-txt"><b>功能说明：</b>仅绑定账号不足以自动打招呼，需要<strong>网页端保持登录会话在线</strong> + <strong>话术已配置</strong> + <strong>候选人过合规筛选</strong> + <strong>在风控额度内</strong>四个条件同时满足才会自动发送</div>
+                    <div class="bn-txt"><b>自动发送打招呼需同时满足 4 个条件：</b>① <strong>BOSS 网页端在线</strong>——绑定后点击下方「拉起 BOSS 网页端」自动完成（或扫码登录后保持窗口开启）② <strong>话术已配置</strong>（触达沟通 → 话术库）③ <strong>候选人过合规筛选</strong> ④ <strong>在风控额度内</strong></div>
                   </div>
                   <div class="bossbtns">
                     <button class="btn ghost" id="btnScanBoss">扫码登录 · 复用登录态</button>
+                    <button class="btn ghost" id="btnLaunchBossWeb" style="display:none">拉起 BOSS 网页端</button>
                     <button class="btn" id="btnSaveBoss">保存绑定信息</button>
                   </div>
                 </div>
@@ -837,6 +948,7 @@
           <div class="card-hd"><h2>系统运行日志</h2><span class="hint">采集 / 调度 / 打招呼 / 异常 · 便于维护排查</span>
             <div class="t-right">
               <button class="btn ghost sm" id="btnLogRefresh">刷新</button>
+              <button class="btn ghost sm" id="btnLogExport"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>导出日志</button>
               <button class="btn sm" id="btnLogClear">清空日志</button>
             </div>
           </div>
@@ -845,7 +957,12 @@
             <button class="chip" data-lv="info">信息</button>
             <button class="chip" data-lv="warn">警告</button>
             <button class="chip" data-lv="error">错误</button>
-            <span style="margin-left:auto" class="hint">滚动保留最近记录，超出自动淘汰旧日志</span>
+            <span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px">
+              <label class="hint" for="logDate">按日期</label>
+              <input type="date" id="logDate" class="lstamp" value="">
+              <button class="btn ghost sm" id="btnLogDateClear" type="button" title="清除日期筛选">×</button>
+            </span>
+            <span class="hint" style="margin-left:10px">滚动保留最近记录，超出自动淘汰旧日志</span>
           </div>
           <div class="logbox" id="logBox"><div class="empty">加载中…</div></div>
         </div>
@@ -853,10 +970,10 @@
     </div>
   </main>
 
-  <!-- ===== 右侧岗位详情侧边栏（替代原岗位详情弹窗） ===== -->
+  <!-- ===== 岗位详情浮层抽屉（点击岗位卡片/详情弹出，任意屏宽可用） ===== -->
   <aside class="job-sidebar" id="jobSidebar">
-    <h3>招聘岗位详情</h3>
-    <div id="jobSideBody"><div class="js-empty">点击左侧「招聘岗位」中的岗位卡片，此处显示岗位详情。</div></div>
+    <div class="js-hd"><h3>岗位详情</h3><button class="x" id="jobSideClose" title="关闭">×</button></div>
+    <div id="jobSideBody"><div class="js-empty">点击「招聘岗位」中的岗位卡片，此处显示岗位详情。</div></div>
   </aside>
 </div>
 
@@ -873,26 +990,8 @@
   <div class="drawer-bd" id="drawerBody"></div>
   <div style="padding:14px 20px;border-top:1px solid var(--line);display:flex;background:#fff">
     <button class="btn ghost sm" style="flex:1" id="btnOrigFile"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>查看原始简历文件</button>
-    <button class="btn ghost sm" style="flex:1" id="btnShowRaw">查看解析原文（解密）</button>
+    <button class="btn ghost sm" style="flex:1" id="btnShowRaw">查看简历原文</button>
     <button class="btn sm" style="flex:0" id="btnDecrypt">脱敏字段解密</button>
-  </div>
-</div>
-
-<!-- ===== 岗位详情弹窗（含收集统计 + 跳转候选人库） ===== -->
-<div class="modal" id="jobModal">
-  <div class="modalcard">
-    <div class="modal-hd">
-      <div class="ava" id="jmAva" style="width:38px;height:38px;font-size:15px">岗</div>
-      <div style="display:flex;flex-direction:column"><span class="nm" style="font-size:16px" id="jmTitle">—</span><span class="meta" style="font-size:12px;color:var(--muted)" id="jmMeta">—</span></div>
-      <button class="x" id="jobModalClose">×</button>
-    </div>
-    <div class="modal-bd">
-      <div id="jmInfo"></div>
-      <div class="jobcandline">
-        <span>该岗位已收集候选人 <b id="jmCount">0</b> 位</span>
-        <button class="btn sm" id="jmGoCand" style="margin-left:auto"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>查看该岗位候选人库</button>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -901,13 +1000,26 @@
 <!-- ===== 扫码登录 BOSS 弹窗 ===== -->
 <div class="scanmodal" id="scanModal">
   <div class="scanbox">
-    <h3>扫码登录 BOSS 直聘</h3>
-    <div class="scan-sub">请用手机「BOSS 直聘 App」扫描下方二维码完成登录，系统将自动抓取会话凭证并接入采集</div>
-    <div class="scanqrcode" id="scanQr"><span id="scanQrPh">正在启动浏览器，获取二维码…</span></div>
+    <div class="scan-hero">
+      <div class="scan-ring" id="scanRing">
+        <svg class="ico-wait" id="scanIcoWait" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M7 13.5h4M7 16.5h7"/></svg>
+        <svg class="ico-ok" id="scanIcoOk" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.7"/></svg>
+        <svg class="ico-err" id="scanIcoErr" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6"/></svg>
+      </div>
+    </div>
+    <h3 id="scanTitle">扫码登录 BOSS 直聘</h3>
+    <div class="scan-sub" id="scanSub">已在独立浏览器窗口打开 BOSS 网页版，请在其中完成登录，系统将自动抓取会话凭证并接入采集</div>
+    <div class="scan-steps" id="scanSteps">
+      <div class="scan-step" data-step="1"><i>1</i><span>拉起浏览器</span></div>
+      <div class="scan-stepline"></div>
+      <div class="scan-step" data-step="2"><i>2</i><span>扫码登录</span></div>
+      <div class="scan-stepline"></div>
+      <div class="scan-step" data-step="3"><i>3</i><span>接入凭证</span></div>
+    </div>
     <div class="scan-status" id="scanStatus"></div>
     <div class="scan-foot">
+      <button class="btn ghost sm" id="btnScanRestart">重新拉起</button>
       <button class="btn ghost sm" id="btnScanCancel">关闭</button>
-      <button class="btn ghost sm" id="btnScanRefresh">刷新二维码</button>
     </div>
   </div>
 </div>
@@ -977,7 +1089,9 @@ const TITLES = {
 };
 const LOG_LV = { info:'log-info', warn:'log-warn', error:'log-err' };
 const LOG_LV_TXT = { info:'信息', warn:'警告', error:'错误', system:'系统', server:'服务', console:'控制台', process:'进程' };
-const STATUS_MAP = { matched:['已匹配','b-ok'], parsed:['已入库','b-info'], screened:['已筛选','b-info'], resume_received:['待核对','b-warn'], sourced:['已寻源','b-gray'], rejected:['已淘汰','b-err'], closed:['已停止采集','b-gray'], open:['采集中','b-info'] };
+const STATUS_MAP = { matched:['已匹配','b-ok'], parsed:['已入库','b-info'], screened:['已筛选','b-info'], resume_received:['已收简历','b-ok'], sourced:['触达中','b-warn'], rejected:['已淘汰','b-err'], closed:['已停止采集','b-gray'], open:['采集中','b-info'] };
+const TOUCH_MAP = { pending:['待触达','b-info'], engaging:['跟进中','b-warn'], replied:['已回复','b-ok'], sleeping:['已沉睡','b-gray'] };
+function touchBadge(s){ const [l,c]=TOUCH_MAP[s]||['未触达','b-gray']; return `<span class="badge ${c}">${l}</span>`; }
 
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2400); }
 function at(iso){ try{ return new Date(iso).toLocaleString('zh-CN',{hour12:false}); }catch{ return iso||''; } }
@@ -998,18 +1112,17 @@ async function loadCandidates(){
   const [c,r,m,cy]=await Promise.all([api.get('/candidates'),api.get('/resumes'),api.get('/matches'),api.get('/cycles')]);
   state.candidates=c.candidates??[]; state.resumes=r.resumes??[]; state.matches=m.matches??[]; state.cycles=cy.cycles??[];
 }
-async function loadAudit(){ const d=await api.get('/audit'); state.audit=d.audit??[]; }
+async function loadAudit(){ const d=await api.get('/api/audit?n=500'+( _auditDate?('&date='+_auditDate):'')); state.audit=d.audit??[]; }
 async function loadMessagelib(){ const d=await api.get('/api/messagelib'); state.msgtemplates=d.templates??[]; }
 async function loadFollowup(){ const d=await api.get('/api/engage/followup'); state.followup=d.plans??[]; }
-async function loadPending(){ const d=await api.get('/api/engage/manual-pending'); state.pending=d.candidates??[]; }
 async function loadHrContact(){ const d=await api.get('/api/engage/contact'); state.hrContact=d.contact??''; }
 async function loadCampaigns(){ const d=await api.get('/api/engage/campaigns'); state.campaigns=d.campaigns??[]; }
 async function loadNotifications(){ const d=await api.get('/api/engage/notifications'); state.notifications=d.notifications??[]; state.unread=d.unread??0; }
 async function loadMetrics(){ const cid=$('#mtCampaign')?.value||''; state.metrics=await api.get('/api/engage/metrics'+(cid?`?campaignId=${encodeURIComponent(cid)}`:'')); }
 async function reloadSchedules(){ const d=await api.get('/api/sourcing/schedules'); state.schedules=d.schedules??[]; }
 
-let _logLevel=''; let _logTimer=null;
-async function loadLogs(){ const d=await api.get('/api/logs?n=400&level='+encodeURIComponent(_logLevel)); state.logs=d.logs??state.logs??[]; }
+let _logLevel=''; let _logTimer=null; let _logDate='';
+async function loadLogs(){ const d=await api.get('/api/logs?n=400&level='+encodeURIComponent(_logLevel)+(_logDate?('&date='+_logDate):'')); state.logs=d.logs??state.logs??[]; }
 function renderLogs(){
   const rows=state.logs??[];
   const box=$('#logBox');
@@ -1032,7 +1145,28 @@ function bindLogChips(){
   }));
 }
 bindLogChips();
+$('#logDate')?.addEventListener('change',async(e)=>{ _logDate=e.target.value||''; await loadLogs(); renderLogs(); });
+$('#btnLogDateClear')?.addEventListener('click',async()=>{ const i=$('#logDate'); if(i){ i.value=''; } _logDate=''; await loadLogs(); renderLogs(); });
 $('#btnLogRefresh')?.addEventListener('click',async()=>{ await loadLogs(); renderLogs(); });
+$('#btnLogExport')?.addEventListener('click',async()=>{
+  const btn=$('#btnLogExport'); const old=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="spin"></span> 导出中';
+  try{
+    const d=await api.get('/api/logs?n=5000&level='+encodeURIComponent(_logLevel)+(_logDate?('&date='+_logDate):''));
+    const rows=d.logs??state.logs??[];
+    if(!rows.length){ toast('当前筛选下没有可导出的日志'); return; }
+    const LV={info:'信息',warn:'警告',error:'错误'};
+    const lines=rows.map(r=>`[${r.ts||''}] [${LV[r.level]||r.level||'信息'}]${r.scope?` [${r.scope}]`:''} ${r.message??''}`);
+    const head=`# 伯乐招聘系统 · 运行日志导出\n# 导出时间：${new Date().toLocaleString('zh-CN')}\n# 级别筛选：${_logLevel?(LV[_logLevel]||_logLevel):'全部'}${_logDate?` · 日期：${_logDate}`:''} · 共 ${rows.length} 条\n\n`;
+    const blob=new Blob(['\ufeff'+head+lines.join('\n')],{type:'text/plain;charset=utf-8'});
+    const a=document.createElement('a');
+    const ts=new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+    a.href=URL.createObjectURL(blob); a.download=`运行日志_${ts}.txt`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+    toast(`✓ 已导出 ${rows.length} 条日志`);
+  }catch(e){ toast('✗ 导出失败：'+(e.message||e)); }
+  finally{ btn.disabled=false; btn.innerHTML=old; }
+});
 $('#btnLogClear')?.addEventListener('click',async()=>{
   if(!confirm('确定清空全部运行日志吗？')) return;
   const r=await api.post('/api/logs/clear');
@@ -1048,6 +1182,7 @@ function applyUser(user){
   $('#footAva').textContent=user.id;
   $('#footName').textContent=`${user.name} · ${user.id}`;
   updateBossBar();
+  loadAiBase();
 }
 const setToken=(t)=>{ state.token=t||null; if(t) localStorage.setItem('hr_token',t); else localStorage.removeItem('hr_token'); };
 
@@ -1105,17 +1240,34 @@ function renderSettings(){
 }
 function renderBossForm(){
   const b=state.user?.boss;
-  if(b){ $('#bossAcc').value=b.account||''; $('#bossNick').value=b.nick||''; }
+  if(b){ $('#bossAcc').value=b.bossAccount||''; $('#bossNick').value=b.bossNick||''; }
   $('#bossTok').value='';
   const tag=$('#boundTag');
   if(b){
     tag.textContent='已绑定';
     tag.className='tag t-bound';
-    tag.title=`${b.account}${b.masked?' · 凭证 '+b.masked:''}`;
+    tag.title=`${b.bossAccount}${b.masked?' · 凭证 '+b.masked:''}`;
   } else {
     tag.textContent='未绑定';
     tag.className='tag t-unbound';
     tag.title='';
+  }
+  updateAcctRow();
+}
+/* 「账号接入与权限」状态栏：随实际绑定态实时渲染（未绑定→引导扫码，已绑定→显示接入账号） */
+function updateAcctRow(){
+  const bd=$('#acctBossBadge'), ds=$('#acctBossDesc'), ops=$('#acctBossOps');
+  if(!bd||!ds||!ops) return;
+  const b=state.user?.boss, tied=b&&(b.masked||b.bossAccount);
+  if(tied){
+    bd.className='badge b-ok'; bd.textContent='已接入';
+    ds.textContent=`BOSS 自有账号 · ${b.bossAccount||b.bossNick||'扫码会话'} 已接入，采集以该账号身份执行`;
+    ops.innerHTML='<span class="badge b-info">会话隔离</span>';
+  }else{
+    bd.className='badge b-warn'; bd.textContent='未接入';
+    ds.textContent='尚未绑定 BOSS 账号：当前采集以离线模拟运行，扫码登录即可接入真实采集';
+    ops.innerHTML='<button class="btn ghost sm" id="btnAcctScan">扫码接入</button>';
+    $('#btnAcctScan').addEventListener('click',scanLaunch);
   }
 }
 $('#btnSaveBoss').addEventListener('click',async()=>{
@@ -1125,73 +1277,188 @@ $('#btnSaveBoss').addEventListener('click',async()=>{
   if(r.ok&&r.boss){ state.user.boss=r.boss; updateBossBar(); renderBossForm(); toast('✓ BOSS 账号已绑定'); }
   else toast('✗ '+(r.error||'绑定失败'));
 });
-/* ---------- 扫码登录 BOSS：复用 BOSS 网页版扫码流程自动抓取会话 cookie ---------- */
-const scanState = { timer: null, sessionId: '', beganAt: 0, qrEl: null, loggedIn: false };
+/* ---------- 扫码登录 BOSS / 拉起 BOSS 网页端：独立浏览器窗口，复用网页版登录态 ---------- */
+const scanState = { timer: null, sessionId: '', beganAt: 0, loggedIn: false, webMode: false };
+const SCAN_LABELS_SCAN = ['拉起浏览器', '扫码登录', '接入凭证'];
+const SCAN_LABELS_WEB = ['拉起浏览器', '复用会话', '网页端在线'];
+function scanHero(kind){ // wait | ok | err
+  const ring=$('#scanRing');
+  ring.className='scan-ring'+(kind==='ok'?' ok':kind==='err'?' err':'');
+  $('#scanIcoWait').style.display=kind==='wait'?'block':'none';
+  $('#scanIcoOk').style.display=kind==='ok'?'block':'none';
+  $('#scanIcoErr').style.display=kind==='err'?'block':'none';
+}
+function scanSteps(active){ // 1=拉起浏览器 2=扫码/复用 3=接入凭证/在线；全部完成时传 3 且标记 done
+  document.querySelectorAll('#scanSteps .scan-step').forEach((el)=>{
+    const n=+el.dataset.step;
+    const done=n<active;
+    el.classList.toggle('done',done);
+    el.classList.toggle('act',n===active&&!done);
+    el.querySelector('i').textContent=done?'✓':String(n);
+  });
+}
+function scanLabels(web){
+  const labels=web?SCAN_LABELS_WEB:SCAN_LABELS_SCAN;
+  document.querySelectorAll('#scanSteps .scan-step span').forEach((el,i)=>{ if(labels[i]) el.textContent=labels[i]; });
+}
+function scanStatusTxt(kind,msg){ const el=$('#scanStatus'); el.textContent=msg; el.className='scan-status'+(kind?' '+kind:''); }
 function scanOpen(){
-  const m=$('#scanModal'); m.classList.add('show');
-  $('#scanStatus').textContent=''; $('#scanStatus').className='scan-status';
-  const qr=$('#scanQr'); qr.innerHTML='<span id="scanQrPh">正在启动浏览器，获取二维码…</span>';
-  $('#scanQrPh').textContent='正在启动浏览器，获取二维码…';
+  $('#scanModal').classList.add('show');
+  $('#scanTitle').textContent=scanState.webMode?'拉起 BOSS 网页端':'扫码登录 BOSS 直聘';
+  $('#scanSub').textContent=scanState.webMode
+    ?'系统将在独立浏览器窗口中打开 BOSS 招聘端并自动注入已保存的会话凭证，满足「网页端在线」条件'
+    :'已在独立浏览器窗口打开 BOSS 网页版，请在其中完成登录，系统将自动抓取会话凭证并接入采集';
+  scanLabels(scanState.webMode);
+  scanHero('wait'); scanSteps(1);
+  scanStatusTxt('',scanState.webMode?'正在拉起 BOSS 网页端窗口（自动复用已保存的会话凭证）…':'正在拉起 BOSS 网页登录窗口…');
 }
 function scanClose(stop=true){
-  const m=$('#scanModal'); m.classList.remove('show');
+  $('#scanModal').classList.remove('show');
   clearInterval(scanState.timer); scanState.timer=null;
-  if(stop&&scanState.sessionId){ fetch('/api/scan-boss/stop',{method:'POST',headers:{'x-auth':state.token}}); scanState.sessionId=''; }
+  const kill=stop&&!scanState.webMode; // 网页端模式：关弹窗不关浏览器窗口（窗口本身就是目标）
+  if(kill&&scanState.sessionId){ fetch('/api/scan-boss/stop',{method:'POST',headers:{'x-auth':state.token}}); scanState.sessionId=''; }
 }
 async function scanStart(){
   const r=await fetch('/api/scan-boss/start',{method:'POST',headers:{'x-auth':state.token}}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
-  if(!r.ok){ scanStatusTxt('err', '启动扫码失败：'+(r.error||'未知错误')); return false; }
+  if(!r.ok){ scanHero('err'); scanStatusTxt('err','拉起失败：'+(r.error||'未知错误')); return false; }
   scanState.sessionId=r.sessionId||String(state.user.id);
   scanState.beganAt=Date.now();
+  scanHero('wait'); scanSteps(2);
   return true;
-}
-function scanStatusTxt(kind,msg){ const el=$('#scanStatus'); el.textContent=msg; el.className='scan-status'+(kind?' '+kind:''); }
-function scanDraw(img){
-  const qr=$('#scanQr');
-  if(!scanState.qrEl){ scanState.qrEl=document.createElement('img'); qr.innerHTML=''; qr.appendChild(scanState.qrEl); }
-  if(img) scanState.qrEl.src='data:image/png;base64,'+img;
 }
 async function scanTick(){
   if(!scanState.sessionId) return;
   const r=await fetch('/api/scan-boss/poll?sessionId='+encodeURIComponent(scanState.sessionId),{headers:{'x-auth':state.token}}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
-  if(!r.ok){ scanStatusTxt('err', r.error||'轮询失败'); return; }
-  scanDraw(r.img);
+  if(!r.ok){ scanHero('err'); scanStatusTxt('err',r.error||'状态获取失败'); return; }
+  if(r.status==='closed'){
+    clearInterval(scanState.timer); scanState.timer=null; scanState.sessionId='';
+    scanHero('err'); scanStatusTxt('err','浏览器窗口已被关闭，可点击「重新拉起」重试');
+    return;
+  }
   if(r.loggedIn||r.status==='logged_in'){
-    if(!scanState.loggedIn){ scanState.loggedIn=true; scanStatusTxt('ok','✓ 登录成功，会话凭证已自动抓取'); }
+    if(!scanState.loggedIn){
+      scanState.loggedIn=true;
+      scanHero('ok'); scanSteps(3);
+      $('#scanTitle').textContent=scanState.webMode?'网页端已在线':'登录成功';
+      scanStatusTxt('ok',scanState.webMode?'✓ BOSS 网页端已在线，采集可直接附着该窗口':'✓ 会话凭证已自动抓取并接入');
+    }
     clearInterval(scanState.timer); scanState.timer=null;
     const me=await api.get('/api/auth/me');
     if(me.ok&&me.user){ state.user=me.user; updateBossBar(); renderBossForm(); }
-    const acc=state.user?.boss?.account||'';
-    toast(acc?`✓ 扫码登录成功，已接入 BOSS ${acc}`:'✓ 扫码登录成功，会话凭证已接入；请在下方填写账号后保存');
-    setTimeout(()=>scanClose(false),900);
+    if(scanState.webMode){
+      toast('✓ BOSS 网页端已在线，后续采集将以最新鲜登录态附着该窗口');
+    }else{
+      const acc=state.user?.boss?.account||'';
+      toast(acc?`✓ 扫码登录成功，已接入 BOSS ${acc}`:'✓ 扫码登录成功，会话凭证已接入；如需绑定账号名称请在下方填写后保存');
+    }
+    scanStatusTxt('ok','保持该浏览器窗口开启，后续采集/岗位同步将直接附着此窗口（关闭也不影响，会改用会话凭证）');
+    setTimeout(()=>scanClose(false),2600);
     return;
   }
-  if(Date.now()-scanState.beganAt>180000){ scanStatusTxt('err','二维码已过期，请点击"刷新二维码"重新获取'); }
-  else if(r.status==='opening'){} 
-  else if(r.status==='waiting'&&r.img){} 
-  else if(r.cookieCount>0&&!r.loggedIn){ scanStatusTxt('','请用手机 BOSS 直聘 App 扫码（当前已读取 '+r.cookieCount+' 个会话标记）'); }
+  const waited=Math.round((Date.now()-scanState.beganAt)/1000);
+  if(scanState.webMode){
+    if(r.cookieCount>0) scanStatusTxt('',`已注入 ${r.cookieCount} 项会话标记，正在打开 BOSS 招聘端…`);
+    else scanStatusTxt('','正在注入已保存的会话凭证…');
+    return;
+  }
+  if(waited>300){ scanStatusTxt('err','已等待 5 分钟仍未登录；仍可继续扫码，或点击「重新拉起」打开新窗口'); }
+  else if(r.cookieCount>0){ scanStatusTxt('',`正在监听登录状态…（已读取 ${r.cookieCount} 个会话标记）`); }
+  else{ scanStatusTxt('','等待扫码登录… 可用手机 BOSS App 扫码，或使用账号密码登录'); }
 }
-$('#btnScanBoss').addEventListener('click',async()=>{
+async function scanLaunch(){
   if(!state.user){ toast('请先登录'); return; }
-  scanOpen(); scanState.loggedIn=false; scanState.qrEl=null;
+  scanState.loggedIn=false; scanState.webMode=false;
+  scanOpen();
   if(await scanStart()){
-    scanState.timer=setInterval(scanTick,1500);
+    scanStatusTxt('','请在弹出的浏览器窗口中完成登录');
+    scanState.timer=setInterval(scanTick,2000);
     scanTick();
   }
-});
-$('#btnScanRefresh').addEventListener('click',async()=>{
-  clearInterval(scanState.timer); scanState.timer=null; scanState.loggedIn=false; scanState.qrEl=null;
-  $('#scanQr').innerHTML='<span id="scanQrPh">正在重新获取二维码…</span>';
-  scanStatusTxt('','正在重新获取二维码…');
-  if(await scanStart()){ scanState.timer=setInterval(scanTick,1500); scanTick(); }
+}
+/* 拉起 BOSS 网页端：注入已保存会话凭证并打开招聘端页面（满足自动打招呼的「网页端在线」条件） */
+async function launchBossWeb(){
+  if(!state.user){ toast('请先登录'); return; }
+  const r=await fetch('/api/boss-web/launch',{method:'POST',headers:{'x-auth':state.token}}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
+  if(!r.ok){ toast('✗ '+(r.error||'拉起失败')); return; }
+  scanState.loggedIn=false; scanState.webMode=true;
+  scanState.sessionId=r.sessionId||String(state.user.id);
+  scanState.beganAt=Date.now();
+  scanOpen();
+  scanSteps(2);
+  scanStatusTxt('','正在注入已保存的会话凭证并打开 BOSS 招聘端…');
+  scanState.timer=setInterval(scanTick,2000);
+  scanTick();
+}
+$('#btnScanBoss').addEventListener('click',scanLaunch);
+$('#btnLaunchBossWeb').addEventListener('click',launchBossWeb);
+$('#bossLaunchWeb').addEventListener('click',launchBossWeb);
+$('#btnScanRestart').addEventListener('click',async()=>{
+  clearInterval(scanState.timer); scanState.timer=null; scanState.loggedIn=false;
+  const web=scanState.webMode;
+  if(scanState.sessionId){ fetch('/api/scan-boss/stop',{method:'POST',headers:{'x-auth':state.token}}); scanState.sessionId=''; }
+  web?launchBossWeb():scanLaunch();
 });
 $('#btnScanCancel').addEventListener('click',()=>{ scanClose(true); });
+$('#scanModal').addEventListener('click',(e)=>{ if(e.target.id==='scanModal') scanClose(true); });
 $('#btnChangePwd').addEventListener('click',async()=>{
   const old=$('#pwdOld').value, nw=$('#pwdNew').value;
   if(!nw||nw.length<4){ toast('新密码至少 4 位'); return; }
   const r=await fetch(`/api/users/${state.user.id}/password`,{method:'POST',headers:{'Content-Type':'application/json','x-auth':state.token},body:JSON.stringify({old,password:nw})}).then(x=>x.json()).catch(()=>({ok:false,error:'网络错误'}));
   if(r.ok){ $('#pwdOld').value=''; $('#pwdNew').value=''; toast('✓ 密码已修改'); } else toast('✗ '+(r.error||'修改失败'));
 });
+let _aiLock=false;
+// ---------- M4/M6 · AI 基座接入（设置页） ----------
+async function loadAiBase(){
+  const $=(s)=>document.querySelector(s);
+  const chip=$('#aiStatusChip'), plug=$('#aiPlug'), url=$('#aiBaseUrl'), keyEl=$('#aiApiKey'), modelSel=$('#aiModel'), keyState=$('#aiKeyState'), hint=$('#aiStatusTxt');
+  try{
+    const r=await api.get('/api/llm/status');
+    if(!r.ok) throw 0; // api.get 未带鉴权头返回 {ok:false}，视为不可用
+    const cfg=r, isAdmin=state.user?.role==='admin';
+    url.value=cfg.baseURL||'';
+    keyState.textContent=cfg.hasKey?`（已保存密钥${cfg.apiKeyMasked?' '+cfg.apiKeyMasked:''}，留空沿用）`:'（未设置密钥）';
+    modelSel.innerHTML=cfg.model?`<option value="${esc(cfg.model)}">${esc(cfg.model)}</option><option value="">— 清空模型 —</option>`:'<option value="">— 未选择 —</option>';
+    if(cfg.source==='settings'){ chip.textContent='已配置 · 设置页'; chip.className='badge b-ok'; }
+    else if(cfg.baseURL){ chip.textContent='已启用 · 环境变量'; chip.className='badge b-info'; }
+    else { chip.textContent='未配置 · 离线启发式'; chip.className='badge b-warn'; }
+    plug.innerHTML='';
+    const chips=[];
+    if(cfg.source==='settings') chips.push('生效来源：设置页（持久化 · 即时应用）');
+    else if(cfg.baseURL) chips.push('生效来源：环境变量 / 启动配置');
+    else chips.push('未接入 AI，JD 抽词 / 匹配以离线启发式兜底');
+    if(cfg.model) chips.push('模型：'+esc(cfg.model));
+    plug.innerHTML=chips.map(c=>`<span class="chip">${c}</span>`).join('');
+    [url,keyEl,modelSel].forEach(el=>el.disabled=!isAdmin);
+    $('#btnAiSave').style.display=isAdmin?'':'none';
+    $('#btnAiListModels').disabled=!isAdmin;
+    hint.textContent=isAdmin?'':'仅管理员可修改 AI 基座配置，当前为只读状态。';
+  }catch{ chip.textContent='不可用'; chip.className='badge b-err'; }
+}
+async function loadAiModels(){
+  const modelSel=$('#aiModel'), btn=$('#btnAiListModels');
+  btn.disabled=true; const oldTxt=btn.textContent; btn.innerHTML='<span class="spin"></span>';
+  const r=await api.get('/api/llm/models');
+  btn.disabled=false; btn.textContent=oldTxt;
+  if(!r.ok||!Array.isArray(r.models)){ toast('拉取模型失败：'+(r.error||'AI 基座未配置')); return; }
+  const prev=modelSel.value;
+  modelSel.innerHTML=r.models.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join('')+(prev?'<option value="">— 清空模型 —</option>':'<option value="">— 未选择 —</option>');
+  if(prev&&r.models.includes(prev)) modelSel.value=prev;
+  toast(`✓ 已拉取 ${r.models.length} 个模型`);
+}
+async function saveAiBase(){
+  if(_aiLock) return; _aiLock=true;
+  const b=$('#btnAiSave'); const oldTxt=b.textContent; b.disabled=true; b.innerHTML='<span class="spin"></span>';
+  const r=await api.put('/api/llm/config',{ baseURL:$('#aiBaseUrl').value.trim(), apiKey:$('#aiApiKey').value.trim(), model:$('#aiModel').value });
+  b.disabled=false; b.textContent=oldTxt; _aiLock=false;
+  if(!r.ok){ toast('✗ '+(r.error||'保存失败')); return; }
+  $('#aiApiKey').value='';
+  toast('✓ AI 基座已探活并应用');
+  const st=r.status||{};
+  $('#aiStatusTxt').textContent=(st.baseURL?`已连接 ${st.baseURL} · 生效模型 ${st.model||'未选'}`:'');
+  loadAiBase();
+}
+$('#btnAiListModels').addEventListener('click',loadAiModels);
+$('#btnAiSave').addEventListener('click',saveAiBase);
 async function loadUsers(){
   const r=await api.get('/api/users');
   if(!r.ok){ $('#adminBox').style.display='none'; return; }
@@ -1202,7 +1469,7 @@ async function loadUsers(){
   $('#userCount').textContent=`${us.length} 位`;
   if(us.length) $('#userList').innerHTML=us.map(u=>`
     <div class="urow">
-      <div style="flex:1;min-width:0"><b>${esc(u.name)}</b> <span class="textfield">${esc(u.username)} · ${esc(u.role)}</span>${u.boss?`<div class="textfield">BOSS ${esc(u.boss.account)}${u.boss.masked?' · '+esc(u.boss.masked):''}</div>`:''}</div>
+      <div style="flex:1;min-width:0"><b>${esc(u.name)}</b> <span class="textfield">${esc(u.username)} · ${esc(u.role)}</span>${u.boss?`<div class="textfield">BOSS ${esc(u.boss.bossAccount)}${u.boss.masked?' · '+esc(u.boss.masked):''}</div>`:''}</div>
       <span class="badge ${u.active?'b-ok':'b-err'}">${u.active?'启用':'停用'}</span>
       ${u.id===r.self.id?'<span class="textfield">(我)</span>':(isAdmin?`<button class="btn ghost sm" data-u="${esc(u.id)}" data-a="pwd">重置密码</button><button class="btn ghost sm" data-a="act" data-u="${esc(u.id)}">${u.active?'停用':'启用'}</button>`:'')}
     </div>`).join('');
@@ -1293,10 +1560,16 @@ function renderJobs(){
     const n=candCountOf(j.jobId);
     return `<div class="jobcard" data-job="${esc(j.jobId)}">
     <div class="jt">${esc(j.jobTitle)}<span class="jid">${esc(j.jobId)}</span><span class="stat">${stBadge(j.status)}</span></div>
-    <div class="jobcandline">已收集 <b>${n}</b> 位候选人 <span class="textfield">· 点击卡片查看详情 / 跳转候选人库</span></div>
+    <div class="jmeta">
+      ${j.salary?`<span class="jb">${esc(j.salary)}</span>`:''}
+      ${j.location?`<span class="jb">${esc(j.location)}</span>`:''}
+      <span class="jb ${j.status!=='closed'?'on':'off'}">BOSS：${esc(j.bossStatus||'—')}</span>
+    </div>
+    <div class="jobcandline">已收集 <b>${n}</b> 位候选人 <span class="textfield">· 点击卡片查看详情</span></div>
     <div class="kw">${(j.parsedKeywords||j.hardSkills||[]).slice(0,8).map(k=>`<span class="skill">${esc(k)}</span>`).join('')||'<span class="textfield">— 暂无关键词</span>'}</div>
     <div class="ftr">创建 <span>${at(j.meta?.createdAt)}</span>
       <span class="jobactions">
+        <button class="btn sm" data-jobact="track">跟进</button>
         <button class="btn ghost sm" data-jobact="details">详情</button>
         ${j.status==='closed'?'<button class="btn sm" data-jobact="reopen">恢复采集</button>':'<button class="btn ghost sm" data-jobact="close">停止采集</button>'}
         <button class="btn ghost sm danger" data-jobact="delete">删除</button>
@@ -1310,6 +1583,7 @@ function renderJobs(){
       e.stopPropagation();
       const jobId=card.dataset.job, act=btn.dataset.jobact;
       if(act==='details'){ openJobSide(jobId); return; }
+      if(act==='track'){ state.activeJob=jobId; fillJobFilter(); navTo('candidates'); return; }
       if(act==='close'||act==='reopen'){
         if(act==='close'&&!confirm(`确定停止岗位 ${jobId} 的采集？停止后不再寻源，可随时「恢复采集」。`)) return;
         const r=await api.post('/api/jobs/'+encodeURIComponent(jobId)+'/control',{action:act});
@@ -1337,24 +1611,51 @@ $('#jdForm').addEventListener('submit',async e=>{
   await loadAll();
 });
 
-/* ---------- 岗位详情侧边栏（点击岗位卡片 / 详情 → 右侧展示） ---------- */
+/* ---------- 从 BOSS 同步在招岗位：复用扫码会话拉取账号下职位 ---------- */
+$('#btnSyncBossJobs').addEventListener('click',async ()=>{
+  const btn=$('#btnSyncBossJobs'); const hint=$('#syncBossHint');
+  btn.disabled=true; const old=btn.textContent; btn.textContent='同步中…（正在拉取 BOSS 在招岗位）';
+  hint.textContent='同步期间会复用/拉起浏览器会话读取职位列表，请稍候';
+  const r=await api.post('/api/jobs/sync-boss',{}).catch(()=>({ok:false,error:'请求失败'}));
+  btn.disabled=false; btn.textContent=old;
+  hint.textContent='复用扫码登录的 BOSS 会话，一键导入账号下在招职位';
+  if(r.ok){ toast(`✓ 同步完成：新增 ${r.added} 个、更新 ${r.updated} 个岗位`); await loadAll(); }
+  else{
+    toast('✗ 同步失败：'+(r.error||'未知错误'));
+    if((r.error||'').includes('尚未绑定')) hint.textContent='尚未绑定 BOSS 会话：请先到「准入与护栏 → 扫码登录 · 复用登录态」完成绑定，再回来同步岗位';
+  }
+});
+
+/* ---------- 岗位详情浮层抽屉（点击岗位卡片 / 详情 → 弹出，任意屏宽可用） ---------- */
 let _jmJob=null;
+$('#jobSideClose').addEventListener('click',()=>$('#jobSidebar').classList.remove('open'));
+$('#jobSidebar').addEventListener('click',e=>{ if(e.target===$('#jobSidebar')) $('#jobSidebar').classList.remove('open'); });
 function openJobSide(jobId){
   const j=state.jobs.find(x=>x.jobId===jobId); if(!j){ toast('未找到岗位'); return; }
   _jmJob=jobId;
   const box=$('#jobSideBody');
   const n=candCountOf(jobId);
+  const bossOn=j.status!=='closed';
   box.innerHTML=`
     <div class="js-title">${esc(j.jobTitle||jobId)}</div>
     <div class="js-sub">${esc(jobId)}${STATUS_MAP[j.status]?.[0]?' · '+esc(STATUS_MAP[j.status][0]):''}</div>
+    <div class="jmeta" style="margin:0 0 4px">
+      ${j.salary?`<span class="jb">${esc(j.salary)}</span>`:''}
+      ${j.location?`<span class="jb">${esc(j.location)}</span>`:''}
+      <span class="jb ${bossOn?'on':'off'}">BOSS：${esc(j.bossStatus||'—')}</span>
+    </div>
     <div class="kv">
       <div><div class="k">状态</div><div class="v">${stBadge(j.status)}</div></div>
       <div><div class="k">已收集候选人</div><div class="v"><b>${n}</b> 位</div></div>
+      ${j.experience?`<div><div class="k">经验要求</div><div class="v">${esc(j.experience)}</div></div>`:''}
+      ${j.degree?`<div><div class="k">学历要求</div><div class="v">${esc(j.degree)}</div></div>`:''}
+      ${j.jobType?`<div><div class="k">职位类型</div><div class="v">${esc(j.jobType)}</div></div>`:''}
       <div><div class="k">搜索 / 硬技能关键词</div><div class="v">${esc((j.parsedKeywords||j.hardSkills||[]).slice(0,10).join('、')||'—')}</div></div>
       <div><div class="k">创建时间</div><div class="v">${at(j.meta?.createdAt)}</div></div>
+      <div><div class="k">最近同步</div><div class="v">${j.meta?.syncedAt?at(j.meta.syncedAt):'—'}</div></div>
     </div>
     <div class="js-actions">
-      <button class="btn sm" data-sidebar="cand">查看候选人库</button>
+      <button class="btn sm" data-sidebar="track">跟进候选人</button>
       ${j.status==='closed'
         ?'<button class="btn ghost sm" data-sidebar="reopen">恢复采集</button>'
         :'<button class="btn ghost sm" data-sidebar="close">停止采集</button>'}
@@ -1363,7 +1664,7 @@ function openJobSide(jobId){
     <div style="margin-top:14px"><div class="dt">JD 原文</div><div class="jdsnippet">${esc(j.jdRaw||'—')}</div></div>`;
   box.querySelectorAll('button[data-sidebar]').forEach(btn=>btn.addEventListener('click',async e=>{
     const act=btn.dataset.sidebar;
-    if(act==='cand'){ state.activeJob=jobId; fillJobFilter(); navTo('candidates'); return; }
+    if(act==='track'){ state.activeJob=jobId; fillJobFilter(); navTo('candidates'); $('#jobSidebar').classList.remove('open'); return; }
     if(act==='close'||act==='reopen'){
       if(act==='close'&&!confirm(`确定停止岗位 ${jobId} 的采集？停止后不再寻源，可随时「恢复采集」。`)) return;
       const r=await api.post('/api/jobs/'+encodeURIComponent(jobId)+'/control',{action:act});
@@ -1378,33 +1679,10 @@ function openJobSide(jobId){
       await loadAll(); return;
     }
   }));
+  $('#jobSidebar').classList.add('open');
 }
 
-/* ---------- 岗位详情（收集统计 + 跳转候选人库） ---------- */
-function openJobModal(jobId){
-  const j=state.jobs.find(x=>x.jobId===jobId); if(!j){ toast('未找到岗位'); return; }
-  _jmJob=jobId;
-  $('#jmTitle').textContent=j.jobTitle||jobId;
-  $('#jmAva').textContent=(j.jobTitle||'岗')[0]||'岗';
-  $('#jmMeta').textContent=`${jobId} · ${STATUS_MAP[j.status]?.[0]||j.status||'—'} · 创建于 ${at(j.meta?.createdAt)}`;
-  $('#jmCount').textContent=candCountOf(jobId);
-  $('#jmInfo').innerHTML=`
-    <div class="kv">
-      <div><div class="k">状态</div><div class="v">${stBadge(j.status)}</div></div>
-      <div><div class="k">岗位 ID</div><div class="v">${esc(jobId)}</div></div>
-      <div><div class="k">搜索 / 硬技能关键词</div><div class="v">${esc((j.parsedKeywords||j.hardSkills||[]).slice(0,8).join('、')||'—')}</div></div>
-      <div><div class="k">创建时间</div><div class="v">${at(j.meta?.createdAt)}</div></div>
-    </div>
-    <div><div class="dt">JD 原文</div><div class="jdsnippet">${esc(j.jdRaw||'—')}</div></div>`;
-  $('#jobModal').classList.add('open');
-}
-$('#jobModalClose').addEventListener('click',()=>$('#jobModal').classList.remove('open'));
-$('#jobModal').addEventListener('click',e=>{ if(e.target===$('#jobModal')) $('#jobModal').classList.remove('open'); });
-$('#jmGoCand').addEventListener('click',()=>{
-  $('#jobModal').classList.remove('open');
-  if(_jmJob){ state.activeJob=_jmJob; fillJobFilter(); $('#fJob').focus(); }
-  navTo('candidates');
-});
+/* ---------- 岗位详情（收集统计 + 跳转候选人库，浮层抽屉实现见 openJobSide） ---------- */
 
 /* ---------- 候选人库：岗位 / 来源 / 学历 等复合筛选 ---------- */
 function clearAllFilters(){
@@ -1437,7 +1715,18 @@ function renderPipe(doneSteps){
 function updateBossBar(){
   const u=state.user;
   $('#bossAva').textContent=u?u.id:'–';
-  $('#bossName').textContent=u?`BOSS 账号 ${u.id} · ${u.name}`:'BOSS 账号 · 未登录';
+  $('#bossName').textContent=u?`BOSS 账号 · ${u.name}`:'BOSS 账号 · 未登录';
+  const b=u?.boss, tied=b&&(b.masked||b.bossAccount);
+  const bd=$('#bossBadge');
+  if(bd){ bd.className='badge '+(tied?'b-ok':'b-dim'); bd.textContent=tied?'● BOSS 已登录':'○ BOSS 未登录'; }
+  const bb=$('#bossBound');
+  if(bb) bb.innerHTML=tied?`已绑定：${esc(b.bossAccount||b.bossNick||'BOSS 会话凭证')}`:'未绑定 BOSS 直聘账号';
+  const lw=$('#bossLaunchWeb');
+  if(lw) lw.style.display=tied?'':'none';
+  const lw2=$('#btnLaunchBossWeb');
+  if(lw2) lw2.style.display=tied?'':'none';
+  const go=$('#bossGoAcct');
+  if(go) go.textContent=tied?'管理账号与凭证':'去「设置」绑定 BOSS 账号';
 }
 ['bossTieBtn','bossGoAcct'].forEach(id=>{const el=$('#'+id); if(el) el.addEventListener('click',()=>navTo('settings'));});
 function renderSchedules(){
@@ -1480,6 +1769,8 @@ function logLine(t){
 async function collect(usePython,btnId){
   const jobId=$('#schJob').value || (myJobs()[0]?.jobId);
   if(!jobId){ logLine('<span class="err">! 请先在 岗位/JD 配置 创建岗位</span>'); return; }
+  const tied=state.user?.boss&&(state.user.boss.masked||state.user.boss.bossAccount);
+  if(usePython&&!tied) logLine('<span class="dim">提示：尚未绑定 BOSS 账号，本次以离线模拟运行；到「准入与护栏 → 扫码登录 · 复用登录态」绑定后自动切换真实采集</span>');
   const btn=$(btnId); const old=btn.textContent; btn.disabled=true; btn.innerHTML='<span class="spin"></span> 运行中';
   logLine(`→ ${usePython?'Python 采集':'离线冒烟'} 岗位 <span class="dim">${jobId}</span> …`);
   try{
@@ -1500,6 +1791,38 @@ async function collect(usePython,btnId){
 }
 $('#btnCollect').addEventListener('click',()=>collect(true,'#btnCollect'));
 $('#btnSmoke').addEventListener('click',()=>collect(false,'#btnSmoke'));
+
+/* 一键停止所有采集：终止运行中的 Python 采集/同步/沟通扫描进程，并停用后台定时扫描 */
+async function stopAllCollect(btnEl){
+  if(!btnEl) btnEl=$('#btnStopAll');
+  const old=btnEl.textContent;
+  if(!confirm('确定一键停止所有采集？\n将立即终止正在运行的采集/沟通扫描进程，并停用后台定时扫描任务（可随时重新运行采集恢复）。')) return;
+  btnEl.disabled=true; btnEl.innerHTML='<span class="spin"></span> 停止中…';
+  try{
+    const r=await api.post('/api/sourcing/stop-all',{});
+    if(r.ok) logLine(`<span class="ok">✓ 已停止所有采集</span>：终止 ${r.killed} 个进程，后台定时扫描已停用`);
+    else logLine(`<span class="err">✗ 停止失败：</span>${r.error??r.note??'未知错误'}`);
+  }catch(e){ logLine(`<span class="err">✗ 停止请求失败：${esc(e.message)}</span>`); }
+  finally{ btnEl.disabled=false; btnEl.textContent=old; }
+  await loadAll();
+}
+$('#btnStopAll').addEventListener('click',()=>stopAllCollect($('#btnStopAll')));
+
+/* 采集设置：单次打招呼人数上限（持久化到服务端，运行采集时生效） */
+async function loadSourcingSettings(){
+  try{ const r=await api.get('/api/sourcing/settings');
+    if(r&&r.maxGreet&&document.activeElement!==$('#cfgMaxGreet')) $('#cfgMaxGreet').value=r.maxGreet;
+  }catch(_){}
+}
+$('#cfgMaxGreet').addEventListener('change',async()=>{
+  const v=Math.max(1,Math.min(100,parseInt($('#cfgMaxGreet').value||'5',10))||5);
+  $('#cfgMaxGreet').value=v;
+  try{ const r=await api.put('/api/sourcing/settings',{maxGreet:v});
+    if(r&&r.maxGreet) toast(`✓ 单次打招呼人数已设为 ${r.maxGreet}`);
+    else toast('✗ 设置失败（可能无管理员权限）');
+  }catch(e){ toast('✗ '+e.message); }
+});
+loadSourcingSettings();
 $('#btnGreet').addEventListener('click',async()=>{
   const jobId=$('#schJob').value||(myJobs()[0]?.jobId);
   if(!jobId){ toast('请先选择目标岗位'); return; }
@@ -1534,11 +1857,18 @@ $('#topRun').addEventListener('click',async()=>{
 });
 $('#btnRefresh').addEventListener('click',async()=>{ $('#btnRefresh').disabled=true; await loadAll(); $('#btnRefresh').disabled=false; toast('✓ 已刷新全部视图'); });
 
-/* ---------- candidates：候选人库（随账号） + 人才库（全员共享） ---------- */
+/* ---------- candidates：候选人库（随账号，含岗位跟进） + 人才库（全员共享，仅已收简历） ---------- */
+function hasResume(c){ return c.status && c.status!=='sourced'; }
+/* 候选人库（含岗位跟进）：本账号岗位下全部候选人（含触达中未收简历，按状态分段区分） */
 function scopeMine(){ const ids=new Set(myJobs().map(j=>j.jobId)); return state.candidates.filter(c=>ids.has(c.jobId)); }
-function scopeAll(){ return state.candidates.slice(); }
+function scopeAll(){ return state.candidates.filter(hasResume); }
 function calSeg(rows){ const c={}; rows.forEach(cd=>{ c[cd.status]=(c[cd.status]||0)+1; });
-  return [['all','全部',rows.length],['matched','已匹配',c.matched||0],['parsed','已入库',c.parsed||0],['screened','已筛选',c.screened||0],['sourced','已寻源',c.sourced||0],['rejected','已淘汰',c.rejected||0]]; }
+  return [['all','全部',rows.length],['sourced','触达中',c.sourced||0],['resume_received','已收简历',c.resume_received||0],['matched','已匹配',c.matched||0],['parsed','已入库',c.parsed||0],['screened','已筛选',c.screened||0],['rejected','已淘汰',c.rejected||0]]; }
+function resumeBadge(c){
+  if(hasResume(c)) return '<span class="badge b-ok">已收简历</span>';
+  if(c.resumeAgreedAt) return '<span class="badge b-warn">已同意·待收简历</span>';
+  return '<span class="badge b-gray">未登记</span>';
+}
 function readF(p,id){ const e=document.getElementById(p+id); return e?e.value:''; }
 function whereRows(base,p,seg,search){
   let rows=search??base.slice();
@@ -1561,35 +1891,49 @@ function whereRows(base,p,seg,search){
   return rows.map(c=>{ const m=state.matches.filter(x=>x.candidateId===c.candidateId).at(-1); return {c,score:m?.matchScore??null}; })
     .sort((a,b)=>(b.score??-1)-(a.score??-1));
 }
-function renderCandInto(tbodyId,countId,rows){
+function renderCandInto(tbodyId,countId,rows,mine=false){
   const tb=$(tbodyId);
-  if(!rows.length){ tb.innerHTML=`<tr><td colspan="7" class="empty">${tbodyId==='#talentTbody'?'暂无人才。各账号采集的候选人都会沉淀到人才库。':'暂无候选人。请先在调度视图运行采集。'}</td></tr>`; }
-  else tb.innerHTML=rows.map(({c,score})=>`
-    <tr data-c="${esc(c.candidateId)}">
+  const cols=mine?10:9;
+  if(!rows.length){ tb.innerHTML=`<tr><td colspan="${cols}" class="empty">${tbodyId==='#talentTbody'?'暂无人才。各账号已收简历的候选人都会沉淀到人才库。':'暂无候选人。请先在调度视图运行采集。'}</td></tr>`; }
+  else tb.innerHTML=rows.map(({c,score})=>{
+    const f=(state.followup||[]).find(p=>p.candidateId===c.candidateId);
+    const lt=lastTouchAt(c);
+    return `<tr data-c="${esc(c.candidateId)}">
       <td><span class="cell-name">${esc(c.name||'—')}<small>${esc(c.candidateId)} · ${esc(c.source)}</small></span></td>
-      <td><span class="tag">${esc(c.source)}</span></td>
+      <td>${esc(jobTitleOf(c.jobId))}</td>
       <td>${c.workExperienceYears??'—'} 年</td>
-      <td>${skillsOf(c).slice(0,6).map(s=>`<span class="skill">${esc(s)}</span>`).join('')||'—'}</td>
       <td>${esc(c.salaryExpected||'面议')}</td>
-      <td>${stBadge(c.status)}</td>
+      <td>${touchBadge(c.touchStatus)}</td>
+      <td>${f?.touchCount??(c.greetedAt?1:0)}</td>
+      <td>${lt?at(lt):'—'}</td>
+      <td>${resumeBadge(c)}</td>
       <td>${scoreHtml(score)}</td>
-    </tr>`).join('');
-  const ce=$(countId); if(ce) ce.textContent=`共 ${rows.length} 条记录 · 敏感字段默认脱敏 · 原始简历加密存储`;
+      ${mine?`<td style="white-space:nowrap"><button class="btn ghost sm" data-follow="${esc(c.candidateId)}">跟进</button></td>`:''}
+    </tr>`;}).join('');
+  const ce=$(countId); if(ce) ce.textContent=`共 ${rows.length} 条记录 · 敏感字段默认脱敏 · 简历原文明文存储`;
   tb.querySelectorAll('tr[data-c]').forEach(tr=>tr.addEventListener('click',()=>{
     openDrawer(tr.dataset.c);
     tb.querySelectorAll('tr[data-c]').forEach(o=>o.classList.remove('sel'));
     tr.classList.add('sel');
   }));
+  tb.querySelectorAll('button[data-follow]').forEach(btn=>btn.addEventListener('click',async e=>{
+    e.stopPropagation();
+    const cid=btn.dataset.follow; btn.disabled=true; btn.textContent='发送中…';
+    const r=await api.post(`/api/candidates/${encodeURIComponent(cid)}/touch`,{action:'follow_up'});
+    btn.disabled=false; btn.textContent='跟进';
+    if(r.ok&&!r.blocked){ toast('✓ 已发送跟进话术（话术库按轮次自动选用）'); await Promise.all([loadCandidates(),loadFollowup()]); renderCandidates(); renderEngage(); }
+    else toast('✗ '+(r.reason||r.error||'发送失败'));
+  }));
 }
 
-/* —— 候选人库：随当前登录账号变化，仅显示本账号岗位下收集的候选人 —— */
+/* —— 候选人库：随当前登录账号变化，本账号岗位下全部候选人（含岗位跟进能力） —— */
 function renderSeg(){
   const base=scopeMine();
   $('#statusSeg').innerHTML=calSeg(base).map(([k,l,n])=>`<button data-f="${k}" class="${state.seg===k?'active':''}">${l} ${n}</button>`).join('');
   $('#navCandBadge').style.display=base.length?'':'none'; $('#navCandBadge').textContent=base.length;
 }
 function currentRows(){ return whereRows(scopeMine(),'',state.seg,state.search); }
-function renderCandidates(){ renderCandInto('#candTbody','#candCount',currentRows()); }
+function renderCandidates(){ renderCandInto('#candTbody','#candCount',currentRows(),true); }
 function fillJobFilter(){
   const cur=$('#fJob').value;
   $('#fJob').innerHTML='<option value="">全部岗位</option>'+myJobs().map(j=>`<option value="${esc(j.jobId)}">${esc(j.jobTitle||j.jobId)}</option>`).join('');
@@ -1652,6 +1996,15 @@ function openDrawer(candId){
         <div><div class="k">专业/学位</div><div class="v">${esc(p.education?.major||c.education?.major||'—')}${p.education?.degree?' · '+esc(p.education.degree):''}</div></div>
         <div><div class="k">来源</div><div class="v">${esc(c.source||'—')}</div></div>
         <div><div class="k">状态</div><div class="v">${stBadge(c.status)}</div></div>
+        <div><div class="k">岗位</div><div class="v">${esc(jobTitleOf(c.jobId))}</div></div>
+        <div><div class="k">触达状态</div><div class="v">${touchBadge(c.touchStatus)}</div></div>
+      </div>
+    </div>
+    <div class="dsec"><div class="dt">简历状态</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        ${resumeBadge(c)}
+        ${hasResume(c)?`<span class="textfield">简历经企业邮箱进入 Moka 归档 · 本系统不存储简历</span>`
+          :`<button class="btn sm" id="btnDrawerRecv">手动登记简历已收到（保底）</button><span class="textfield">聊天扫描自动识别「对方已发简历 / 已同意发简历」，此处手动登记仅作保底</span>`}
       </div>
     </div>
     <div class="dsec"><div class="dt">工作经历</div>
@@ -1664,9 +2017,11 @@ function openDrawer(candId){
       <p class="textfield">来源：${esc(c.source||'—')} · 简历解析引擎 ${esc(r?.meta?.engine||'—')}<br/>敏感字段（电话/邮箱）默认脱敏，点下方「脱敏字段解密」单次留痕解密；「查看原始简历文件」为 BOSS 索要的原始 docx/PDF，无真实文件时按解析结果合成样例。</p>
     </div>
     <div class="dsec" id="origzone" style="display:none"><div class="dt">原始简历文件</div><div class="textfield" id="origInfo">加载中…</div></div>
-    <div class="dsec" id="rawzone" style="display:none"><div class="dt">解析原文（解密）</div><div class="rawtext" id="rawText">加载中…</div></div>`;
+    <div class="dsec" id="rawzone" style="display:none"><div class="dt">简历原文</div><div class="rawtext" id="rawText">加载中…</div></div>`;
   $('#drawer').classList.add('open');
   $('#btnShowRaw').disabled=false; $('#btnDecrypt').disabled=false; $('#btnOrigFile').disabled=false;
+  const recvBtn=$('#btnDrawerRecv');
+  if(recvBtn) recvBtn.addEventListener('click',async()=>{ await registerResume(candId,recvBtn); openDrawer(candId); });
   renderOriginalInfo(candId);
 }
 
@@ -1697,9 +2052,9 @@ $('#btnOrigFile').addEventListener('click',async()=>{
 });
 $('#btnShowRaw').addEventListener('click',async()=>{
   const cid=currentDrawerCand(); if(!cid){ toast('无候选人'); return; }
-  $('#btnShowRaw').disabled=true; $('#rawzone').style.display='block'; $('#rawText').textContent='解密中…';
+  $('#btnShowRaw').disabled=true; $('#rawzone').style.display='block'; $('#rawText').textContent='加载中…';
   const r=await api.get('/api/resumes/'+encodeURIComponent(cid)+'/text');
-  $('#rawText').textContent=(r.found&&r.text)?r.text:'（未找到加密原文，可能为脱敏种子数据）';
+  $('#rawText').textContent=(r.found&&r.text)?r.text:'（未找到简历原文）';
   $('#btnShowRaw').disabled=false;
 });
 $('#btnDecrypt').addEventListener('click',()=>{
@@ -1715,10 +2070,13 @@ function renderAudit(){
   box.innerHTML=state.audit.slice().reverse().slice(0,60).map(a=>`
     <div class="item"><div class="ic">⚙</div><div class="act">${esc(a.action)}<small>${esc((a.detail&&(a.detail.candidateId||a.detail.jobId||a.detail.scheduleId))||'')}</small></div><div class="who">${esc(a.actor||'')}</div><div class="ts">${at(a.ts)}</div></div>`).join('');
 }
+let _auditDate='';
 $('#btnAuditRefresh').addEventListener('click',async()=>{ await loadAudit(); renderAudit(); toast('✓ 已刷新审计'); });
+$('#auditDate')?.addEventListener('change',async(e)=>{ _auditDate=e.target.value||''; await loadAudit(); renderAudit(); });
+$('#btnAuditDateClear')?.addEventListener('click',async()=>{ const i=$('#auditDate'); if(i){ i.value=''; } _auditDate=''; await loadAudit(); renderAudit(); });
 
 /* ---------- 触达/沟通：话术库 + 智能跟进 + 触达审计 ---------- */
-const TIER_LABEL={first:'初次打招呼',second:'二次激活',third:'三次及以上',exchange:'交换联系方式（F-2）'};
+const TIER_LABEL={first:'初次打招呼',second:'二次激活',third:'三次及以上',exchange:'交换联系方式'};
 const TIER_HINT={first:'匹配达标自动发送',second:'第 2 轮跟进应用',third:'第 3 轮及以后应用',exchange:'简历缺电话自动发送 · 话术含 [我方联系方式]'};
 const TOUCH_TAG={greet:'打招呼',follow_up:'重发跟进',request_resume:'索要简历',request_phone:'索要电话',agree_resume:'同意收取简历',exchange_contact:'交换联系方式'};
 function renderMsgLib(){
@@ -1808,24 +2166,52 @@ $('#btnSweep').addEventListener('click',async()=>{
   await loadFollowup(); await loadAudit(); renderEngage();
 });
 
-/* ---------- F组：自动收取（F-1）/ 交换联系方式（F-2）/ 打招呼批次（F-3）/ 提醒+复盘（F-4） ---------- */
+/* ---------- 简历收取 / 联系方式交换 / 打招呼批次 / 提醒与复盘 ---------- */
+/* 触达沟通 · 子页签切换 */
+document.querySelectorAll('#v-engage .subtab').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.sub;
+  document.querySelectorAll('#v-engage .subtab').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('#v-engage .subpanel').forEach(p=>p.classList.toggle('on',p.dataset.sub===k));
+}));
+/* —— 简历收取登记（Moka 流）：列出已打招呼未登记的候选人，一键登记 —— */
+function jobTitleOf(id){ return state.jobs.find(j=>j.jobId===id)?.jobTitle||id||'—'; }
+function lastTouchAt(c){ return c.greetedAt||c.meta?.updatedAt||c.meta?.createdAt||c.createdAt||''; }
+async function registerResume(cid, btn){
+  const old=btn?.textContent; if(btn){ btn.disabled=true; btn.textContent='登记中…'; }
+  const r=await api.post(`/api/candidates/${encodeURIComponent(cid)}/resume-received`,{});
+  if(r.ok){
+    toast(r.already?'该候选人此前已登记':'✓ 已登记简历已收到，候选人进入候选人库与人才库');
+    await loadCandidates(); renderEngage(); renderSeg(); fillJobFilter(); fillSourceFilter(); renderCandidates(); renderTalentSeg(); fillTalentSource(); renderTalent();
+  } else {
+    if(btn){ btn.disabled=false; btn.textContent=old; }
+    toast('✗ '+(r.error||'登记失败'));
+  }
+}
 function renderPending(){
-  const list=state.pending||[];
-  $('#pendingTbody').innerHTML=list.length?list.map(c=>`<tr>
-    <td class="cell-name">${esc(c.name)}<small>${esc(c.candidateId)}</small></td>
-    <td>${esc(c.jobId||'—')}</td>
-    <td><span class="badge b-err">${esc(c.manualReason||'收取异常')}</span></td>
-    <td><button class="btn sm" data-retry="${esc(c.candidateId)}">重试自动收取</button></td>
-  </tr>`).join(''):'<tr><td colspan="4" class="empty">暂无人工待处理（自动收取异常时在此显示）</td></tr>';
+  const list=state.candidates.filter(c=>c.status==='sourced');
+  $('#pendingTbody').innerHTML=list.length?list.map(c=>`<tr data-c="${esc(c.candidateId)}" style="cursor:pointer">
+    <td class="cell-name">${esc(c.name||'—')}<small>${esc(c.candidateId)}</small></td>
+    <td>${esc(jobTitleOf(c.jobId))}</td>
+    <td>${touchBadge(c.touchStatus)}</td>
+    <td>${resumeBadge(c)}</td>
+    <td>${lastTouchAt(c)?at(lastTouchAt(c)):'—'}</td>
+    <td>${c.resumeAgreedAt?'':`<button class="btn sm" data-recv="${esc(c.candidateId)}">登记简历已收到</button>`}</td>
+  </tr>`).join(''):'<tr><td colspan="6" class="empty">暂无待登记候选人：已打招呼且尚未收简历的候选人将在此显示（聊天扫描识别到简历/同意发简历会自动更新状态）</td></tr>';
 }
 $('#pendingTbody').addEventListener('click',async(e)=>{
-  const b=e.target.closest('[data-retry]'); if(!b) return;
-  const cid=b.dataset.retry; b.disabled=true; b.textContent='收取中…';
-  const r=await api.post(`/api/engage/manual-pending/${encodeURIComponent(cid)}/retry`,{recruiterId:state.recruiter});
-  if(r.ok&&r.resumeReceived){ toast('✓ 已自动收取并触发解析'); await loadAll(); renderEngage(); }
-  else{ b.disabled=false; b.textContent='重试自动收取'; toast('✗ '+(r.error||r.reason||'收取失败')); }
+  const b=e.target.closest('[data-recv]'); if(b){ await registerResume(b.dataset.recv,b); return; }
+  const tr=e.target.closest('tr[data-c]'); if(tr) openDrawer(tr.dataset.c);
 });
-$('#btnPendingRefresh').addEventListener('click',async()=>{ await loadPending(); renderPending(); toast('✓ 已刷新人工待处理清单'); });
+$('#btnPendingRefresh').addEventListener('click',async()=>{ await loadCandidates(); renderEngage(); renderCandidates(); toast('✓ 已刷新登记清单'); });
+/* 同步 BOSS 沟通状态：扫描聊天会话，自动识别「已发简历 / 已同意发简历」并更新候选人状态 */
+$('#btnChatScan').addEventListener('click',async()=>{
+  const btn=$('#btnChatScan'); btn.disabled=true; const old=btn.textContent; btn.textContent='扫描中…（打开 BOSS 聊天页识别简历事件）';
+  const r=await api.post('/api/sourcing/chat-scan',{});
+  btn.disabled=false; btn.textContent=old;
+  if(!r.ok){ toast('✗ '+(r.error||'扫描失败')); return; }
+  toast(`✓ 扫描 ${r.scanned} 个会话：自动收简历 ${r.received} 人 · 标记同意发简历 ${r.agreed} 人`+(r.unmatched?` · ${r.unmatched} 个会话未匹配到候选人`:''));
+  await loadCandidates(); renderEngage(); renderCandidates(); renderSeg(); renderTalentSeg(); renderTalent();
+});
 
 function renderHrContact(){
   $('#hrContactInput').value=state.hrContact||'';
@@ -1949,13 +2335,15 @@ function renderMetrics(){
 
 /* ---------- nav ---------- */
 function navTo(v){
-  document.body.classList.toggle('jobs-view',v==='jobs');
   document.querySelectorAll('.navitem').forEach(x=>x.classList.toggle('active',x.dataset.view===v));
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));
   const t=TITLES[v]; if(t){ $('#pageTitle').textContent=t[0]; $('#pageSub').textContent=t[1]; }
   if(v==='audit'){ loadAudit().then(renderAudit); }
   if(v==='logs'){ loadLogs().then(renderLogs); }
-  if(v==='engage'){ Promise.all([loadMessagelib(),loadFollowup(),loadAudit(),loadPending(),loadHrContact(),loadCampaigns(),loadNotifications(),loadMetrics()]).then(renderEngage); }
+  if(v==='schedule'){ // 切到采集调度页时实时刷新 BOSS 绑定态（扫码/解绑后立即反映）
+    api.get('/api/auth/me').then(r=>{ if(r.ok&&r.user){ state.user=r.user; updateBossBar(); } });
+  }
+  if(v==='engage'){ Promise.all([loadMessagelib(),loadFollowup(),loadAudit(),loadCandidates(),loadHrContact(),loadCampaigns(),loadNotifications(),loadMetrics()]).then(renderEngage); }
   if(v==='settings'&&state.user){ renderSettings(); }
 }
 document.querySelectorAll('.navitem').forEach(b=>b.addEventListener('click',()=>navTo(b.dataset.view)));

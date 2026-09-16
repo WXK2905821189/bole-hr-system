@@ -1,101 +1,153 @@
-# HR 自研系统 · 框架骨架（v0.1）
+# 伯乐招聘系统 · 内网部署与使用说明
 
-> 面向未来 AI HR 系统的**可插拔模块化框架**。招聘提效是第一个业务模块。
-> 本骨架目标是验证「可读、可插拔、数据统一流转」，含**框架内核 + 统一数据契约 + 一位模块 + 演示脚本**，可在 Node 环境直接运行（无构建、原生 ESM）。
+> 招聘提效一体化系统：岗位管理 → BOSS 候选人采集 → 自动打招呼 → 岗位跟进 → 简历登记（对接 Moka）。
+> 无需数据库，数据以文件形式落盘，部署简单，适合公司内网直接使用。
 
-## 一、目录规范（可读性）
+---
+
+## 一、内网部署（管理员操作，仅需一次）
+
+### 1. 启动服务
+
+双击 `start.bat`，脚本会自动完成：
+
+| 步骤 | 说明 |
+| --- | --- |
+| ① 检查 Node.js | 需 18 及以上版本 |
+| ② 加载 AI 直连配置 | 读取 `llm.env`（直连 DeepSeek 官方 API，无需本地网关） |
+| ③ 启动后端服务 | 「伯乐招聘系统 - 后端服务」窗口（端口 4700） |
+| ④ 打开浏览器 | 自动进入系统登录页 |
+
+> 关闭一键启动窗口不影响服务运行。停止服务请关闭「伯乐招聘系统 - 后端服务」窗口。
+>
+> **运行与停止行为**：系统仅在存在已登录会话时执行后台自动任务（如 BOSS 沟通状态扫描、智能跟进扫描）；登录用户在系统内点击「退出登录」后，若已无其他在线用户，后端服务会自动停止并退出进程。如需彻底停止服务，也可直接关闭「伯乐招聘系统 - 后端服务」窗口。
+
+### 2. 防火墙放行（让同事电脑可以访问）
+
+以**管理员身份**打开 PowerShell，执行一次即可：
+
+```powershell
+New-NetFirewallRule -DisplayName "伯乐招聘系统 4700" -Direction Inbound -Protocol TCP -LocalPort 4700 -Action Allow -Profile Private
+```
+
+### 3. 访问方式
+
+| 项目 | 内容 |
+| --- | --- |
+| 本机访问 | http://127.0.0.1:4700 |
+| **内网访问（招聘同学使用）** | **http://192.168.3.171:4700** |
+| 管理员账号 | 用户名 `wang` · 密码 `boss123` |
+| 普通账号 | 登录页可切换到「注册」自助创建 |
+
+> 服务默认监听全部网卡，无需额外配置。若办公电脑 IP 变化（无线网络重连等），内网地址随之变化，可在命令行执行 `ipconfig` 查询本机 IPv4 地址后告知同事。
+
+---
+
+## 二、招聘同学使用指引
+
+### 1. 简历流转方式（本系统与 Moka 的分工）
+
+```
+BOSS 直聘打招呼 → 候选人回复并同意发简历
+        │
+        ▼
+简历自动发送至企业邮箱 → 进入 Moka 系统归档（简历正文在 Moka 查看）
+        │
+        ▼
+回到本系统「岗位跟进」页 → 点击【登记简历已收到】
+        │
+        ▼
+候选人进入候选人库 / 人才库，可继续跟进与复盘
+```
+
+> 本系统**不存储简历文件**，仅登记状态与跟进记录，与 Moka 互不冲突。
+
+### 2. 岗位跟进（触达沟通 → 岗位跟进）
+
+按岗位分别跟进候选人的主工作台，进入「触达沟通」模块即为默认首屏：
+
+| 区域 | 功能 |
+| --- | --- |
+| 岗位筛选 | 下拉选择某个岗位，仅显示该岗位的候选人 |
+| 汇总指标 | 共触达 / 沟通中 / 已回复 / 已收简历（Moka）/ 已沉睡 |
+| 候选人列表 | 姓名、岗位、触达状态、触达轮次、最近触达时间、简历状态 |
+| 【跟进】 | 一键发送「智能跟进」话术，触达轮次自动累加 |
+| 【登记简历已收到】 | 候选人已在 Moka 发来简历后点击，状态即变更为「已收简历」 |
+
+### 3. 简历收取登记（触达沟通 → 简历收取）
+
+集中显示**已打招呼但尚未登记简历**的候选人，作为每日待办清单：在 Moka / 企业邮箱确认收到简历后，逐条点击【登记简历已收到】即可，避免遗漏。
+
+### 4. 日常工作路径建议
+
+1. 早上打开系统 → 「岗位跟进」查看各岗位触达进度；
+2. 对「已回复」候选人点击【跟进】推动发简历；
+3. 简历到了 Moka 后，在「简历收取」页登记；
+4. 需要回看简历内容时，前往 Moka 系统。
+
+---
+
+## 三、数据说明
+
+| 问题 | 说明 |
+| --- | --- |
+| 数据存在哪里 | `infra/store/` 目录下的数据文件，无需安装数据库 |
+| 数据量 | 当前量级小，文件存储完全满足；如后续彻底替代 Moka，可平滑升级数据库 |
+| 简历文件 | 不落盘本系统，经企业邮箱进入 Moka |
+| 候选人入库条件 | 仅已收到简历的候选人进入候选人库与人才库 |
+| 备份方式 | 直接复制 `infra/store/` 目录即可完成全量备份 |
+
+---
+
+## 四、目录规范（技术说明）
 
 ```
 hr-system/
 ├── framework/              # 框架内核（不绑定业务）
-│   ├── core/               #   内核引擎
-│   │   ├── registry.js     #     模块注册表
-│   │   ├── lifecycle.js    #     模块生命周期（start/stop）
-│   │   ├── bus.js          #     事件/消息总线
-│   │   ├── gateway.js      #     统一网关（HTTP 路由 + 审计）
-│   │   └── config.js       #     配置读取
-│   ├── schema/             #   统一数据契约（JSON Schema）
-│   │   ├── candidate.schema.json
-│   │   ├── job.schema.json
-│   │   ├── resume.schema.json
-│   │   ├── match.schema.json
-│   │   └── validate.js     #     契约校验器
+│   ├── core/               #   内核引擎（registry/lifecycle/bus/gateway/config/bossScan）
+│   ├── schema/             #   统一数据契约（JSON Schema）+ 契约校验器
 │   ├── audit/              #   操作审计
-│   ├── demo.js             #   演示：注册→事件→校验→审计（离线冒烟）
-│   └── server.js           #   应用入口：统一网关 + 静态前端 + 采集注入 + CSV 导出
+│   └── server.js           #   应用入口：统一网关 + 静态前端 + 采集注入 + 导出
 ├── modules/                # 业务模块（可插拔，互不直接调用）
-│   └── recruitment-sourcing/   # 模块1：招聘提效 ◆本期◆
-│       ├── manifest.json       #   模块声明
-│       ├── domain/             #   模块领域逻辑
-│       ├── services/           #   解析/匹配服务（Node，复用 InterviewPrep）
-│       ├── adapters/           #   采集适配器（Python）
-│       │   └── sourcing-py/
-│       │       ├── run.py          #   调度 CLI（simulator/boss）
-│       │       ├── adapter.py      #   SourcingAdapter 门面
-│       │       ├── safety.py       #   账号风控护栏（频率/上限/冷却/熔断）
-│       │       ├── simulator.py    #   离线脱敏模拟器
-│       │       ├── boss_driver.py  #   真实 BOSS 驱动（强门控，需 T1 校准）
-│       │       └── config.example.json
+│   └── recruitment-sourcing/   # 模块：招聘提效
+│       ├── domain/             #   领域逻辑（打招呼/跟进/护栏）
+│       ├── services/           #   解析/匹配服务
+│       ├── adapters/sourcing-py/  # 采集适配器（Python，BOSS 真实驱动）
 │       ├── listeners/          #   事件订阅
-│       └── public/             #   模块业务控制台前端（index.html，自包含）
-└── infra/
-    ├── store/              # 领域数据存储（jsonl；含 audit/ 操作审计，单文件沉淀）
-    └── files/              # 简历原文（AES-256-GCM 加密；vault.key 不入库）
+│       └── public/             #   业务控制台前端（index.html，自包含）
+├── infra/
+│   ├── store/              # 领域数据存储（数据文件 + audit/ 操作审计）
+│   └── files/              # 简历原文（加密；vault.key 不入库）
+├── start.bat               # 一键启动（加载 AI 直连配置 + 后端服务 + 浏览器）
+└── llm.env                 # AI 模型配置（密钥不入库）
 ```
 
-## 二、模块接入范式（可插拔）
+## 五、模块接入范式（技术说明）
 
 1. 新模块在 `modules/<name>/manifest.json` 声明 `id / version / requires / services / listens / provides`。
 2. 模块**只依赖**框架内核接口（`registry/bus/schema/audit`），**不直接 import 其他模块内部**。
-3. 模块产出数据必须通过 `framework/schema` 校验后写入领域库 —— 这就是「数据统一流转」的保障。
+3. 模块产出数据必须通过 `framework/schema` 校验后写入领域库，保障「数据统一流转」。
 
-## 三、运行演示
+## 六、运行与技术验证（技术说明）
 
 ```bash
-# 前置：Node ≥ 18
-# 离线模式（未配置 LLM 时，用启发式解析/匹配，全链路仍可跑通）：
+# 离线冒烟（无需 LLM，全链路可跑通）
 node framework/demo.js
 
-# 接入本地 LLM（OpenAI 兼容协议，如 Ollama/Qwen/DeepSeek）：
-$env:HR_LLM_BASE="http://127.0.0.1:11434/v1"; $env:HR_LLM_MODEL="qwen2.5"; node framework/demo.js
-```
+# 启动服务端（默认端口 4700；改端口：$env:HR_PORT="4730"）
+node framework/server.js
 
-演示将：注册招聘提效模块 → 解析 JD（复用 JD_PARSE_SYSTEM）→ 模拟「要简历 → 简历解析（RESUME_PARSE_SYSTEM）→ JD 匹配打分（GAP_ANALYSIS_SYSTEM）」事件流转 → 每条数据过统一 Schema 校验 → 写审计留痕 → 经统一网关（`/modules` `/jobs` `/matches` `/audit`）访问。
-
-## 四、运行真实业务（Web 控制台 + Python 采集）
-
-**1) 启动服务端（网关 + 业务控制台）**
-
-```bash
-node framework/server.js          # 默认端口 4700；改端口：$env:HR_PORT="4730"
-# 敏感接口鉴权（可选但建议）：设置共享令牌后，数据/导出接口需带 Authorization: Bearer <token> 访问
-$env:HR_AUTH_TOKEN="你的令牌"       # 未设置则数据接口保持开放并启动时给出告警；认证身份可用 $env:HR_AUTH_ACTOR 指定
-```
-
-打开 `http://127.0.0.1:4700` 进入招聘提效业务控制台，可：
-- 新建岗位（粘贴 JD 自动解析关键词）；
-- 触发 **Python 采集**（优先 `simulator` 离线脱敏 / 可切 `boss` 真实账号）或 **离线冒烟**；
-- 查看候选人 & 匹配分（按分排序）、点行看简历解析详情；
-- 导出 `candidates.csv`（含匹配分，批量导出走审批留痕）；
-- 查看审计留痕与最近调度周期。
-
-**2) Python 采集调度器（可选，更接近生产）**
-
-```bash
+# Python 采集调度器
 cd modules/recruitment-sourcing/adapters/sourcing-py
-python run.py                        # 按 config.example.json 任务清单调度
-python run.py --job job_01 --once -v # 仅跑一个岗位一轮，投递到网关
+python run.py                        # 按 config 任务清单调度
+python run.py --job job_01 --once -v # 仅跑一个岗位一轮
 ```
 
-- 默认 `simulator`（仅标准库，无需依赖即可全链路联调）；所有采集动作受 `safety.py` 护栏：随机间隔 3~8s、每账号日上限 200、会话上限 80、冷却 30min、连续失败熔断 3 次。
-- `boss` 真实模式需公司自有账号持久会话（`account.profile_dir`）并先做 **T1(POC)** 用真实 DOM 校准 `boss_driver.py` 选择器；不轮换代理、不做 WebDriver 规避。
+- 敏感接口可设置共享令牌：`$env:HR_AUTH_TOKEN="你的令牌"`（未设置则数据接口开放并启动告警）。
+- 采集动作受护栏约束：随机间隔 3~8s、每账号日上限 200、会话上限 80、冷却 30min、连续失败熔断。
+- 采集链路数据流：`Python 采集 → POST /api/sourcing/candidates → candidate.sourced → 简历解析 → JD 匹配打分 → 领域库 → 前端展示/导出`。
 
-**3) 采集链路数据流**
+## 七、相关文档
 
-`Python 采集候选 → POST /api/sourcing/candidates → 事件总线 candidate.sourced → 简历解析 → resume.parsed → JD 匹配打分 → 领域库 → 前端展示/导出`。
-
-## 五、与方案文档关系
-
-- 架构细节见《AI HR 系统·整体框架方案》
-- 首位模块见《招聘提效模块 MVP 方案》
-- 本骨架为上述两份方案的**可运行落地基**。
+- 《AI HR 系统·整体框架方案》—— 架构设计
+- 《伯乐AI-Bole-招聘提效系统-方案与PRD》—— 业务方案与需求

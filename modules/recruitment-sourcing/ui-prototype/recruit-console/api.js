@@ -114,6 +114,8 @@ export async function fetchEngage() {
     egAuto: e.egAuto,
     followups: e.fups,
     pendingRes: e.pendingRes,
+    autoAccept: e.autoAccept,
+    campaignModes: e.campaignModes,
     hrContact: e.hrContact,
     campaigns: e.campaigns,
     notify: e.notify,
@@ -172,6 +174,25 @@ export async function runCollect(jobId) {
   return { ok: true, lines };
 }
 
+/* GET /api/schedule/health → BOSS 一句话体检（四前置 + 两路寻访配额 + 风控护栏明细）
+   TODO: replace with fetch('/api/schedule/health') */
+export async function fetchScheduleHealth() {
+  await delay(260);
+  return { health: DB.scheduleHealth, sourceQuota: DB.sourceQuota, guards: DB.guards };
+}
+
+/* POST /api/engage/resume/retry → 人工重试处理待收简历 */
+export async function retryResume(id) {
+  await delay(520);
+  return { ok: true, note: "已重新解析该简历 · 失败项自动隔离转交人工核对" };
+}
+
+/* POST /api/engage/campaign/:id/control → 批次运行控制（start/stop） */
+export async function controlCampaign(id, act) {
+  await delay(420);
+  return { ok: true, id, act, note: act === "start" ? "批次已恢复运行 · 后续按职位顺序继续发送" : "批次已暂停 · 已耗额度保留" };
+}
+
 /* POST /api/export/candidates → 导出（走审批留痕）
    TODO: replace with fetch('/api/export/candidates', {method:'POST'}) */
 export async function exportCandidates() {
@@ -195,6 +216,43 @@ export async function saveSettings() {
 export async function decryptField() {
   await delay(400);
   return { ok: true, phone: "138****7210 → 138-0107-7210" };
+}
+
+/* GET /api/talent → 人才库（共享 · 账号无关 · 无岗位维度；bluescale=伯乐指数）
+   TODO: replace with fetch('/api/talent') */
+export async function fetchTalent({ q = "", page = 1, pageSize = 8 } = {}) {
+  await delay(260);
+  let list = DB.talent;
+  if (q) { const s = q.toLowerCase(); list = list.filter((c) => c.name.toLowerCase().includes(s) || c.skills.some((k) => k.toLowerCase().includes(s))); }
+  const total = list.length;
+  return { list: list.slice((page - 1) * pageSize, page * pageSize), total };
+}
+
+/* GET /api/logs?level= → 系统运行日志（按级别筛选） */
+export async function fetchLogs(level = "all") {
+  await delay(240);
+  const items = level === "all" ? DB.logs : DB.logs.filter((l) => l.level === level);
+  return { items, total: items.length };
+}
+
+/* POST /api/logs/clear → 清空运行日志（运维保留审计旁路） */
+export async function clearLogs() {
+  await delay(380);
+  DB.logs.length = 0;
+  DB.logs.unshift({ ts: nowFull(), level: "info", tag: "配置", msg: "运行日志已清空（审计留痕独立保留）" });
+  return { ok: true, note: "运行日志已清空 · 审计留痕不受影响" };
+}
+function nowFull() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+/* POST /api/overview → 运行采集（顶部快捷按钮）
+   TODO: replace with fetch('/api/overview/run', {method:'POST'}) */
+export async function runNow() {
+  await delay(700);
+  return { ok: true, note: "采集任务已入列 · 今日索取 46/200" };
 }
 
 function now() {

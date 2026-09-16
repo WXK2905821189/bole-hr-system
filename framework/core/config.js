@@ -4,7 +4,11 @@ export function cfg(overrides = {}) {
     filesDir: overrides.filesDir ?? 'infra/files',
     ports: { gateway: overrides.gatewayPort ?? 0 },
     llm: overrides.llm ?? {},
-    auth: overrides.auth ?? {},
+    auth: {
+      // M5 · 会话超时（轻量安全）：登录/注册会话默认 12 小时失效；可经 HR_SESSION_TTL_MS 覆盖
+      sessionTtlMs: overrides.auth?.sessionTtlMs ?? Number(process.env.HR_SESSION_TTL_MS || 12 * 60 * 60 * 1000),
+      token: overrides.auth?.token, actor: overrides.auth?.actor,
+    },
     safety: overrides.safety ?? {},
     engage: {
       autoGreetThreshold: overrides.engage?.autoGreetThreshold ?? 60, // 匹配分达标即自动打招呼

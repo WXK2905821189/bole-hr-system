@@ -1,6 +1,7 @@
 # simulator 模式（默认）仅用 Python 标准库(urllib/json)，无需第三方依赖。
-# 仅当启用 boss 真实采集模式时，安装浏览器自动化：
+# 仅当启用 boss 真实采集模式时，安装浏览器自动化与 HTTP 客户端：
 #   pip install -r requirements.txt
 #   playwright install chromium
 # （boss 模式依赖公司自有账号持久会话，不引入任何代理/隐形规避依赖）
 playwright>=1.40
+httpx>=0.24

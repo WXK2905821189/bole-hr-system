@@ -10,8 +10,27 @@
     "circuit_breaker": 3
   },
   "per_job_target": 3,
+  "keep_browser_open": true,
+  "pre_match": {
+    "enabled": true,
+    "threshold": 60,
+    "resume_url": "",
+    "resume_selector": ""
+  },
   "jobs": [
     { "job_id": "job_01", "keyword": "前端工程师" },
     { "job_id": "job_02", "keyword": "后端工程师" }
-  ]
+  ],
+  "_说明": {
+    "mode": "simulator=离线模拟；boss=真实账号采集（推荐由系统界面操作，网关自动注入扫码会话与话术，无需手改本文件）",
+    "boss 会话": "优先级：CDP 附着（扫码窗口保持开启，HR_BOSS_CDP）> 扫码 cookie（HR_BOSS_COOKIES）> account.profile_dir 持久会话目录",
+    "headless": "boss 模式是否无头运行；校准期建议 false（可见窗口便于观察）",
+    "boss_job_id": "BOSS 端职位 ID（encryptJobId）覆盖：按职位推荐候选 + 打招呼接口必填；系统会自动注入已同步岗位的 ID，手工建岗时 Python 侧按岗位标题自动匹配",
+    "pages": "招聘端页面地址覆盖（新版前端已迁至 /web/chat/），如 {\"recommend\": \"https://www.zhipin.com/web/chat/recommend\", \"manage_job\": \"https://www.zhipin.com/web/chat/job/list\"}",
+    "selectors": "页面选择器覆盖（candidate_cards/greet_button/search_input 等），首次真实运行报「未命中」时按提示校准；采集调度按岗位推荐新增：recommend_job_btn(右上角岗位选择器触发元素)/recommend_job_option(岗位下拉项，按职位名文本匹配)/recommend_cards(推荐页牛人卡片容器)/candidate_link(卡片内可点开在线简历的链接)/resume_panel(打开在线简历后的文本容器)/shot_dir(在线简历截图目录，默认 resume_shots)；无命中时自动导出 recommend_raw_sample.json（页面正文+候选 class 清单）供校准",
+    "api": "内部接口与 httpx 通道覆盖（对齐 GitHub 社区项目 boss-zhipin-mcp / Auto-Recruiting 的端点共识，均可逐项覆盖）：{\"search\": \"搜索流 geeks.json\", \"searchZpjob\": \"按职位推荐 rec/geek/list（GET，jobId 必带；有 BOSS 职位 ID 时首选）\", \"recommend\": \"推荐流 recommendgeek.json\", \"addRelation\": \"打招呼 addRelation.json\", \"greet\": \"新版 zpjob 打招呼 chat/start（expectId/jid/securityId 必填）\", \"jobList\": \"在招职位 zpjob/job/data/list\", \"friendList\": \"沟通会话列表（旧 zpchat getFriendList 已 404；配置此项后启用 API 直调通道）\", \"chatList\": \"单会话消息历史（API 直调通道用）\", \"addRelationMethod\": \"POST|GET\", \"proxy\": \"\"}；数据获取主通道为 httpx 直调（从活会话导出 cookie+UA），失败自动回退页面 fetch 与 iframe DOM；搜索三通道各自收集再汇总去重（expectId 主键），DOM 失败不再熔断，仅当三通道全空才触发冷却；岗位同步 API 优先、职位管理页 DOM 兜底；沟通扫描（--chat-scan）被动捕获优先（监听聊天页自身 /wapi/ 请求，零主动试探、自带合法风控凭证）→ 聊天页 DOM 兜底（仅识别最新一条消息），首次运行落 chat_raw_sample.json（端点清单+会话条目+DOM 探针）供字段校准",
+    "keep_browser_open": "M6 采集后是否保持 BOSS 扫码窗口在线（默认 true）：CDP 附着时采集结束不关闭浏览器窗口，可多次复用登录态；可用环境变量 HR_KEEP_BROWSER_OPEN（1/0）覆盖",
+    "pre_match": "M6 前置匹配门禁：enabled(默认 true)/threshold(匹配分门槛，默认 60，达到才打招呼；可随时调整 0-100)/resume_url(在线简历 URL 模板，可含 {lid} {expect})/resume_selector(在线简历文本容器)；可用 HR_PRE_MATCH、HR_PRE_MATCH_THRESHOLD、HR_PRE_RESUME_URL 覆盖；工作流=解析JD→推荐牛人页右上角选岗位→从上到下逐个打开在线简历(抽取文本+截图存 resume_shots)→差距分析打分→匹配分≥threshold 才打招呼",
+"匹配分计算规则(上限100分)": "五个维度加权，满分100：①硬技能匹配30×覆盖率(JD硬技能中候选人覆盖比例) ②软素质匹配20×覆盖率 ③核心职责匹配20×覆盖率 ④行业经验15(完全一致15/相近8/不相关0) ⑤学历背景15(完全满足15/基本满足8/不满足0)；match_score=五维得分之和(0-100)。匹配档位：90-100高度匹配、70-89良好匹配、50-69部分匹配、<50差距较大。打分实现：优先调用 LLM(GAP_ANALYSIS_SYSTEM，见 services/prompts.js)；网关不可用时回退离线启发式(见 services/matcher.js heuristic，五维权重与上一致，硬技能维按简历技能对岗位硬技能的覆盖率计分)。threshold 可对每个岗位在「采集调度」里调整"
+  }
 }

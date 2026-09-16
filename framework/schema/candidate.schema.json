@@ -16,6 +16,9 @@
     "touchStatus": { "type": "string", "enum": ["pending", "engaging", "replied", "sleeping"], "description": "候选人触达状态：待触达/跟进中/已回复/沉睡" },
     "manualPending": { "type": "boolean", "default": false, "description": "F-1：自动收取简历失败/异常 → 转人工待处理" },
     "manualReason": { "type": "string", "description": "转人工原因" },
+    "resumeAgreedAt": { "type": "string", "format": "date-time", "description": "对方已同意发简历（BOSS 聊天扫描识别），等待简历送达 Moka" },
+    "resumeReceivedAt": { "type": "string", "format": "date-time", "description": "简历已收到（Moka 到件登记或聊天扫描识别简历卡片）" },
+    "resumeChannel": { "type": "string", "description": "简历登记渠道：moka（邮箱到件）/ boss_chat_scan（聊天扫描识别）" },
     "contactResolved": { "type": "boolean", "default": false, "description": "F-2：交换联系方式成功后候选人联系方式已回写" },
     "education": {
       "type": "object",
