@@ -1,15 +1,73 @@
 {
-  "name": "hr-system-framework",
-  "version": "0.1.0",
+  "name": "bole-hr-system",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "AI HR 自研系统框架骨架（无构建，原生 ESM）",
+  "description": "伯乐招聘系统：招聘提效一体化（岗位管理 → BOSS 采集 → 打招呼 → 跟进 → 简历登记），Electron 单机全内置版",
+  "author": "WXK2905821189",
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/WXK2905821189/bole-hr-system",
+  "repository": "https://github.com/WXK2905821189/bole-hr-system",
   "scripts": {
     "demo": "node framework/demo.js",
-    "start": "node framework/server.js",
     "server": "node framework/server.js",
     "test": "node --test \"tests/*.test.js\"",
-    "collect": "python modules/recruitment-sourcing/adapters/sourcing-py/run.py"
+    "collect": "python modules/recruitment-sourcing/adapters/sourcing-py/run.py",
+    "electron": "electron electron/main.js",
+    "electron:dev": "cross-env ELECTRON_DEV=1 electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "release": "electron-builder --win --publish always"
   },
-  "engines": { "node": ">=18" }
+  "main": "electron/main.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "cross-env": "^7.0.3"
+  },
+  "build": {
+    "appId": "com.bole.hrsystem",
+    "productName": "伯乐招聘系统",
+    "copyright": "Copyright © 2026 WXK2905821189",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "framework/**/*",
+      "modules/**/*",
+      "infra/**/*",
+      "scripts/**/*",
+      "public/**/*",
+      "package.json"
+    ],
+    "asar": false,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "伯乐招聘系统"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "WXK2905821189",
+      "repo": "bole-hr-system",
+      "releaseType": "release"
+    }
+  }
 }

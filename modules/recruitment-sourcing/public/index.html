@@ -421,6 +421,7 @@
         <div class="health"><span class="dot" id="healthDot"></span><span id="healthTxt">网关检测中</span></div>
         <button class="btn ghost sm" id="btnRefresh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-2.6-6.4M21 5v4h-4"/></svg>刷新</button>
         <button class="btn" id="topRun"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 4l14 8-14 8V4z"/></svg>运行采集</button>
+        <button class="btn ghost sm" id="updateBtn" title="检查并升级到最新版本" style="display:none">↻ 检查更新</button>
       </div>
     </header>
 
@@ -2349,6 +2350,51 @@ function navTo(v){
 document.querySelectorAll('.navitem').forEach(b=>b.addEventListener('click',()=>navTo(b.dataset.view)));
 
 boot();
+
+/* ---------- Electron 自动更新（桌面版专用，浏览器模式自动隐藏） ---------- */
+(()=>{
+  const U = window.boleUpdater;
+  if(!U){ return; } // 非 Electron 环境：不显示更新按钮
+  const btn = $('#updateBtn');
+  btn.style.display = ''; // 显示「检查更新」按钮
+  const label = (t)=>{ btn.innerHTML = t; };
+  const busy = (on)=>{ btn.disabled = on; };
+  let statusCache = null;
+
+  U.onEvent((ev)=>{
+    statusCache = ev;
+    switch(ev.status){
+      case 'checking': label('↻ 检查中…'); busy(true); break;
+      case 'available':
+        label('↓ 发现 v'+ev.version+'，点击下载更新');
+        busy(false);
+        toast?.('发现新版本 v'+ev.version+'，点击「检查更新」即可升级');
+        break;
+      case 'not-available': label('↻ 检查更新'); busy(false); toast?.('已是最新版本'); break;
+      case 'download-progress': label('↓ 下载中 '+ev.progress+'% ('+ev.transferred+'/'+ev.total+'MB)'); busy(true); break;
+      case 'downloaded':
+        label('⇪ 已就绪，点击安装并重启');
+        busy(false);
+        setBtnModeInstall();
+        break;
+      case 'error':
+        label('↻ 检查更新'); busy(false);
+        console.warn('[updater]', ev.message);
+        if(statusReadyForToast(ev)) toast?.(ev.message==='已经是最新版本' ? '已是最新版本' : '更新出错：'+(ev.message||'未知'));
+        break;
+    }
+  });
+
+  function setBtnModeInstall(){ btn.dataset.mode = 'install'; }
+  btn.addEventListener('click', ()=>{
+    if(btn.dataset.mode === 'install'){ U.install(); return; }
+    if(statusCache?.status === 'available'){ U.download(); label('↓ 下载中…'); busy(true); return; }
+    U.check();
+  });
+  // 仅在 Electron 且已就绪状态下展示下载出错提示，避免误报离线
+  function statusReadyForToast(ev){ return !!ev && statusCache && statusCache.status !== 'error'; }
+  U.check(); // 进入即检查一次
+})();
 </script>
 </body>
 </html>
