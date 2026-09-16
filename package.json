@@ -54,9 +54,11 @@
           "target": "nsis",
           "arch": ["x64"]
         }
-      ]
+      ],
+      "signAndEditExecutable": false
     },
     "nsis": {
+      "artifactName": "${name}-setup-${version}.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
