@@ -11,6 +11,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApplication } from '../framework/server.js';
+import { loginAdmin } from './_helpers.js';
 
 // ---------- mock OpenAI 兼容服务器（模拟公司 AI Coding 中转平台） ----------
 const MODEL_LIST = ['m4-jd-parser', 'm4-resume-parser', 'm4-深匹配'];
@@ -87,7 +88,7 @@ test('M4 门禁：未登录 401，非管理员无法配置 AI 基座', async () 
   assert.equal((await fetch(base + '/api/llm/status')).status, 401, '未登录查询 AI 状态应 401');
 
   // 管理员登录
-  const admin = await login('wang', 'boss123');
+  const admin = await loginAdmin(base);
   assert.equal(admin.ok, true, '默认管理员登录成功');
 
   // 注册一名普通 HR（普通用户）
@@ -108,7 +109,7 @@ test('M4 门禁：未登录 401，非管理员无法配置 AI 基座', async () 
 });
 
 test('M4 配置：管理员配置 → 探活自动列模型 → 持久化 + 密钥掩码 + 即时生效', async () => {
-  const admin = await login('wang', 'boss123');
+  const admin = await loginAdmin(base);
 
   // 配置前：未配置 → ready false / source none
   const before_ = await get('/api/llm/status', admin.token);
@@ -132,7 +133,7 @@ test('M4 配置：管理员配置 → 探活自动列模型 → 持久化 + 密�
 });
 
 test('M4 三大 AI 功能经新基座跑通：JD 抽词 → 简历抽取 → 深度匹配', { timeout: 60000 }, async () => {
-  const admin = await login('wang', 'boss123');
+  const admin = await loginAdmin(base);
   const token = admin.token;
 
   // ① JD 抽词：解析结果与 mock 返回一致（证明走新基座而非离线启发式）
@@ -170,7 +171,7 @@ test('M4 三大 AI 功能经新基座跑通：JD 抽词 → 简历抽取 → 深
 });
 
 test('M4 审计：配置变更写审计，actor 为管理员', async () => {
-  const admin = await login('wang', 'boss123');
+  const admin = await loginAdmin(base);
   const audit = (await get('/api/audit?n=500', admin.token)).audit;
   const entry = audit.filter((a) => a.action === 'ai.base.configure').at(-1);
   assert.ok(entry, '存在 AI 基座配置审计');

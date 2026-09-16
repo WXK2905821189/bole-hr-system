@@ -1,6 +1,6 @@
 {
   "name": "bole-hr-system",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "description": "伯乐招聘系统：招聘提效一体化（岗位管理 → BOSS 采集 → 打招呼 → 跟进 → 简历登记），Electron 单机全内置版",

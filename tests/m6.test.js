@@ -6,6 +6,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApplication } from '../framework/server.js';
+import { loginAdmin } from './_helpers.js';
 
 let app, base, dir;
 
@@ -46,7 +47,7 @@ test('M6 前置匹配：未登录返回 401', async () => {
 });
 
 test('M6 前置匹配：登录后调用返回门禁所需分数结构', async () => {
-  const { token } = await login('wang', 'boss123');
+  const { token } = await loginAdmin(base);
   assert.ok(token, 'admin 可登录');
 
   const r = await postPreMatch(token, JOB_ID, '张三，3年前端开发经验，精通 JavaScript、TypeScript、React，熟悉 Vue 与工程化，做过组件库建设，本科。');
@@ -61,7 +62,7 @@ test('M6 前置匹配：登录后调用返回门禁所需分数结构', async ()
 });
 
 test('M6 前置匹配：匹配分对技术栈不同有明显区分', async () => {
-  const { token } = await login('wang', 'boss123');
+  const { token } = await loginAdmin(base);
   // 技术栈完全不符的简历 → 主分维度应明显低于强匹配简历
   const low = await (await postPreMatch(token, JOB_ID, '王五，10年会计经验，精通Excel、财务报表与税务申报，有CPA证书。')).json();
   const high = await (await postPreMatch(token, JOB_ID, '李四，4年前端，精通JavaScript、TypeScript、React、Vue，负责核心业务前端，本科。')).json();
@@ -71,7 +72,7 @@ test('M6 前置匹配：匹配分对技术栈不同有明显区分', async () =>
 });
 
 test('M6 前置匹配：必填字段校验', async () => {
-  const { token } = await login('wang', 'boss123');
+  const { token } = await loginAdmin(base);
   assert.equal((await postPreMatch(token, '', '')).status, 400, '双空返回 400');
   assert.equal((await postPreMatch(token, JOB_ID, '')).status, 400, '缺简历返回 400');
   assert.equal((await postPreMatch(token, 'no_such', '张三')).status, 404, '不存在岗位返回 404');

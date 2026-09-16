@@ -15,6 +15,7 @@ import { GreetCampaignService } from './services/greetcampaign.js';
 import { NotificationService } from './services/notify.js';
 import { AiBaseService } from './services/aiBase.js';
 import { MatchingRulesService } from './services/rules.js';
+import { OverallAbilityService } from './services/overall.js';
 import { FileVault } from '../../infra/files/vault.js';
 import { OriginalStore } from '../../infra/files/originals.js';
 import { SourcingListeners } from './listeners/sourcingListeners.js';
@@ -38,6 +39,7 @@ export async function loadModule(deps) {
     jd: new JdService({ llm, validate: deps.validate, store }),
     parser: new ParserService({ llm, validate: deps.validate, store, bus: deps.bus, vault }),
     matcher: new MatcherService({ llm, validate: deps.validate, store, rules }),
+    overall: new OverallAbilityService({ llm, rules }),
     engagement: new EngagementService({ store, validate: deps.validate, audit: deps.audit, config: deps.config }),
     guardrail: new GuardrailService({ store, audit: deps.audit, config: deps.config }),
     messagelib: new MessageLibraryService({ store, validate: deps.validate, audit: deps.audit, config: deps.config }),
@@ -124,6 +126,78 @@ export async function loadModule(deps) {
   }
   function uploadOriginal(candidateId, { filename, data, mime }) {
     return originals.put(candidateId, filename, data, mime);
+  }
+
+  // ---------- C4 · 轨道二总体能力分 + 人工复核池 ----------
+  const REVIEW_FILE = 'review.jsonl';
+  function greetThreshold() {
+    const cfg = rules.get().match?.greetThreshold;
+    const t = cfg ?? Number(process.env.HR_ENGAGE_THRESHOLD ?? 60);
+    return Number.isFinite(Number(t)) ? Number(t) : 60;
+  }
+  async function overallScoreFor(candidateId) {
+    const resume = store.readAll('resumes.jsonl').filter((x) => x.candidateId === candidateId).at(-1) ?? null;
+    if (!resume) return null;
+    const { text } = await getResumeText(candidateId);
+    return await services.overall.score({ resumeParsed: resume.parsed ?? null, resumeText: text ?? '' });
+  }
+  // 复核池：开启复核 && 已收简历 && 匹配分<打招呼阈值 && 总体能力分≥复核阈值 && 尚未处理
+  async function reviewPoolRows() {
+    const o = rules.get().overall ?? {};
+    const th = greetThreshold();
+    if (!o.enabled) return { enabled: false, threshold: o.reviewThreshold, greetThreshold: th, count: 0, rows: [] };
+    const decided = new Map(store.readAll(REVIEW_FILE).map((x) => [x.candidateId, x]));
+    const candidates = store.readAll('candidates.jsonl');
+    const matches = store.readAll('matches.jsonl');
+    const resumes = store.readAll('resumes.jsonl');
+    const rows = [];
+    for (const c of candidates) {
+      if (!c.status || c.status === 'sourced') continue;   // 需「已收简历」
+      if (decided.has(c.candidateId)) continue;             // 已处理
+      const m = matches.filter((x) => x.candidateId === c.candidateId).at(-1) ?? null;
+      const sc = m?.matchScore ?? null;
+      if (sc == null || sc >= th) continue;                 // 未打出匹配分 或 已达自动打招呼门槛
+      const resume = resumes.filter((x) => x.candidateId === c.candidateId).at(-1) ?? null;
+      if (!resume) continue;
+      const ov = await services.overall.score({ resumeParsed: resume.parsed ?? null, resumeText: resume.rawText ?? '' });
+      if (ov.overallScore >= o.reviewThreshold) {
+        rows.push({ candidateId: c.candidateId, jobId: c.jobId, name: c.name ?? '', source: c.source,
+          matchScore: sc, overallScore: ov.overallScore, dimensionScores: ov.dimensionScores, evidence: ov.evidence,
+          touchStatus: c.touchStatus, createdAt: c.meta?.createdAt ?? c.createdAt });
+      }
+    }
+    rows.sort((a, b) => (b.overallScore - a.overallScore) || (b.matchScore - a.matchScore));
+    return { enabled: true, threshold: o.reviewThreshold, greetThreshold: th, count: rows.length, rows };
+  }
+  // 复核动作：打招呼 / 放弃 / 登记期望岗位；打招呼走统一护栏，不经复核放行
+  async function reviewDecide(candidateId, decision, recruiterId) {
+    const allowed = new Set(['greet', 'discard', 'expect']);
+    if (!allowed.has(decision)) return { ok: false, error: `不支持的复核动作: ${decision}` };
+    if (!(rules.get().overall?.enabled)) return { ok: false, error: '人工复核未开启' };
+    const cand = store.readAll('candidates.jsonl').find((c) => c.candidateId === candidateId);
+    if (!cand) return { ok: false, error: '未找到候选人' };
+    const existing = store.readAll(REVIEW_FILE);
+    const prev = existing.find((x) => x.candidateId === candidateId);
+    if (prev && prev.decision) return { ok: true, already: true, decision: prev.decision, candidate: cand };
+
+    let greet = null;
+    if (decision === 'greet') {
+      greet = await domain.greetCandidate(candidateId, recruiterId ?? 'A1');
+      if (greet?.blocked) return { ok: false, blocked: true, reason: greet.reason, candidate: cand }; // 超频拦截：不消耗复核项，可稍后重试
+    }
+    const matched = store.readAll('matches.jsonl').filter((x) => x.candidateId === candidateId).at(-1) ?? null;
+    const ov = await overallScoreFor(candidateId);
+    const rec = {
+      candidateId, jobId: cand.jobId, decision,
+      matchScore: matched?.matchScore ?? null,
+      overallScore: ov?.overallScore ?? null,
+      overallDims: ov?.dimensionScores ?? null,
+      greeted: decision === 'greet',
+      by: recruiterId ?? 'A1', decidedAt: new Date().toISOString(),
+    };
+    store.writeAll(REVIEW_FILE, existing.filter((x) => x.candidateId !== candidateId).concat([rec]));
+    await deps.audit.record({ actor: recruiterId ?? 'A1', action: 'sourcing.review.decide', detail: { candidateId, jobId: cand.jobId, decision, matchScore: rec.matchScore, overallScore: rec.overallScore, blocked: greet?.blocked ?? false } });
+    return { ok: true, already: false, decision, candidate: cand, greet };
   }
 
   const instance = {
@@ -234,6 +308,14 @@ export async function loadModule(deps) {
         get: () => rules.get(),
         status: () => rules.status(),
         save: (over, actorId) => rules.save(over, actorId ?? 'A1'),
+      },
+      // C4 · 轨道二总体能力分 + 人工复核池
+      overall: {
+        score: (candidateId) => overallScoreFor(candidateId),
+      },
+      review: {
+        pool: () => reviewPoolRows(),
+        decide: (candidateId, decision, recruiterId) => reviewDecide(candidateId, decision, recruiterId),
       },
       // M6 · Python 前置 AI 匹配（在线简历→差距分析打分，高分才打招呼）
       preMatch: async (jobId, resumeText) => {

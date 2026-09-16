@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApplication } from '../framework/server.js';
 import { hashPw, verifyPw, pwPolicyError } from '../infra/auth/password.js';
+import { loginAdmin } from './_helpers.js';
 
 const TTL = 900; // 短会话 TTL，用于验证超时失效（角色/停用测试在窗口内即时进行，不依赖计时）
 
@@ -58,7 +59,7 @@ test('M5 密码：复杂度策略拦截弱密码', () => {
 // ---------- 端到端：登录 / 注册 / 散列落盘 / 会话 ----------
 test('M5 登录与注册：默认管理员可登录；弱密码被拒；入库非明文', async () => {
   // 默认管理员（已散列注入）
-  const admin = await login('wang', 'boss123');
+  const admin = await loginAdmin(base);
   assert.equal(admin.ok, true, '默认管理员登录成功');
   assert.equal(admin.user.role, 'admin', '默认账号为管理员');
 
@@ -82,7 +83,7 @@ test('M5 登录与注册：默认管理员可登录；弱密码被拒；入库�
 });
 
 test('M5 会话：超时后自动失效（401）', async () => {
-  const r = await login('wang', 'boss123');
+  const r = await loginAdmin(base);
   assert.equal(r.ok, true, '登录成功获取会话');
   assert.equal((await getMe(r.token)).status, 200, '会话有效期内可访问');
   await sleep(TTL + 400); // 超过 TTL
@@ -90,7 +91,7 @@ test('M5 会话：超时后自动失效（401）', async () => {
 });
 
 test('M5 权限变更联动：角色变更 → 该用户会话立即失效 + 审计留痕', async () => {
-  const admin = await login('wang', 'boss123');
+  const admin = await loginAdmin(base);
   const target = await login('m5rec', 'zhao2026'); // 被变更者的现存会话
   assert.equal(target.ok, true, '普通用户已登录');
 
@@ -113,11 +114,11 @@ test('M5 权限变更联动：角色变更 → 该用户会话立即失效 + 审
 });
 
 test('M5 停用联动：停用账号 → 会话失效 + 非法账号无法登录', async () => {
-  const admin = await login('wang', 'boss123');
+  const admin = await loginAdmin(base);
   // 先为另一普通用户取得会话，再重新以管理员登录（管理员会话在窗口内有效）
   const victim = await register('m5victim', '被停用用户', 'victim123');
   assert.equal(victim.ok, true);
-  const admin2 = await login('wang', 'boss123');
+  const admin2 = await loginAdmin(base);
 
   const dis = await (await post(`/api/users/${victim.user.id}/active`, admin2.token, { active: false })).json();
   assert.equal(dis.ok, true, '停用成功');

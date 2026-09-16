@@ -2,8 +2,12 @@
 // - jd      : JD 解析产出的硬性条件是否自动作为寻访门槛 + 解析质量阈值
 // - filter  : 硬性筛选规则（PRD FR-11，Pre-AI 门槛）。字段留空/0 表示不启用该条
 // - match   : 匹配打分权重（五维求和默认 100）+ 打招呼阈值（达标才打招呼）
+// - overall : 轨道二·总体能力分（独立于岗位匹配）+ 人工复核开关/阈值
 // 默认值与改造前行为完全等价，避免回归；管理员可在设置页调整，保存即生效。
 const FILE = 'matching_rules.jsonl';
+
+// 轨道二·总体能力评分默认权重（independent of 岗位匹配；总和 100，可完全重配）
+export const OVERALL_WEIGHTS = { project_depth: 25, skill_breadth: 25, exp_level: 20, resume_quality: 15, self_drive: 15 };
 
 export const DEFAULT_RULES = {
   jd: {
@@ -22,16 +26,24 @@ export const DEFAULT_RULES = {
     greetThreshold: null,      // 打招呼阈值，null=沿用改造前（配置/环境变量/默认 60）
     weights: { hard_skills: 30, soft_skills: 20, core_duties: 20, industry_experience: 15, education: 15 },
   },
+  overall: {
+    enabled: false,            // 「人工复核」总开关：默认关闭；开启后能力高匹配低的候选人进入复核池
+    reviewThreshold: 70,       // 复核阈值：总体能力分 ≥ 此值 且 匹配分 < 打招呼阈值 → 需人工复核
+    weights: { ...OVERALL_WEIGHTS },
+  },
 };
+
+const WEIGHT_SECTIONS = { match: 'match', overall: 'overall' };
+const WEIGHT_KEYS = { match: 'weights', overall: 'weights' };
 
 // 深合并：以用户配置覆盖默认，缺失字段回退默认
 function merge(over) {
   const base = structuredClone(DEFAULT_RULES);
   if (!over || typeof over !== 'object') return base;
-  for (const sec of ['jd', 'filter', 'match']) {
+  for (const sec of ['jd', 'filter', 'match', 'overall']) {
     if (over[sec] && typeof over[sec] === 'object') {
-      if (sec === 'match' && over[sec].weights && typeof over[sec].weights === 'object') {
-        base.match.weights = { ...base.match.weights, ...over[sec].weights };
+      if (WEIGHT_SECTIONS[sec] && over[sec][WEIGHT_KEYS[sec]] && typeof over[sec][WEIGHT_KEYS[sec]] === 'object') {
+        base[sec][WEIGHT_KEYS[sec]] = { ...base[sec][WEIGHT_KEYS[sec]], ...over[sec][WEIGHT_KEYS[sec]] };
       }
       base[sec] = { ...base[sec], ...over[sec] };
     }
@@ -60,7 +72,7 @@ export class MatchingRulesService {
   async save(over, actorId) {
     const merged = merge(over ?? {});
     this.store.writeAll(FILE, [merged]);
-    await this.audit.record({ actor: actorId, action: 'sourcing.rules.configure', detail: { filter: merged.filter, greetThreshold: merged.match.greetThreshold, weights: merged.match.weights } });
+    await this.audit.record({ actor: actorId, action: 'sourcing.rules.configure', detail: { filter: merged.filter, greetThreshold: merged.match.greetThreshold, weights: merged.match.weights, overallEnabled: merged.overall.enabled, reviewThreshold: merged.overall.reviewThreshold, overallWeights: merged.overall.weights } });
     return { ok: true, rules: merged };
   }
 

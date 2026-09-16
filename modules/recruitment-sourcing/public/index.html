@@ -374,6 +374,28 @@
   .tier .add textarea{flex:1 1 240px;border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;resize:vertical;min-height:50px}
   @media(max-width:1180px){.tiergrid{grid-template-columns:1fr}}
   .chiprow{display:flex;flex-wrap:wrap;gap:8px}
+  /* ---- 评分规则设置视图 ---- */
+  .rweight-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:#fbfcfe}
+  .rweight-row.dim-off{opacity:.55;filter:grayscale(.4)}
+  .rweight-name{flex:1;min-width:0}
+  .rweight-name b{font-size:13px;color:var(--ink);display:block}
+  .rweight-name code{font-size:11px;color:var(--faint)}
+  .rweight-slider{flex:2;min-width:120px;display:flex;align-items:center;gap:8px}
+  .rweight-slider input[type=range]{flex:1;accent-color:var(--brand)}
+  .rweight-slider input[type=number]{width:64px;box-sizing:border-box;border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:13px;text-align:right}
+  .rweight-on{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
+  .rweight-del{background:transparent;border:none;color:var(--err);font-size:15px;cursor:pointer;line-height:1;opacity:.7}
+  .rweight-del:hover{opacity:1}
+  .ruler-head{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .rtoggle{width:38px;height:20px;appearance:none;-webkit-appearance:none;border-radius:999px;background:#cbd4e6;position:relative;cursor:pointer;flex:none;transition:background .15s}
+  .rtoggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .15s}
+  .rtoggle:checked{background:var(--brand)}
+  .rtoggle:checked::after{left:20px}
+  .rtoggle:disabled{opacity:.5;cursor:not-allowed}
+  .rreviewbar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 14px;background:#eef2ff;border:1px solid #dfe6fb;border-radius:8px}
+  .rdim-grid{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:8px 26px;align-items:center;margin-top:6px}
+  .rdim-grid .dh{font-size:11px;color:var(--faint);font-weight:600}
+  .rdim-detail{max-width:360px;font-size:11.5px;color:var(--muted);line-height:1.5}
 </style>
 </head>
 <body>
@@ -393,13 +415,13 @@
       <button class="navitem" data-view="jobs"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 7h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 12h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 17h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>招聘岗位</button>
       <button class="navitem" data-view="schedule"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="16" rx="2" stroke="currentColor"/><path d="M8 3v4M16 3v4M4 11h16" stroke="currentColor"/></svg>采集调度</button>
       <button class="navitem" data-view="candidates"><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor"/><path d="M3.5 19c.5-3.5 3-5.5 5.5-5.5s5 2 5.5 5.5" stroke="currentColor" stroke-linecap="round"/><circle cx="17" cy="9" r="2.4" stroke="currentColor"/><path d="M16 13.5c2.8.3 4.5 2.3 4.9 5.5" stroke="currentColor" stroke-linecap="round"/></svg>候选人库<span class="badge" id="navCandBadge" style="display:none">0</span></button>
-      <button class="navitem" data-view="talent"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l-6 5v13h12V8l-6-5z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.4"/><path d="M9.5 17c.6-1 1.4-1.6 2.5-1.6s1.9.6 2.5 1.6" stroke-linecap="round"/></svg>人才库<span class="badge" id="navTalentBadge" style="display:none">0</span></button>
       <div class="navsec">沟通</div>
       <button class="navitem" data-view="engage"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.5 8.5 0 01-12.8 7.3L3 21l1.6-4.4A8.5 8.5 0 1121 11.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 11.5h7M8.5 14.5h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>触达沟通</button>
       <button class="navitem" data-view="tapaudit"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="8" y="3" width="8" height="4" rx="1" stroke="currentColor"/><path d="M6 7h12l-1.5 13a2 2 0 01-2 1.8H9.5a2 2 0 01-2-1.8L6 7z" stroke="currentColor"/><path d="M10 11v5M14 11v5" stroke="currentColor" stroke-linecap="round"/></svg>触达审计</button>
       <div class="navsec">治理</div>
       <button class="navitem" data-view="audit"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke="currentColor" stroke-linecap="round"/><rect x="7" y="9.5" width="10" height="5" rx="2.5" transform="rotate(45 12 12)" stroke="currentColor"/></svg>审计留痕</button>
-      <button class="navitem" data-view="settings"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" stroke="currentColor"/><path d="M19 12a7 7 0 01.1-1l2-1.5-2-3.4-2.4.7a7.5 7.5 0 00-1.7-1L14.8 3.4h-5.6l-.4 2.4a7.5 7.5 0 00-1.7 1l-2.4-.7-2 3.4 2 1.5a7 7 0 000 2l-2 1.5 2 3.4 2.4-.7a7.5 7.5 0 001.7 1l.4 2.4h5.6l.4-2.4a7.5 7.5 0 001.7-1l2.4.7 2-3.4-2-1.5a7 7 0 01-.1-1z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>准入与护栏</button>
+      <button class="navitem" data-view="rules"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="9" y1="5" x2="9" y2="9" stroke="currentColor" stroke-width="1.8"/><line x1="15" y1="10" x2="15" y2="14" stroke="currentColor" stroke-width="1.8"/><line x1="18" y1="15" x2="18" y2="19" stroke="currentColor" stroke-width="1.8"/></svg><span style="flex:1">评分规则设置</span><span class="badge warn" id="navRulesBadge" style="display:none">复核</span></button>
+      <button class="navitem" data-view="settings"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" stroke="currentColor"/><path d="M19 12a7 7 0 01.1-1l2-1.5-2-3.4-2.4.7a7.5 7.5 0 00-1.7-1L14.8 3.4h-5.6l-.4 2.4a7.5 7.5 0 00-1.7 1l-2.4-.7-2 3.4 2 1.5a7 7 0 000 2l-2 1.5 2 3.4 2.4-.7a7.5 7.5 0 001.7 1l.4 2.4h5.6l.4-2.4a7.5 7.5 0 001.7-1l2.4.7 2-3.4-2-1.5a7 7 0 01-.1-1z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>设置</button>
       <div class="navsec">系统</div>
       <button class="navitem" data-view="logs"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" stroke="currentColor"/><path d="M8 9h8M8 12h8M8 15h5" stroke="currentColor" stroke-linecap="round"/></svg>运行日志</button>
 	    </nav>
@@ -612,44 +634,6 @@
         </div>
       </section>
 
-      <!-- ============ VIEW 5B: 人才库（全员共享，不随账号变化；无“岗位”筛选） ============ -->
-      <section class="view" id="v-talent">
-        <div class="card">
-          <div class="card-hd"><h2>人才库</h2><span class="hint">全员共享 · 不随登录账号变化 · 全量人才池（候选人在各账号下采集后沉淀于此）</span></div>
-          <div class="toolbar">
-            <div class="seg" id="talentSeg"></div>
-            <div class="tsearchbox">
-              <div class="search"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="tKw" placeholder="姓名 / 期望…"/></div>
-              <input type="text" id="tSkill" placeholder="技能" style="width:110px"/>
-              <input type="text" id="tEdu" placeholder="学历/院校" style="width:130px"/>
-              <button class="btn sm" id="tBtnSearch">检索</button>
-              <button class="btn ghost sm" id="tBtnReset">重置</button>
-            </div>
-            <button class="btn ghost sm" onclick="location.href='/export/candidates.csv'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>导出 CSV</button>
-            <button class="btn ghost sm" onclick="location.href='/export/candidates.xlsx'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>导出 Excel</button>
-          </div>
-          <div class="filtrow">
-            <label>来源</label><select id="tSource"><option value="">全部来源</option></select>
-            <label>学历</label><select id="tDeg"><option value="">全部学历</option><option>大专</option><option>本科</option><option>硕士</option><option>博士</option></select>
-          </div>
-          <div class="filtrow">
-            <label>工作年限 ≥</label><input type="number" id="tYears" min="0" value="" placeholder="年" />
-            <label>匹配分 ≥</label><input type="number" id="tScore" min="0" max="100" value="" placeholder="0-100" />
-            <label>触达状态</label><select id="tTouch"><option value="">全部状态</option><option value="pending">待触达</option><option value="engaging">跟进中</option><option value="replied">已回复</option><option value="sleeping">已沉睡</option></select>
-            <label>联系方式</label><select id="tContact"><option value="">全部</option><option value="has">已获取</option><option value="no">未获取</option></select>
-          </div>
-          <div class="filtrow">
-            <label>创建时间</label><select id="tCreated"><option value="">全部</option><option value="today">今日</option><option value="week">近7天</option><option value="month">近30天</option><option value="older">更早</option></select>
-            <button class="btn ghost sm" id="tBtnClearFilters">清除筛选</button>
-          </div>
-          <div style="overflow:auto">
-            <table><thead><tr><th>候选人</th><th>岗位</th><th>年限</th><th>期望薪资</th><th>触达状态</th><th>轮次</th><th>最近触达</th><th>简历</th><th>匹配分</th></tr></thead>
-            <tbody id="talentTbody"></tbody></table>
-          </div>
-          <div class="pfoot"><span id="talentCount"></span></div>
-        </div>
-      </section>
-
       <!-- ============ VIEW 7: ENGAGE（触达/沟通） ============ -->
       <section class="view" id="v-engage">
         <div class="subnav">
@@ -797,14 +781,15 @@
       <!-- ============ VIEW 6: SETTINGS ============ -->
       <section class="view" id="v-settings">
         <div class="card">
-          <div class="card-hd"><h2>AI 基座 · 大模型接入</h2><span class="hint" id="aiBaseHint">JD 抽词 / 简历结构化 / 深度匹配统一经此基座调用</span>
+          <div class="card-hd"><h2>设置</h2><span class="hint">账号接入 · 最小权限 · 版本管理</span>
+            <div class="t-right"><button class="btn ghost sm" id="settingsUpdateBtn" title="检查并升级到最新版本">↻ 检查更新</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h2>AI 基座 · 大模型接入</h2><span class="hint" id="aiBaseHint">配置后保存即自动校验并生效</span>
             <div class="t-right"><span class="badge b-gray" id="aiStatusChip">检测中</span></div>
           </div>
           <div class="card-bd">
-            <div class="bossnote">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5l8-3z"/><path d="M12 8v4M12 15h.01"/></svg>
-              <div class="bn-txt"><b>轻量接入公司 AI Coding 中转平台</b>：仅需 baseURL + API Key，保存即自动探活并应用，无需重启。「默认模型」由平台模型列表自动拉取选择；Key 仅掩码展示，不落明文。</div>
-            </div>
             <div class="aiplug" id="aiPlug"></div>
             <div class="aidatagrid">
               <div class="fld full">
@@ -943,6 +928,86 @@
         </div>
       </section>
 
+      <!-- ============ VIEW RULES: 评分规则设置（岗位匹配 + 总体能力 + 人工复核） ============ -->
+      <section class="view" id="v-rules">
+        <div class="card">
+          <div class="card-hd"><h2>轨道一 · 岗位匹配分</h2><span class="hint">候选人多贴合这份 JD · 达标才打招呼</span>
+            <div class="t-right"><span class="badge b-gray" id="rTrack1Sum">合计 —</span></div>
+          </div>
+          <div class="card-bd">
+            <div class="textfield" style="margin-bottom:12px">五维权重可调，实时生效（保存即写档）；某维度停用即权重归 0。合计 ≠100 时仅提示不强制。</div>
+            <div id="rMatchWeights"></div>
+            <div class="ruler-head">
+              <button class="btn ghost sm" data-add="match" type="button">+ 新增维度</button>
+              <span class="hint">重置为默认五维</span>
+              <button class="btn ghost sm" id="btnResetMatch" type="button" style="margin-left:auto">↺ 重置</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>附加规则 · 硬门槛与阈值</h2><span class="hint">作用于匹配前硬筛与打招呼判定</span></div>
+          <div class="card-bd">
+            <div class="kvrow" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+              <div class="fld" style="margin-top:4px"><label>打招呼阈值（分）</label><input id="rGreet" type="number" min="0" max="100" step="1"></div>
+              <div class="fld" style="margin-top:4px"><label>年龄上限（岁，0=不限）</label><input id="rMaxAge" type="number" min="0" max="100" step="1"></div>
+              <div class="fld" style="margin-top:4px"><label>学历下限</label><select id="rMinDegree"><option value="">不限</option><option>专科</option><option>本科</option><option>硕士</option><option>博士</option></select></div>
+            </div>
+            <div class="fld"><label>必须包含关键词（任一命中才进入匹配，逗号分隔）</label><input id="rMustInclude" placeholder="如：OpenGL, 渲染, 引擎"></div>
+            <div class="fld" style="flex-direction:row;align-items:center;gap:10px;margin-top:14px">
+              <label style="margin:0">JD 解析的硬技能自动作为寻访硬门槛</label>
+              <input type="checkbox" id="rUseParsedHard" class="rtoggle">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>轨道二 · 总体能力分 + 人工复核</h2><span class="hint">候选人多强 · 兜底纠偏强但匹配低的优质候选人</span>
+            <div class="t-right"><span class="badge b-gray" id="rTrack2Sum">合计 —</span></div>
+          </div>
+          <div class="card-bd">
+            <div class="rreviewbar">
+              <div style="display:flex;align-items:center;gap:10px">
+                <label style="margin:0;font-size:12px;font-weight:600">启用人工复核</label>
+                <input type="checkbox" id="rReviewEnable" class="rtoggle" data-role="review">
+                <span class="hint">开启后，「总体能力 ≥ 复核阈值 且 匹配分 &lt; 打招呼阈值」的候选人进入复核池</span>
+              </div>
+              <div class="fld" style="margin:0;width:200px;flex:none"><label>复核阈值（分）</label><input id="rReviewTh" type="number" min="0" max="100" step="1" data-role="review"></div>
+            </div>
+            <div class="textfield" style="margin:12px 0">总体能力五维默认权重可完全重配；能力分由启发式(可离线) + AI(基座就绪时) 双重打分。</div>
+            <div id="rOverallWeights"></div>
+            <div class="ruler-head">
+              <button class="btn ghost sm" data-add="overall" type="button">+ 新增维度</button>
+              <span class="hint">重置为默认五维</span>
+              <button class="btn ghost sm" id="btnResetOverall" type="button" style="margin-left:auto">↺ 重置</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-bd" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <button class="btn" id="btnRulesSave" type="button">保存评分规则（立即生效）</button>
+            <span class="hint" id="rRulesInfo">改动写入 matching_rules.jsonl 并全程留审计</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>打分预览</h2><span class="hint">选择候选人 · 直观看到轨道得分（改轨道二权重实时重算）</span></div>
+          <div class="card-bd">
+            <div class="fld" style="margin-top:4px;max-width:420px"><label>选择候选人</label><select id="rPreviewSel"></select></div>
+            <div id="rPreview" style="margin-top:14px"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>人工复核池</h2><span class="hint" id="rPoolHint">需开启「人工复核」后生效</span><span class="badge b-warn" id="rPoolCount">0 人</span></div>
+          <div class="card-bd" style="padding:0">
+            <table><thead><tr><th>候选人</th><th>匹配分</th><th>总体能力分</th><th>维度明细</th><th>操作</th></tr></thead>
+            <tbody id="rPoolBody"><tr><td colspan="5" class="empty">暂无可复核候选人</td></tr></tbody></table>
+          </div>
+        </div>
+      </section>
+
       <!-- ============ VIEW LOGS: 系统运行日志 ============ -->
       <section class="view" id="v-logs">
         <div class="card">
@@ -1068,7 +1133,7 @@ const $ = (s) => document.querySelector(s);
 const RECRUITERS = [
   { id:'A1', name:'王先生' },
 ];
-const state = { jobs:[], candidates:[], resumes:[], matches:[], cycles:[], audit:[], schedules:[], search:null, searchT:null, seg:'all', segT:'all', recruiter:'', token:null, user:null, msgtemplates:[], followup:[], pending:[], hrContact:'', campaigns:[], notifications:[], unread:0, metrics:null };
+const state = { jobs:[], candidates:[], resumes:[], matches:[], cycles:[], audit:[], schedules:[], search:null, seg:'all', recruiter:'', token:null, user:null, msgtemplates:[], followup:[], pending:[], hrContact:'', campaigns:[], notifications:[], unread:0, metrics:null, rules:null };
 
 const api = {
   get: async (p) => { const r = await fetch(p, { headers: state.token ? { 'x-auth': state.token } : {} }); return r.ok ? (r.status===204?{}:await r.json()) : { error: (await r.json().catch(()=>({}))).error }; },
@@ -1081,11 +1146,11 @@ const TITLES = {
   jobs:['招聘岗位','岗位信息 · 关键词 · 收集统计'],
   schedule:['采集调度','定时批量 · 频率受控 · 失败熔断'],
   candidates:['候选人库','随登录账号变化 · 本账号岗位收集的候选人'],
-  talent:['人才库','全员共享 · 不随账号变化 · 全量人才池'],
   engage:['触达沟通','话术库 · 自动打招呼 · 智能跟进 · 打招呼管控'],
   tapaudit:['触达审计','打招呼 / 联系 / 交换 · 审计留痕'],
   audit:['审计留痕','采集 / 访问 / 导出留痕'],
-  settings:['准入与护栏','账号接入 · 最小权限'],
+  rules:['评分规则设置','岗位匹配 · 总体能力 · 人工复核'],
+  settings:['设置','账号接入 · 最小权限 · 版本管理'],
   logs:['运行日志','系统运行状态 · 业务动作 · 错误告警'],
 };
 const LOG_LV = { info:'log-info', warn:'log-warn', error:'log-err' };
@@ -1519,7 +1584,7 @@ async function boot(){
 }
 async function loadAll(){
   await Promise.all([loadJobs(),loadCandidates(),loadAudit(),reloadSchedules(),loadMessagelib(),loadFollowup()]);
-  renderOverview(); renderJobs(); renderSchedules(); renderAudit(); renderSeg(); fillJobFilter(); fillSourceFilter(); renderCandidates(); renderTalentSeg(); fillTalentSource(); renderTalent(); fillSchJob(); renderEngage();
+  renderOverview(); renderJobs(); renderSchedules(); renderAudit(); renderSeg(); fillJobFilter(); fillSourceFilter(); renderCandidates(); fillSchJob(); renderEngage();
 }
 
 /* ---------- overview ---------- */
@@ -1858,11 +1923,10 @@ $('#topRun').addEventListener('click',async()=>{
 });
 $('#btnRefresh').addEventListener('click',async()=>{ $('#btnRefresh').disabled=true; await loadAll(); $('#btnRefresh').disabled=false; toast('✓ 已刷新全部视图'); });
 
-/* ---------- candidates：候选人库（随账号，含岗位跟进） + 人才库（全员共享，仅已收简历） ---------- */
+/* ---------- candidates：候选人库（随账号，含岗位跟进） ---------- */
 function hasResume(c){ return c.status && c.status!=='sourced'; }
 /* 候选人库（含岗位跟进）：本账号岗位下全部候选人（含触达中未收简历，按状态分段区分） */
 function scopeMine(){ const ids=new Set(myJobs().map(j=>j.jobId)); return state.candidates.filter(c=>ids.has(c.jobId)); }
-function scopeAll(){ return state.candidates.filter(hasResume); }
 function calSeg(rows){ const c={}; rows.forEach(cd=>{ c[cd.status]=(c[cd.status]||0)+1; });
   return [['all','全部',rows.length],['sourced','触达中',c.sourced||0],['resume_received','已收简历',c.resume_received||0],['matched','已匹配',c.matched||0],['parsed','已入库',c.parsed||0],['screened','已筛选',c.screened||0],['rejected','已淘汰',c.rejected||0]]; }
 function resumeBadge(c){
@@ -1895,7 +1959,7 @@ function whereRows(base,p,seg,search){
 function renderCandInto(tbodyId,countId,rows,mine=false){
   const tb=$(tbodyId);
   const cols=mine?10:9;
-  if(!rows.length){ tb.innerHTML=`<tr><td colspan="${cols}" class="empty">${tbodyId==='#talentTbody'?'暂无人才。各账号已收简历的候选人都会沉淀到人才库。':'暂无候选人。请先在调度视图运行采集。'}</td></tr>`; }
+  if(!rows.length){ tb.innerHTML=`<tr><td colspan="${cols}" class="empty">暂无候选人。请先在调度视图运行采集。</td></tr>`; }
   else tb.innerHTML=rows.map(({c,score})=>{
     const f=(state.followup||[]).find(p=>p.candidateId===c.candidateId);
     const lt=lastTouchAt(c);
@@ -1951,30 +2015,6 @@ async function doSearch(){ const r=await api.get('/api/candidates/search?'+new U
 $('#btnSearch').addEventListener('click',doSearch);
 $('#fKw').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
 $('#btnReset').addEventListener('click',clearAllFilters);
-
-/* —— 人才库：全员共享，不随账号变化；无“岗位”筛选 —— */
-function renderTalentSeg(){
-  const base=scopeAll();
-  $('#talentSeg').innerHTML=calSeg(base).map(([k,l,n])=>`<button data-f="${k}" class="${state.segT===k?'active':''}">${l} ${n}</button>`).join('');
-  $('#navTalentBadge').style.display=base.length?'':'none'; $('#navTalentBadge').textContent=base.length;
-}
-function talentRows(){ return whereRows(scopeAll(),'t',state.segT,state.searchT); }
-function renderTalent(){ renderCandInto('#talentTbody','#talentCount',talentRows()); }
-function fillTalentSource(){ fillSourceFrom('t', scopeAll()); }
-$('#talentSeg').addEventListener('click',e=>{
-  const b=e.target.closest('button[data-f]'); if(!b) return;
-  state.segT=b.dataset.f; renderTalentSeg(); renderTalent();
-});
-async function doSearchTalent(){ const r=await api.get('/api/candidates/search?'+new URLSearchParams({keyword:readF('t','fKw').trim(),skill:readF('t','fSkill').trim(),education:readF('t','fEdu').trim(),limit:200})); state.searchT=r.candidates??[]; renderTalent(); toast(`✓ 人才库检索命中 ${state.searchT.length} 位`); }
-$('#tBtnSearch').addEventListener('click',doSearchTalent);
-$('#tKw').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearchTalent(); });
-function clearTalentFilters(){
-  ['fSource','fDeg','fYears','fScore','fTouch','fContact','fCreated','fKw','fSkill','fEdu'].forEach(id=>{ const el=$('#t'+id); if(el) el.value=''; });
-  state.segT='all'; state.searchT=null; renderTalentSeg(); renderTalent(); fillTalentSource();
-}
-$('#tBtnReset').addEventListener('click',clearTalentFilters);
-$('#tBtnClearFilters').addEventListener('click',clearTalentFilters);
-['fSource','fDeg','fYears','fScore','fTouch','fContact','fCreated'].forEach(id=>{ const el=$('#t'+id); if(el) el.addEventListener('change',()=>{ state.searchT=null; renderTalent(); }); });
 
 /* ---------- drawer ---------- */
 function resumeOf(cid){ return state.resumes.filter(x=>x.candidateId===cid).at(-1)||null; }
@@ -2181,8 +2221,8 @@ async function registerResume(cid, btn){
   const old=btn?.textContent; if(btn){ btn.disabled=true; btn.textContent='登记中…'; }
   const r=await api.post(`/api/candidates/${encodeURIComponent(cid)}/resume-received`,{});
   if(r.ok){
-    toast(r.already?'该候选人此前已登记':'✓ 已登记简历已收到，候选人进入候选人库与人才库');
-    await loadCandidates(); renderEngage(); renderSeg(); fillJobFilter(); fillSourceFilter(); renderCandidates(); renderTalentSeg(); fillTalentSource(); renderTalent();
+    toast(r.already?'该候选人此前已登记':'✓ 已登记简历已收到，候选人进入候选人库');
+    await loadCandidates(); renderEngage(); renderSeg(); fillJobFilter(); fillSourceFilter(); renderCandidates();
   } else {
     if(btn){ btn.disabled=false; btn.textContent=old; }
     toast('✗ '+(r.error||'登记失败'));
@@ -2211,7 +2251,7 @@ $('#btnChatScan').addEventListener('click',async()=>{
   btn.disabled=false; btn.textContent=old;
   if(!r.ok){ toast('✗ '+(r.error||'扫描失败')); return; }
   toast(`✓ 扫描 ${r.scanned} 个会话：自动收简历 ${r.received} 人 · 标记同意发简历 ${r.agreed} 人`+(r.unmatched?` · ${r.unmatched} 个会话未匹配到候选人`:''));
-  await loadCandidates(); renderEngage(); renderCandidates(); renderSeg(); renderTalentSeg(); renderTalent();
+  await loadCandidates(); renderEngage(); renderCandidates(); renderSeg();
 });
 
 function renderHrContact(){
@@ -2334,6 +2374,212 @@ function renderMetrics(){
     +(m.campaign?`<span class="chip">批次进度 ${m.campaign.totalGreeted??0} 人</span>`:'');
 }
 
+/* ========== 评分规则设置（C4：评分规则可视化 + 总体能力 + 人工复核池） ========== */
+const RFIXED_MATCH = { hard_skills:'硬技能', soft_skills:'软技能', core_duties:'核心职责', industry_experience:'行业经验', education:'学历' };
+const RFIXED_OVERALL = { project_depth:'项目深度', skill_breadth:'技能广度与深度', exp_level:'经验年限与层级', resume_quality:'履历质量', self_drive:'自我驱动力信号' };
+const RDEFAULT_WEIGHTS = { match: { hard_skills:30, soft_skills:20, core_duties:20, industry_experience:15, education:15 }, overall: { project_depth:25, skill_breadth:25, exp_level:20, resume_quality:15, self_drive:15 } };
+let rulesState = null;       // 工作副本：{ jd, filter, match, overall }
+let rSelectedCand = '';      // 预览选中候选
+let rCandidates = [];
+
+function rTrackSum(track){ const w=rulesState[track].weights||{}; return Object.values(w).reduce((a,b)=>a+(Number(b)||0),0); }
+
+// 客户端总体能力启发式（与后端 heuristicOverall 口径一致，用于改权重即时预览）
+function rHeuristicOverall(parsed, text, weights){
+  const ps=parsed||{}; const edu=ps.education||{};
+  const skills=Array.isArray(ps.skills)?ps.skills:[];
+  const projects=Array.isArray(ps.projects)?ps.projects.filter(o=>o&&JSON.stringify(o)!=='{}'&&Object.keys(o).length>0):[];
+  const experiences=Array.isArray(ps.experiences)?ps.experiences.filter(o=>o&&JSON.stringify(o)!=='{}'&&Object.keys(o).length>0):[];
+  const len=(o)=>{ const t=typeof o==='string'?o:JSON.stringify(o||''); return (t||'').length; };
+  const raw=String(text||'')+' '+(ps.rawText||'')+' '+projects.map(JSON.stringify).join(' ')+' '+experiences.map(JSON.stringify).join(' ');
+  const hasLong=projects.some(o=>len(o)>=40);
+  const skillSub=(s)=> s.length>=6?0.85: s.length>=3?0.6: s.length>=1?0.4: /\b(技能|掌握|熟悉|精通)\b|:[,，]/.test(raw)?0.35:0.2;
+  const years=Number(ps.workExperienceYears||ps.experienceYears)||0;
+  let y= years>0?Math.min(0.9,0.25+0.05*Math.min(12,years)) : Math.min(0.8,0.15+0.1*Math.min(5,experiences.length));
+  if(/负责人|主管|经理|总监|带头人|团队|lead|leader|director|manager|架构|核心成员|owner/i.test(raw)) y=Math.min(0.98,y+0.12);
+  const degRank=(d)=>String(d).includes('博士')?4:String(d).includes('硕士')?3:String(d).includes('本科')||String(d).includes('学士')?2:String(d).includes('专科')||String(d).includes('大专')?1:0;
+  const deg=degRank(edu.degree||''); const n=Math.min(3,experiences.length);
+  const info=(deg>0?0.2:0.05)+((n>0?0.2+0.06*n:0.08));
+  const q=Math.max(0,Math.min(1, deg/4*0.5+Math.min(0.5,info)));
+  const sigs=['开源','open source','github','博客','blog','原创','专利','获奖','竞赛','晋升','证书','认证','社区','分享','作品','副业','作品集','hall of fame','gitee','公众号'];
+  let hit=0; for(const s of sigs) if(raw.toLowerCase().includes(s.toLowerCase())) hit++;
+  const sd=hit>=3?0.9:hit===2?0.7:hit===1?0.5:0.2;
+  const dims={ project_depth:Math.max(0,Math.min(1,0.25+0.2*Math.min(3,projects.length)+(hasLong?0.12:0))), skill_breadth:skillSub(skills), exp_level:y, resume_quality:q, self_drive:sd };
+  const w={...(RDEFAULT_WEIGHTS.overall),...weights}; const sum=Object.values(w).reduce((a,b)=>a+(Number(b)||0),0)||100;
+  let total=0; const ds={};
+  for(const k in dims){ const max=Math.max(0,Number(w[k])||0); ds[k]=Math.max(0,Math.min(max,Math.round(dims[k]*max))); total+=ds[k]; }
+  return { overallScore:Math.max(0,Math.min(100,Math.round(total/sum*100))), dimensionScores:ds };
+}
+
+function rRenderWeights(track){
+  const box=$('#r'+ (track==='match'?'Match':'Overall') +'Weights');
+  const w=rulesState[track].weights||{};
+  const fixed = track==='match'?RFIXED_MATCH:RFIXED_OVERALL;
+  box.innerHTML=Object.entries(w).map(([k,v])=>{
+    const disabled=Number(v)===0;
+    const label=fixed[k]||('维度「'+esc(k)+'」');
+    return `<div class="rweight-row ${disabled?'dim-off':''}">
+      <div class="rweight-name"><b>${esc(label)}</b><code>${esc(k)}</code></div>
+      <div class="rweight-slider">
+        <input type="range" min="0" max="100" value="${Number(v)||0}" data-track="${track}" data-key="${esc(k)}" data-role="wsl">
+        <input type="number" min="0" max="100" value="${Number(v)||0}" data-track="${track}" data-key="${esc(k)}" data-role="wnum">
+      </div>
+      <label class="rweight-on"><input type="checkbox" ${disabled?'':'checked'} data-track="${track}" data-key="${esc(k)}" data-role="won">启用</label>
+      <button class="rweight-del" type="button" title="删除维度" data-track="${track}" data-key="${esc(k)}" data-role="wdel">✕</button>
+    </div>`;
+  }).join('');
+  rUpdateSum(track);
+}
+
+function rUpdateSum(track){
+  const sum=rTrackSum(track); const el=$('#r'+(track==='match'?'Track1':'Track2')+'Sum');
+  if(!el) return;
+  const warn=sum!==100 && Object.keys(rulesState[track].weights).length>0;
+  el.textContent='合计 '+sum+(warn?' ⚠':''); el.className='badge '+(warn?'b-warn':'b-gray');
+}
+// 权重滑杆/数字输入 → 实时小幅更新（不重绘，避免输入焦点丢失）
+function rLiveSync(track,key,val,el){
+  const w=rulesState[track].weights; w[key]=Math.max(0,Math.min(100,Math.round(Number(val)||0)));
+  const row=el.closest('.rweight-row');
+  if(row){
+    row.querySelectorAll('[data-role="wnum"],[data-role="wsl"]').forEach(x=>{ if(x!==el) x.value=w[key]; });
+    row.classList.toggle('dim-off', w[key]===0);
+    const cb=row.querySelector('[data-role="won"]'); if(cb) cb.checked=w[key]!==0;
+  }
+  rUpdateSum(track); rRefreshPreview();
+}
+function rToggle(track,key,on){
+  const prev=rulesState[track].weights[key]||0;
+  rulesState[track].weights[key]=on?Math.max(1,prev||0):0; // 关=0，开=恢复（曾>0则保留原值）
+  rRenderWeights(track); rRefreshPreview();
+}
+
+async function renderRules(){
+  const isAdmin=state.user?.role==='admin';
+  const dis=isAdmin?'':' disabled';
+  if(!rulesState){
+    const r=await api.get('/api/sourcing/rules');
+    if(r.ok&&r.rules){ rulesState=JSON.parse(JSON.stringify(r.rules)); }
+    else { $('#rRulesInfo').textContent='读取规则失败'; return; }
+  }
+  // 阈值 / 硬门槛
+  const th=rulesState.match.greetThreshold; $('#rGreet').value=th==null?60:th;
+  $('#rMaxAge').value=rulesState.filter.maxAge||0;
+  $('#rMinDegree').value=rulesState.filter.minDegree||'';
+  $('#rMustInclude').value=(rulesState.filter.mustInclude||[]).join(', ');
+  $('#rUseParsedHard').checked=!!rulesState.jd.useParsedHardSkills;
+  // 轨道二
+  $('#rReviewEnable').checked=!!rulesState.overall.enabled;
+  $('#rReviewTh').value=rulesState.overall.reviewThreshold;
+  [ '#rMatchWeights','#rOverallWeights','#rGreet','#rMaxAge','#rMinDegree','#rMustInclude','#rUseParsedHard','#rReviewEnable','#rReviewTh',
+    '#btnRulesSave','#btnResetMatch','#btnResetOverall','[data-add="match"]','[data-add="overall"]' ].forEach(s=>$(s).setAttribute('disabled',dis?true:false));
+  rRenderWeights('match'); rRenderWeights('overall');
+  rToggleReviewDisable();
+  // 预览候选 + 复核池
+  const [cres,pool]=await Promise.all([api.get('/candidates'), api.get('/api/sourcing/review-pool')]);
+  if(cres.ok&&Array.isArray(cres.candidates)) rCandidates=cres.candidates||[];
+  const st=`<option value="">— 选择候选人 —</option>`+rCandidates.map(c=>`<option value="${esc(c.candidateId)}">${esc(c.name||c.candidateId)}</option>`).join('');
+  $('#rPreviewSel').innerHTML=st; $('#rPreviewSel').value=rSelectedCand;
+  $('#rPoolHint').textContent=pool.enabled?'满足「总体能力 ≥ 复核阈值 且 匹配分 < 打招呼阈值」进入池内':'需开启「人工复核」后生效';
+  $('#rPoolCount').textContent=pool.count+' 人';
+  $('#navRulesBadge').style.display=(pool.enabled&&pool.count>0)?'':'none';
+  $('#rPoolBody').innerHTML=pool.rows&&pool.rows.length? pool.rows.map(rp=>{
+    const dims=rp.dimensionScores||{};
+    const detail=`<div class="rdim-grid"><span class="dh">维度</span><span class="dh">得分</span><span class="dh">约因</span>
+      ${Object.entries(dims).map(([d,o])=>`<span>${esc(RFIXED_OVERALL[d]||d)}</span><b>${o.score}/${o.max}</b><span class="rdim-detail">${esc(o.detail||'')}</span>`).join('')}</div>`;
+    return `<tr>
+      <td><b>${esc(rp.name||rp.candidateId)}</b><div class="textfield">${esc(rp.source||'')||'—'} · 匹配分 ${rp.matchScore ?? '—'} / 能力 ${rp.overallScore ?? '—'}</div></td>
+      <td>${scoreHtml(rp.matchScore)}</td>
+      <td>${scoreHtml(rp.overallScore)}</td>
+      <td>${detail}</td>
+      <td><div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn sm" data-role="rDecide" data-cid="${esc(rp.candidateId)}" data-act="greet">打招呼</button>
+        <button class="btn ghost sm" data-role="rDecide" data-cid="${esc(rp.candidateId)}" data-act="discard">放弃</button>
+        <button class="btn ghost sm" data-role="rDecide" data-cid="${esc(rp.candidateId)}" data-act="expect">登记期望岗位</button>
+      </div></td></tr>`;
+  }).join('') : '<tr><td colspan="5" class="empty">暂无可复核候选人</td></tr>';
+  $('#rRulesInfo').textContent=isAdmin?'改动写入 matching_rules.jsonl 并全程留审计':'当前为招聘者账号，评分规则仅管理员可修改（可读与预览）';
+  rRefreshPreview();
+}
+function rToggleReviewDisable(){
+  const on=!!$('#rReviewEnable').checked; const dt=on?'':' disabled';
+  $('#rReviewTh').disabled=!on;
+}
+
+function rBuildPayload(){
+  const w=(track)=>{ const o={}; for(const [k,v] of Object.entries(rulesState[track].weights)) if(Number(v)>0) o[k]=Number(v); return o; };
+  return {
+    jd:{ useParsedHardSkills: $('#rUseParsedHard').checked },
+    filter:{
+      maxAge:Number($('#rMaxAge').value)||0,
+      minDegree:$('#rMinDegree').value||'',
+      mustInclude:$('#rMustInclude').value.split(/[,，、\s]+/).map(s=>s.trim()).filter(Boolean),
+    },
+    match:{ greetThreshold: Number($('#rGreet').value)||0, weights: w('match') },
+    overall:{ enabled: $('#rReviewEnable').checked, reviewThreshold: Number($('#rReviewTh').value)||70, weights: w('overall') },
+  };
+}
+async function rSave(){
+  if(state.user?.role!=='admin'){ toast('仅管理员可保存评分规则'); return; }
+  const b=rBuildPayload();
+  // delete 掉 null 的 greeting 阈值才会回退默认；此处显式写数字
+  const r=await api.put('/api/sourcing/rules', b);
+  if(r.ok){ toast('评分规则已保存并生效'); rulesState=r.rules; renderRules(); }
+  else toast('保存失败：'+(r.error||'未知错误'));
+}
+async function rReset(track){
+  rulesState[track].weights=JSON.parse(JSON.stringify(RDEFAULT_WEIGHTS[track]));
+  rRenderWeights(track); rRefreshPreview(); toast('已重置为默认权重');
+}
+async function rAddDim(track){
+  const name=prompt('新维度命名（如 项目管理）'); if(!name||!name.trim()) return;
+  let bs=name.trim(); let key=('dim_'+bs).replace(/\s+/g,'_');
+  rulesState[track].weights[key]=0; rRenderWeights(track); rRefreshPreview();
+}
+// 打分预览：展示总体能力分（改权重即时重算）与已存档匹配分
+function rRefreshPreview(){
+  const box=$('#rPreview'); if(!candidateOf(rSelectedCand)){ box.innerHTML='<div class="textfield">选择候选人后展示评分明细</div>'; return; }
+  const cand=candidateOf(rSelectedCand);
+  const r=storeResumeOf(rSelectedCand);
+  const ov=rHeuristicOverall(r?.parsed||null, r?.rawText||'', rulesState.overall.weights||{});
+  const m=state.matches.filter(x=>x.candidateId===rSelectedCand).at(-1)||null;
+  box.innerHTML=`<div style="display:flex;gap:14px;flex-wrap:wrap">
+    <div class="kpi b-brand" style="min-width:170px"><div class="lab">总体能力分(轨道二)</div><div class="val">${ov.overallScore}</div><div class="delta">启发式 · 按当前权重</div></div>
+    <div class="kpi b-ok" style="min-width:170px"><div class="lab">岗位匹配分(轨道一)</div><div class="val">${m?.matchScore ?? '—'}</div><div class="delta">${esc(cand.jobId||'')||'—'}</div></div>
+  </div>
+  <div class="rdim-grid" style="max-width:620px">${Object.entries(ov.dimensionScores).map(([k,v])=>`<span>${esc(RFIXED_OVERALL[k]||k)}</span><b>${v}/${rulesState.overall.weights[k]||0}</b><span></span>`).join('')}</div>`;
+}
+function candidateOf(id){ return rCandidates.find(c=>c.candidateId===id)||null; }
+function storeResumeOf(id){ return (state.resumes||[]).filter(x=>x.candidateId===id).at(-1)||null; }
+async function rDecide(cid,act){
+  const r=await api.post(`/api/sourcing/review/${encodeURIComponent(cid)}/decide`,{decision:act});
+  if(r.ok){ toast(r.already?('已处理：'+r.decision):'复核完成'+(act==='greet'?'（已打招呼）':'')); renderRules(); }
+  else if(r.blocked) toast('打招呼被护栏拦截：'+ (r.reason||'')); else toast('操作失败：'+(r.error||''));
+}
+async function rLoadCandidatesForPreview(){ await loadCandidates(); rCandidates=state.candidates||[]; }
+
+function initRules(){
+  document.addEventListener('input',(e)=>{
+    const el=e.target; if(!el||!el.dataset) return;
+    if(el.dataset.role==='wsl'||el.dataset.role==='wnum'){ rLiveSync(el.dataset.track,el.dataset.key,el.value,el); }
+  });
+  document.addEventListener('change',(e)=>{
+    const el=e.target; if(!el||!el.dataset) return;
+    if(el.dataset.role==='won'){ rToggle(el.dataset.track,el.dataset.key,el.checked); }
+    if(el.id==='rReviewEnable'){ rToggleReviewDisable(); }
+  });
+  document.addEventListener('click',(e)=>{
+    const el=e.target; if(!el||!el.dataset) return;
+    if(el.dataset.role==='wdel'){ delete rulesState[el.dataset.track].weights[el.dataset.key]; rRenderWeights(el.dataset.track); rRefreshPreview(); }
+    else if(el.dataset.role==='rDecide'){ rDecide(el.dataset.cid,el.dataset.act); }
+    else if(el.dataset.add){ rAddDim(el.dataset.add); }
+  });
+  const $b=(id,fn)=>{ const el=$(id); if(el) el.addEventListener('click',fn); };
+  $b('btnRulesSave',rSave);
+  $b('btnResetMatch',()=>rReset('match'));
+  $b('btnResetOverall',()=>rReset('overall'));
+  const selCand=$('#rPreviewSel'); if(selCand) selCand.addEventListener('change',()=>{ rSelectedCand=selCand.value; rRefreshPreview(); });
+}
 /* ---------- nav ---------- */
 function navTo(v){
   document.querySelectorAll('.navitem').forEach(x=>x.classList.toggle('active',x.dataset.view===v));
@@ -2346,54 +2592,61 @@ function navTo(v){
   }
   if(v==='engage'){ Promise.all([loadMessagelib(),loadFollowup(),loadAudit(),loadCandidates(),loadHrContact(),loadCampaigns(),loadNotifications(),loadMetrics()]).then(renderEngage); }
   if(v==='settings'&&state.user){ renderSettings(); }
+  if(v==='rules'){ renderRules(); }
 }
 document.querySelectorAll('.navitem').forEach(b=>b.addEventListener('click',()=>navTo(b.dataset.view)));
 
+initRules();
 boot();
 
 /* ---------- Electron 自动更新（桌面版专用，浏览器模式自动隐藏） ---------- */
 (()=>{
   const U = window.boleUpdater;
-  if(!U){ return; } // 非 Electron 环境：不显示更新按钮
-  const btn = $('#updateBtn');
-  btn.style.display = ''; // 显示「检查更新」按钮
-  const label = (t)=>{ btn.innerHTML = t; };
-  const busy = (on)=>{ btn.disabled = on; };
-  let statusCache = null;
-
-  U.onEvent((ev)=>{
-    statusCache = ev;
-    switch(ev.status){
-      case 'checking': label('↻ 检查中…'); busy(true); break;
-      case 'available':
-        label('↓ 发现 v'+ev.version+'，点击下载更新');
-        busy(false);
-        toast?.('发现新版本 v'+ev.version+'，点击「检查更新」即可升级');
-        break;
-      case 'not-available': label('↻ 检查更新'); busy(false); toast?.('已是最新版本'); break;
-      case 'download-progress': label('↓ 下载中 '+ev.progress+'% ('+ev.transferred+'/'+ev.total+'MB)'); busy(true); break;
-      case 'downloaded':
-        label('⇪ 已就绪，点击安装并重启');
-        busy(false);
-        setBtnModeInstall();
-        break;
-      case 'error':
-        label('↻ 检查更新'); busy(false);
-        console.warn('[updater]', ev.message);
-        if(statusReadyForToast(ev)) toast?.(ev.message==='已经是最新版本' ? '已是最新版本' : '更新出错：'+(ev.message||'未知'));
-        break;
+  // 设置页「检查更新」常驻按钮（无论 Electron / 浏览器模式都展示并给出反馈）
+  const wire = (btn, opts = {}) => {
+    if(!btn) return;
+    if(!U){ // 非 Electron：点击给出「已是最新版本」反馈
+      btn.addEventListener('click', ()=>{ toast?.(opts.noUpdater || '已是最新版本'); });
+      return;
     }
-  });
-
-  function setBtnModeInstall(){ btn.dataset.mode = 'install'; }
-  btn.addEventListener('click', ()=>{
-    if(btn.dataset.mode === 'install'){ U.install(); return; }
-    if(statusCache?.status === 'available'){ U.download(); label('↓ 下载中…'); busy(true); return; }
-    U.check();
-  });
-  // 仅在 Electron 且已就绪状态下展示下载出错提示，避免误报离线
-  function statusReadyForToast(ev){ return !!ev && statusCache && statusCache.status !== 'error'; }
-  U.check(); // 进入即检查一次
+    btn.style.display = ''; // Electron 下显示按钮
+    const label = (t)=>{ btn.innerHTML = t; };
+    const busy = (on)=>{ btn.disabled = on; };
+    let statusCache = null;
+    // 仅在 Electron 且已就绪状态下展示下载出错提示，避免误报离线
+    function statusReadyForToast(ev){ return !!ev && statusCache && statusCache.status !== 'error'; }
+    U.onEvent((ev)=>{
+      statusCache = ev;
+      switch(ev.status){
+        case 'checking': label('↻ 检查中…'); busy(true); break;
+        case 'available':
+          label('↓ 发现 v'+ev.version+'，点击下载更新');
+          busy(false);
+          toast?.('发现新版本 v'+ev.version+'，点击「检查更新」即可升级');
+          break;
+        case 'not-available': label('↻ 检查更新'); busy(false); toast?.('已是最新版本'); break;
+        case 'download-progress': label('↓ 下载中 '+ev.progress+'% ('+ev.transferred+'/'+ev.total+'MB)'); busy(true); break;
+        case 'downloaded':
+          label('⇪ 已就绪，点击安装并重启');
+          busy(false);
+          btn.dataset.mode = 'install';
+          break;
+        case 'error':
+          label('↻ 检查更新'); busy(false);
+          console.warn('[updater]', ev.message);
+          if(statusReadyForToast(ev)) toast?.(ev.message==='已经是最新版本' ? '已是最新版本' : '更新出错：'+(ev.message||'未知'));
+          break;
+      }
+    });
+    btn.addEventListener('click', ()=>{
+      if(btn.dataset.mode === 'install'){ U.install(); return; }
+      if(statusCache?.status === 'available'){ U.download(); label('↓ 下载中…'); busy(true); return; }
+      U.check();
+    });
+  };
+  wire($('#updateBtn'));             // 顶部按钮（仅 Electron 显示）
+  wire($('#settingsUpdateBtn'));     // 设置页常驻按钮
+  if(U) U.check(); // 进入即检查一次
 })();
 </script>
 </body>
